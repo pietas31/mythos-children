@@ -1,5 +1,4 @@
-const API_URL =
-  'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
 
 console.log('MYTHOS READY');
 
@@ -82,21 +81,16 @@ function showRegisterForm() {
 function registerPlayer() {
   alert('가입 요청을 시작합니다.');
 
-  const characterName = document.getElementById('register-name').value.trim();
-  const age = document.getElementById('register-age').value.trim();
-  const origin = document.getElementById('register-origin').value.trim();
-
-  if (!characterName || !age || !origin) {
-    alert('캐릭터명, 나이, 출신지를 모두 입력해주세요.');
-    return;
-  }
+  const characterName = document.getElementById('characterName')?.value || '';
+  const age = document.getElementById('age')?.value || '';
+  const origin = document.getElementById('origin')?.value || '';
 
   const url =
-    API_URL +
-    '?action=registerPlayer' +
-    '&characterName=' + encodeURIComponent(characterName) +
-    '&age=' + encodeURIComponent(age) +
-    '&origin=' + encodeURIComponent(origin);
+    API_URL
+    + '?action=registerPlayer'
+    + '&characterName=' + encodeURIComponent(characterName)
+    + '&age=' + encodeURIComponent(age)
+    + '&origin=' + encodeURIComponent(origin);
 
   window.open(url, '_blank');
 }
