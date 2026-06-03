@@ -1,1 +1,1 @@
-console.log("MYTHOS LOADED");
+console.log("MYTHOS READY");

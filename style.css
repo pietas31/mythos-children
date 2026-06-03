@@ -1,10 +1,173 @@
-body{
-    background:#f5f7fb;
-    font-family:sans-serif;
-    text-align:center;
-    padding-top:100px;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-h1{
-    font-size:48px;
+body{
+
+  background:
+  linear-gradient(
+    180deg,
+    #f4f7fb 0%,
+    #e7edf5 100%
+  );
+
+  min-height:100vh;
+
+  font-family:
+  "Noto Sans KR",
+  sans-serif;
+
+  color:#202734;
+}
+
+.topbar{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:24px 48px;
+
+  background:white;
+
+  box-shadow:
+  0 4px 16px rgba(0,0,0,.05);
+}
+
+.logo{
+
+  font-size:42px;
+
+  font-family:
+  "Black Han Sans",
+  sans-serif;
+
+  color:#223e72;
+
+  cursor:pointer;
+}
+
+nav{
+
+  display:flex;
+  gap:12px;
+}
+
+.nav-btn{
+
+  border:none;
+
+  background:#edf2fa;
+
+  color:#223e72;
+
+  padding:10px 18px;
+
+  border-radius:12px;
+
+  cursor:pointer;
+
+  font-weight:700;
+}
+
+.layout{
+
+  max-width:1400px;
+
+  margin:auto;
+
+  padding:40px;
+
+  display:grid;
+
+  grid-template-columns:
+  300px
+  1fr
+  300px;
+
+  gap:32px;
+}
+
+.panel-title{
+
+  font-size:24px;
+
+  font-weight:700;
+
+  margin-bottom:16px;
+}
+
+.card{
+
+  background:white;
+
+  border-radius:20px;
+
+  padding:20px;
+
+  box-shadow:
+  0 6px 20px rgba(0,0,0,.06);
+}
+
+.small-title{
+
+  font-weight:700;
+
+  margin-bottom:12px;
+}
+
+.character-section{
+
+  display:flex;
+  justify-content:center;
+}
+
+.character-card{
+
+  width:420px;
+
+  background:white;
+
+  border-radius:28px;
+
+  padding:28px;
+
+  text-align:center;
+
+  box-shadow:
+  0 10px 30px rgba(0,0,0,.08);
+}
+
+.portrait{
+
+  width:100%;
+  border-radius:20px;
+
+  margin-bottom:20px;
+}
+
+.character-card h2{
+
+  font-size:38px;
+
+  margin-bottom:8px;
+}
+
+.sub-info{
+
+  color:#6b7689;
+
+  margin-bottom:20px;
+}
+
+.info-list{
+
+  display:flex;
+  flex-direction:column;
+
+  gap:10px;
+
+  font-size:18px;
 }
