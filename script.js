@@ -98,3 +98,13 @@ function registerPlayer() {
 function loginPlayer() {
   alert('로그인 기능은 다음 단계에서 연결합니다.');
 }
+
+function openRegisterModal() {
+  document.getElementById('login-modal').style.display = 'none';
+  document.getElementById('register-modal').style.display = 'flex';
+}
+
+function backToLoginModal() {
+  document.getElementById('register-modal').style.display = 'none';
+  document.getElementById('login-modal').style.display = 'flex';
+}

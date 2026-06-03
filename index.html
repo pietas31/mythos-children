@@ -3,14 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>뮈토스의 아이들</title>
-
 <link rel="stylesheet" href="style.css">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
 </head>
 
@@ -18,17 +14,13 @@
 
 <header class="topbar">
   <div class="logo" onclick="goHome()">MYTHOS</div>
-
-  <button class="logout-btn" onclick="logout()">
-    로그아웃
-  </button>
+  <button class="logout-btn" onclick="logout()">로그아웃</button>
 </header>
 
 <main class="layout">
 
   <section class="panel">
     <div class="panel-title">PLAY MENU</div>
-
     <button class="menu-btn">조사하러 가기</button>
     <button class="menu-btn">조사일지</button>
     <button class="menu-btn">개인 메모</button>
@@ -37,36 +29,23 @@
 
   <section class="character-section">
     <div class="character-card">
-
-      <img
-        src="https://placehold.co/320x420"
-        class="portrait"
-        id="character-portrait"
-      >
-
+      <img src="https://placehold.co/320x420" class="portrait" id="character-portrait">
       <h2 id="character-name">캐릭터명</h2>
-
-      <div class="sub-info" id="character-origin">
-        클레이오니아 · 출신지
-      </div>
-
+      <div class="sub-info" id="character-origin">클레이오니아 · 출신지</div>
       <div class="info-list">
         <div id="character-age">나이</div>
         <div id="character-location">현재 위치 : -</div>
         <div id="character-money">보유 재화 : 0골드</div>
       </div>
-
     </div>
   </section>
 
   <section class="panel">
     <div class="panel-title">NOTICE</div>
-
     <div class="card">
       <div class="small-title">안내</div>
       <p>조사는 지정된 시간에만 진행됩니다.</p>
     </div>
-
     <div class="card notice-card">
       <div class="small-title">현재 상태</div>
       <p>로그인 후 캐릭터 정보를 확인할 수 있습니다.</p>
@@ -75,49 +54,29 @@
 
 </main>
 
+<!-- 로그인 모달 -->
 <div id="login-modal" class="modal">
   <div class="modal-box">
-
     <h2>MYTHOS</h2>
 
-    <input
-      type="text"
-      placeholder="개인코드"
-      id="login-code"
-    >
+    <input type="text" placeholder="개인코드" id="login-code">
 
-    <input
-      type="text"
-      placeholder="캐릭터명"
-      id="characterName"
-    >
+    <button class="modal-btn" onclick="loginPlayer()">로그인</button>
+    <button class="modal-btn" onclick="openRegisterModal()">회원가입</button>
+  </div>
+</div>
 
-    <input
-      type="text"
-      placeholder="나이"
-      id="age"
-    >
+<!-- 회원가입 모달 -->
+<div id="register-modal" class="modal" style="display: none;">
+  <div class="modal-box">
+    <h2>회원가입</h2>
 
-    <input
-      type="text"
-      placeholder="출신지"
-      id="origin"
-    >
+    <input type="text" placeholder="캐릭터명" id="characterName">
+    <input type="text" placeholder="나이" id="age">
+    <input type="text" placeholder="출신지" id="origin">
 
-    <button
-      class="modal-btn"
-      onclick="loginPlayer()"
-    >
-      로그인
-    </button>
-
-    <button
-      class="modal-btn"
-      onclick="registerPlayer()"
-    >
-      회원가입
-    </button>
-
+    <button class="modal-btn" onclick="registerPlayer()">가입하기</button>
+    <button class="modal-btn" onclick="backToLoginModal()">돌아가기</button>
   </div>
 </div>
 
