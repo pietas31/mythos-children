@@ -285,3 +285,22 @@ button{
 
   color:#223e72;
 }
+
+.modal-box select{
+  width:100%;
+  padding:14px;
+  border:1px solid #d8dfeb;
+  border-radius:12px;
+  margin-bottom:16px;
+}
+
+.file-row{
+  display:grid;
+  grid-template-columns:80px 1fr;
+  gap:10px;
+  align-items:center;
+  margin-bottom:16px;
+  font-size:14px;
+  font-weight:700;
+  color:#223e72;
+}
