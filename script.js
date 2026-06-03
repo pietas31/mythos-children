@@ -1,3 +1,6 @@
+const API_URL =
+'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
+
 console.log("MYTHOS READY");
 
 function goHome() {
@@ -6,6 +9,60 @@ function goHome() {
 
 function logout() {
   alert("로그아웃 기능은 데이터 연결 후 작동합니다.");
+}
+
+async function loginPlayer() {
+
+  const code =
+  document.getElementById('login-code').value.trim();
+
+  if (!code) {
+    alert('개인코드를 입력해주세요.');
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      API_URL,
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          action:'login',
+          data:{
+            personalCode:code
+          }
+        })
+      }
+    );
+
+    const result =
+    await response.json();
+
+    console.log(result);
+
+    if(result.error){
+      alert(result.error);
+      return;
+    }
+
+    alert(
+      result.characterName +
+      '님 환영합니다.'
+    );
+
+  } catch(err){
+
+    console.error(err);
+
+    alert(
+      '서버 연결 실패'
+    );
+
+  }
 }
 
 function showRegisterForm() {
