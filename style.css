@@ -202,3 +202,86 @@ button{
   background:#1f4784;
   color:white;
 }
+
+.modal{
+
+  position:fixed;
+
+  inset:0;
+
+  background:
+  rgba(0,0,0,.35);
+
+  display:flex;
+
+  justify-content:center;
+  align-items:center;
+
+  z-index:999;
+}
+
+.modal-box{
+
+  width:380px;
+
+  background:white;
+
+  padding:32px;
+
+  border-radius:24px;
+
+  text-align:center;
+
+  box-shadow:
+  0 20px 60px rgba(0,0,0,.15);
+}
+
+.modal-box h2{
+
+  margin-bottom:24px;
+
+  color:#223e72;
+}
+
+.modal-box input{
+
+  width:100%;
+
+  padding:14px;
+
+  border:
+
+  1px solid #d8dfeb;
+
+  border-radius:12px;
+
+  margin-bottom:16px;
+}
+
+.modal-btn{
+
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#223e72;
+
+  color:white;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  margin-bottom:10px;
+}
+
+.secondary{
+
+  background:#eef3fb;
+
+  color:#223e72;
+}
