@@ -73,21 +73,14 @@ nav{
 }
 
 .layout{
-
-  max-width:1400px;
-
-  margin:auto;
-
-  padding:40px;
+  max-width:1100px;
+  margin:0 auto;
+  padding:46px 56px;
 
   display:grid;
-
-  grid-template-columns:
-  300px
-  1fr
-  300px;
-
-  gap:32px;
+  grid-template-columns:240px minmax(300px, 420px) 240px;
+  gap:34px;
+  align-items:start;
 }
 
 .panel-title{
@@ -125,26 +118,19 @@ nav{
 }
 
 .character-card{
-
-  width:420px;
-
+  width:100%;
   background:white;
-
   border-radius:28px;
-
-  padding:28px;
-
+  padding:26px;
   text-align:center;
-
   box-shadow:
   0 10px 30px rgba(0,0,0,.08);
 }
 
 .portrait{
-
   width:100%;
+  max-width:280px;
   border-radius:20px;
-
   margin-bottom:20px;
 }
 
@@ -170,4 +156,8 @@ nav{
   gap:10px;
 
   font-size:18px;
+}
+
+.notice-card{
+  margin-top:16px;
 }

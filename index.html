@@ -22,41 +22,39 @@
     MYTHOS
   </div>
 
-  <nav>
-    <button class="nav-btn">조사</button>
-    <button class="nav-btn">인벤토리</button>
-    <button class="nav-btn">메모</button>
-  </nav>
-
 </header>
 
 
 <main class="layout">
 
-  <!-- 왼쪽 -->
+  <!-- 왼쪽 : 플레이 메뉴 -->
 
   <section class="panel">
 
     <div class="panel-title">
-      조사 기록
+      PLAY MENU
     </div>
 
-    <div class="card">
+    <button class="menu-btn">
+      조사하러 가기
+    </button>
 
-      <div class="small-title">
-        최근 조사
-      </div>
+    <button class="menu-btn">
+      조사일지
+    </button>
 
-      <p>
-        아직 기록이 없습니다.
-      </p>
+    <button class="menu-btn">
+      개인 메모
+    </button>
 
-    </div>
+    <button class="menu-btn">
+      인벤토리
+    </button>
 
   </section>
 
 
-  <!-- 가운데 -->
+  <!-- 가운데 : 캐릭터 카드 -->
 
   <section class="character-section">
 
@@ -65,21 +63,30 @@
       <img
         src="https://placehold.co/320x420"
         class="portrait"
+        id="character-portrait"
       >
 
-      <h2>토우코</h2>
+      <h2 id="character-name">
+        캐릭터명
+      </h2>
 
-      <div class="sub-info">
-        클레이오니아 · 남부 세렌티아
+      <div class="sub-info" id="character-origin">
+        클레이오니아 · 출신지
       </div>
 
       <div class="info-list">
 
-        <div>28세</div>
+        <div id="character-age">
+          나이
+        </div>
 
-        <div>현재 위치 : 도서관</div>
+        <div id="character-location">
+          현재 위치 : -
+        </div>
 
-        <div>보유 재화 : 0골드</div>
+        <div id="character-money">
+          보유 재화 : 0골드
+        </div>
 
       </div>
 
@@ -88,22 +95,34 @@
   </section>
 
 
-  <!-- 오른쪽 -->
+  <!-- 오른쪽 : 안내 / 상태 -->
 
   <section class="panel">
 
     <div class="panel-title">
-      개인 메모
+      NOTICE
     </div>
 
     <div class="card">
 
       <div class="small-title">
-        최근 메모
+        안내
       </div>
 
       <p>
-        아직 메모가 없습니다.
+        조사는 지정된 시간에만 진행됩니다.
+      </p>
+
+    </div>
+
+    <div class="card notice-card">
+
+      <div class="small-title">
+        현재 상태
+      </div>
+
+      <p>
+        로그인 후 캐릭터 정보를 확인할 수 있습니다.
       </p>
 
     </div>
