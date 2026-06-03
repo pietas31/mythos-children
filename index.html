@@ -73,7 +73,14 @@
 
     <input type="text" placeholder="캐릭터명" id="characterName">
     <input type="text" placeholder="나이" id="age">
-    <input type="text" placeholder="출신지" id="origin">
+    <select id="origin" class="modal-input">
+  <option value="">출신지를 선택하세요</option>
+  <option value="수도 탈리스">수도 탈리스</option>
+  <option value="동부 모네타">동부 모네타</option>
+  <option value="서부 아르스">서부 아르스</option>
+  <option value="남부 세렌티아">남부 세렌티아</option>
+  <option value="북부 니발리스">북부 니발리스</option>
+</select>
 
     <button class="modal-btn" onclick="registerPlayer()">가입하기</button>
     <button class="modal-btn" onclick="backToLoginModal()">돌아가기</button>
