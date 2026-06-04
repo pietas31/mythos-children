@@ -187,16 +187,31 @@ function resizeImage(file, callback) {
 
     img.onload = function () {
       const canvas = document.createElement('canvas');
-      const maxWidth = 420;
-      const scale = maxWidth / img.width;
 
-      canvas.width = maxWidth;
-      canvas.height = img.height * scale;
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+
+      const outputSize = 500;
+
+      canvas.width = outputSize;
+      canvas.height = outputSize;
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      ctx.drawImage(
+        img,
+        sx,
+        sy,
+        size,
+        size,
+        0,
+        0,
+        outputSize,
+        outputSize
+      );
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
       callback(dataUrl.split(',')[1]);
     };
 
@@ -215,36 +230,34 @@ function resizeImage(file, callback) {
 }
 
 function uploadPortraitBase64(base64Data) {
-  const callbackName = 'portraitCallback_' + Date.now();
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'updatePortraitUpload',
+      personalCode: currentPersonalCode,
+      mimeType: 'image/jpeg',
+      portraitBase64: base64Data
+    })
+  })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      if (data.success) {
+        document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
+        alert('인장이 등록되었습니다.');
+      } else {
+        alert('인장 등록 실패: ' + data.message);
+      }
+    })
+    .catch(function (error) {
+      alert(
+        '인장 업로드 중 오류가 발생했습니다.\n\n' +
+        '문제가 계속되면 총괄진에게 문의해주세요.'
+      );
 
-  window[callbackName] = function (data) {
-    if (data.success) {
-      document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
-      alert('인장이 등록되었습니다.');
-    } else {
-      alert('인장 등록 실패: ' + data.message);
-    }
-
-    delete window[callbackName];
-  };
-
-  const url =
-    API_URL
-    + '?action=updatePortraitUpload'
-    + '&callback=' + encodeURIComponent(callbackName)
-    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&mimeType=' + encodeURIComponent('image/jpeg')
-    + '&portraitBase64=' + encodeURIComponent(base64Data);
-
-  const script = document.createElement('script');
-  script.src = url;
-
-  script.onerror = function () {
-    alert('인장 업로드 요청에 실패했습니다. 이미지 용량이 너무 크거나 연결이 불안정할 수 있습니다.');
-    delete window[callbackName];
-  };
-
-  document.body.appendChild(script);
+      console.error(error);
+    });
 }
 
 function convertDriveUrl(url) {
