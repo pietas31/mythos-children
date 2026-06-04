@@ -26,8 +26,6 @@ function backToLoginModal() {
   document.getElementById('login-modal').style.display = 'flex';
 }
 
-let isRegistering = false;
-
 function registerPlayer() {
   if (isRegistering) {
     return;
