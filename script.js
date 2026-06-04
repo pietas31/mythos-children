@@ -1,6 +1,6 @@
-let isRegistering = false;
-
 const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
+
+let isRegistering = false;
 
 console.log('MYTHOS READY');
 
@@ -31,29 +31,26 @@ function registerPlayer() {
     return;
   }
 
-  isRegistering = true;
-
-  const characterName = document.getElementById('characterName')?.value.trim() || '';
-  const age = document.getElementById('age')?.value.trim() || '';
-  const origin = document.getElementById('origin')?.value || '';
+  const characterName = document.getElementById('characterName').value.trim();
+  const age = document.getElementById('age').value.trim();
+  const origin = document.getElementById('origin').value;
 
   if (!characterName) {
     alert('캐릭터명을 입력해주세요.');
-    isRegistering = false;
     return;
   }
 
   if (!age) {
     alert('나이를 입력해주세요.');
-    isRegistering = false;
     return;
   }
 
   if (!origin) {
     alert('출신지를 선택해주세요.');
-    isRegistering = false;
     return;
   }
+
+  isRegistering = true;
 
   const url =
     API_URL
@@ -63,8 +60,12 @@ function registerPlayer() {
     + '&origin=' + encodeURIComponent(origin);
 
   fetch(url)
-    .then(response => response.json())
-    .then(data => {
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      isRegistering = false;
+
       if (data.success) {
         alert(
           '가입이 완료되었습니다!\n\n' +
@@ -79,10 +80,10 @@ function registerPlayer() {
       } else {
         alert('가입 실패: ' + data.message);
       }
-
-      isRegistering = false;
     })
-    .catch(error => {
+    .catch(function(error) {
+      isRegistering = false;
+
       alert(
         '회원가입 처리 중 오류가 발생했습니다.\n\n' +
         '잠시 후 다시 시도해주세요.\n' +
@@ -90,6 +91,5 @@ function registerPlayer() {
       );
 
       console.error(error);
-      isRegistering = false;
     });
 }
