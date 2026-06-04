@@ -142,12 +142,13 @@ function renderPlayer(player) {
     '보유 재화 : 0골드';
 
   if (player.portraitUrl) {
-  document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
-  document.getElementById('character-portrait').style.display = 'block';
-  document.getElementById('portrait-empty').style.display = 'none';
-} else {
-  document.getElementById('character-portrait').style.display = 'none';
-  document.getElementById('portrait-empty').style.display = 'flex';
+    document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
+    document.getElementById('character-portrait').style.display = 'block';
+    document.getElementById('portrait-empty').style.display = 'none';
+  } else {
+    document.getElementById('character-portrait').style.display = 'none';
+    document.getElementById('portrait-empty').style.display = 'flex';
+  }
 }
 
 function updatePortrait() {
