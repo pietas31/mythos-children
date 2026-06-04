@@ -151,30 +151,7 @@ function updatePortrait() {
     return;
   }
 
-  const portraitUrl = prompt('구글 드라이브에 업로드한 인장 이미지 링크를 붙여넣어주세요.');
-
-  if (!portraitUrl) return;
-
-  const url =
-    API_URL
-    + '?action=updatePortrait'
-    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&portraitUrl=' + encodeURIComponent(portraitUrl);
-
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
-        alert('인장이 등록되었습니다.');
-      } else {
-        alert('인장 등록 실패: ' + data.message);
-      }
-    })
-    .catch(error => {
-      alert('인장 등록 중 오류가 발생했습니다.\n\n문제가 계속되면 관리자에게 문의해주세요.');
-      console.error(error);
-    });
+  document.getElementById('portrait-upload-input').click();
 }
 
 function convertDriveUrl(url) {
@@ -188,6 +165,19 @@ function convertDriveUrl(url) {
 }
 
 window.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('portrait-upload-input');
+
+  if (input) {
+    input.addEventListener('change', function () {
+      const file = input.files[0];
+      if (!file) return;
+
+      resizeImage(file, function (base64Data) {
+        uploadPortraitBase64(base64Data);
+      });
+    });
+  }
+
   const savedCode = localStorage.getItem('mythosPersonalCode');
 
   if (savedCode) {
@@ -195,3 +185,67 @@ window.addEventListener('DOMContentLoaded', function () {
     loginPlayer();
   }
 });
+
+function resizeImage(file, callback) {
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+    const img = new Image();
+
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      const maxWidth = 420;
+      const scale = maxWidth / img.width;
+
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      callback(dataUrl.split(',')[1]);
+    };
+
+    img.src = event.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function uploadPortraitBase64(base64Data) {
+  const callbackName = 'portraitCallback_' + Date.now();
+
+  window[callbackName] = function (data) {
+    if (data.success) {
+      document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
+      alert('인장이 등록되었습니다.');
+    } else {
+      alert('인장 등록 실패: ' + data.message);
+    }
+
+    delete window[callbackName];
+  };
+
+  const url =
+    API_URL
+    + '?action=updatePortraitUpload'
+    + '&callback=' + encodeURIComponent(callbackName)
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mimeType=' + encodeURIComponent('image/jpeg')
+    + '&portraitBase64=' + encodeURIComponent(base64Data);
+
+  const script = document.createElement('script');
+  script.src = url;
+  document.body.appendChild(script);
+}
+
+function convertDriveUrl(url) {
+  const match = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
+
+  if (match && match[1]) {
+    return 'https://drive.google.com/uc?export=view&id=' + match[1];
+  }
+
+  return url;
+}
