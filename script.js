@@ -142,8 +142,12 @@ function renderPlayer(player) {
     '보유 재화 : 0골드';
 
   if (player.portraitUrl) {
-    document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
-  }
+  document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
+  document.getElementById('character-portrait').style.display = 'block';
+  document.getElementById('portrait-empty').style.display = 'none';
+} else {
+  document.getElementById('character-portrait').style.display = 'none';
+  document.getElementById('portrait-empty').style.display = 'flex';
 }
 
 function updatePortrait() {
@@ -245,6 +249,8 @@ function uploadPortraitBase64(base64Data) {
     .then(function (data) {
       if (data.success) {
         document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
+document.getElementById('character-portrait').style.display = 'block';
+document.getElementById('portrait-empty').style.display = 'none';
         alert('인장이 등록되었습니다.');
       } else {
         alert('인장 등록 실패: ' + data.message);

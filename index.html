@@ -30,11 +30,14 @@
   <section class="character-section">
     <div class="character-card">
 
-      <img src="https://placehold.co/320x420" class="portrait" id="character-portrait">
+      <div class="portrait-frame">
+  <img src="" class="portrait" id="character-portrait" alt="캐릭터 인장">
+  <div class="portrait-empty" id="portrait-empty">인장 없음</div>
+</div>
 
-      <button class="portrait-btn" onclick="updatePortrait()">
-        인장 등록
-      </button>
+<button class="portrait-btn" onclick="updatePortrait()">
+  인장 등록
+</button>
 
 <input
   type="file"
@@ -131,7 +134,7 @@
   </div>
 </div>
 
-<script src="script.js?v=11"></script>
+<script src="script.js?v=12"></script>
 
 </body>
 </html>
