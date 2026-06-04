@@ -12,6 +12,7 @@ function goHome() {
 
 function logout() {
   localStorage.removeItem('mythosPersonalCode');
+  currentPersonalCode = '';
   location.reload();
 }
 
@@ -154,16 +155,6 @@ function updatePortrait() {
   document.getElementById('portrait-upload-input').click();
 }
 
-function convertDriveUrl(url) {
-  const match = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
-
-  if (match && match[1]) {
-    return 'https://drive.google.com/uc?export=view&id=' + match[1];
-  }
-
-  return url;
-}
-
 window.addEventListener('DOMContentLoaded', function () {
   const input = document.getElementById('portrait-upload-input');
 
@@ -171,6 +162,8 @@ window.addEventListener('DOMContentLoaded', function () {
     input.addEventListener('change', function () {
       const file = input.files[0];
       if (!file) return;
+
+      alert('인장 업로드를 시작합니다.');
 
       resizeImage(file, function (base64Data) {
         uploadPortraitBase64(base64Data);
@@ -207,7 +200,15 @@ function resizeImage(file, callback) {
       callback(dataUrl.split(',')[1]);
     };
 
+    img.onerror = function () {
+      alert('이미지를 불러오지 못했습니다. 다른 이미지를 선택해주세요.');
+    };
+
     img.src = event.target.result;
+  };
+
+  reader.onerror = function () {
+    alert('파일을 읽지 못했습니다. 다른 이미지를 선택해주세요.');
   };
 
   reader.readAsDataURL(file);
@@ -237,6 +238,12 @@ function uploadPortraitBase64(base64Data) {
 
   const script = document.createElement('script');
   script.src = url;
+
+  script.onerror = function () {
+    alert('인장 업로드 요청에 실패했습니다. 이미지 용량이 너무 크거나 연결이 불안정할 수 있습니다.');
+    delete window[callbackName];
+  };
+
   document.body.appendChild(script);
 }
 
