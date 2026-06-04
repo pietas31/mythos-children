@@ -1,3 +1,5 @@
+let isRegistering = false;
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
 
 console.log('MYTHOS READY');
@@ -24,23 +26,34 @@ function backToLoginModal() {
   document.getElementById('login-modal').style.display = 'flex';
 }
 
+let isRegistering = false;
+
 function registerPlayer() {
+  if (isRegistering) {
+    return;
+  }
+
+  isRegistering = true;
+
   const characterName = document.getElementById('characterName')?.value.trim() || '';
   const age = document.getElementById('age')?.value.trim() || '';
   const origin = document.getElementById('origin')?.value || '';
 
   if (!characterName) {
     alert('캐릭터명을 입력해주세요.');
+    isRegistering = false;
     return;
   }
 
   if (!age) {
     alert('나이를 입력해주세요.');
+    isRegistering = false;
     return;
   }
 
   if (!origin) {
     alert('출신지를 선택해주세요.');
+    isRegistering = false;
     return;
   }
 
@@ -52,28 +65,33 @@ function registerPlayer() {
     + '&origin=' + encodeURIComponent(origin);
 
   fetch(url)
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(
+          '가입이 완료되었습니다!\n\n' +
+          '개인코드: ' + data.personalCode + '\n\n' +
+          '이 코드는 로그인에 필요하니 반드시 저장해주세요.'
+        );
+
+        prompt('개인코드를 복사하세요.', data.personalCode);
+
+        document.getElementById('login-code').value = data.personalCode;
+        backToLoginModal();
+      } else {
+        alert('가입 실패: ' + data.message);
+      }
+
+      isRegistering = false;
+    })
+    .catch(error => {
       alert(
-        '가입이 완료되었습니다!\n\n' +
-        '개인코드: ' + data.personalCode + '\n\n' +
-        '이 코드는 로그인에 필요하니 반드시 저장해주세요.'
+        '회원가입 처리 중 오류가 발생했습니다.\n\n' +
+        '잠시 후 다시 시도해주세요.\n' +
+        '문제가 계속되면 관리자에게 문의해주세요.'
       );
 
-      document.getElementById('login-code').value = data.personalCode;
-      backToLoginModal();
-    } else {
-      alert('가입 실패: ' + data.message);
-    }
-  })
-  .catch(error => {
-    alert(
-      '회원가입 처리 중 오류가 발생했습니다.\n\n' +
-      '잠시 후 다시 시도해주세요.\n' +
-      '문제가 계속되면 관리자에게 문의해주세요.'
-    );
-
-    console.error(error);
-  });
+      console.error(error);
+      isRegistering = false;
+    });
 }
