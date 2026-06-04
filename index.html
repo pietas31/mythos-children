@@ -94,6 +94,29 @@
   </div>
 </div>
 
+<!-- 가입 완료 모달 -->
+<div id="register-complete-modal" class="modal" style="display: none;">
+  <div class="modal-box complete-box">
+    <h2>가입이 완료되었습니다</h2>
+
+    <p class="complete-text">
+      아래 개인코드를 반드시 저장해주세요.
+    </p>
+
+    <div class="code-box" id="issued-code">
+      P-000000
+    </div>
+
+    <button class="modal-btn" onclick="copyIssuedCode()">
+      개인코드 복사하기
+    </button>
+
+    <button class="modal-btn secondary" onclick="closeCompleteModal()">
+      로그인으로 이동
+    </button>
+  </div>
+</div>
+
 <script src="script.js"></script>
 
 </body>

@@ -1,6 +1,7 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4C_ySGPWL_j8sUx2kbAFyGRxb7GDfLNMCWl1t_GgxePgDFw/exec';
 
 let isRegistering = false;
+let issuedPersonalCode = '';
 
 console.log('MYTHOS READY');
 
@@ -67,16 +68,13 @@ function registerPlayer() {
       isRegistering = false;
 
       if (data.success) {
-        alert(
-          '가입이 완료되었습니다!\n\n' +
-          '개인코드: ' + data.personalCode + '\n\n' +
-          '이 코드는 로그인에 필요하니 반드시 저장해주세요.'
-        );
+        issuedPersonalCode = data.personalCode;
 
-        prompt('개인코드를 복사하세요.', data.personalCode);
+document.getElementById('issued-code').textContent = data.personalCode;
+document.getElementById('login-code').value = data.personalCode;
 
-        document.getElementById('login-code').value = data.personalCode;
-        backToLoginModal();
+document.getElementById('register-modal').style.display = 'none';
+document.getElementById('register-complete-modal').style.display = 'flex';
       } else {
         alert('가입 실패: ' + data.message);
       }
@@ -92,4 +90,24 @@ function registerPlayer() {
 
       console.error(error);
     });
+}
+
+function copyIssuedCode() {
+  if (!issuedPersonalCode) {
+    alert('복사할 개인코드가 없습니다.');
+    return;
+  }
+
+  navigator.clipboard.writeText(issuedPersonalCode)
+    .then(function () {
+      alert('개인코드가 복사되었습니다.');
+    })
+    .catch(function () {
+      alert('복사에 실패했습니다. 개인코드를 직접 선택해서 복사해주세요.');
+    });
+}
+
+function closeCompleteModal() {
+  document.getElementById('register-complete-modal').style.display = 'none';
+  document.getElementById('login-modal').style.display = 'flex';
 }
