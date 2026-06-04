@@ -78,21 +78,154 @@ function showRegisterForm() {
   `;
 }
 
-function registerPlayer() {
-  alert('가입 요청을 시작합니다.');
+const SPREADSHEET_ID = '1Ep6ylUDwH7P2xj-ZKSvFngyXjA0c3WqmwvAXIYi3neM';
+const PORTRAIT_FOLDER_ID = '1NG1Smxh1puAutnchhSG8u4KCTe7OWG7L';
 
-  const characterName = document.getElementById('characterName')?.value || '';
-  const age = document.getElementById('age')?.value || '';
-  const origin = document.getElementById('origin')?.value || '';
+function doGet(e) {
+  const action = e.parameter.action;
 
-  const url =
-    API_URL
-    + '?action=registerPlayer'
-    + '&characterName=' + encodeURIComponent(characterName)
-    + '&age=' + encodeURIComponent(age)
-    + '&origin=' + encodeURIComponent(origin);
+  if (!action) {
+    return jsonOutput({
+      success: true,
+      message: 'MYTHOS API OK'
+    });
+  }
 
-  window.open(url, '_blank');
+  if (action === 'registerPlayer') {
+    return registerPlayerByGet(e);
+  }
+
+  return jsonOutput({
+    success: false,
+    message: 'Unknown action: ' + action
+  });
+}
+
+function registerPlayerByGet(e) {
+  try {
+    const characterName = e.parameter.characterName || '';
+    const age = e.parameter.age || '';
+    const origin = e.parameter.origin || '';
+    const fileName = e.parameter.fileName || '';
+    const mimeType = e.parameter.mimeType || '';
+    const portraitBase64 = e.parameter.portraitBase64 || '';
+
+    if (!characterName) {
+      return jsonOutput({
+        success: false,
+        message: 'characterName is required'
+      });
+    }
+
+    if (!age) {
+      return jsonOutput({
+        success: false,
+        message: 'age is required'
+      });
+    }
+
+    if (!origin) {
+      return jsonOutput({
+        success: false,
+        message: 'origin is required'
+      });
+    }
+
+    if (!portraitBase64) {
+      return jsonOutput({
+        success: false,
+        message: 'portrait image is required'
+      });
+    }
+
+    const personalCode = generatePersonalCode();
+
+    const portraitUrl = uploadPortraitToDrive(
+      portraitBase64,
+      fileName,
+      mimeType,
+      personalCode
+    );
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName('개인');
+
+    if (!sheet) {
+      return jsonOutput({
+        success: false,
+        message: '개인 시트를 찾을 수 없습니다.'
+      });
+    }
+
+    sheet.appendRow([
+      personalCode,      // A 개인코드
+      characterName,     // B 캐릭터명
+      age,               // C 나이
+      '',                // D 역할
+      '',                // E 현재장소ID
+      origin,            // F 출신지
+      portraitUrl        // G 인장URL
+    ]);
+
+    return jsonOutput({
+      success: true,
+      personalCode: personalCode,
+      characterName: characterName,
+      age: age,
+      origin: origin,
+      portraitUrl: portraitUrl
+    });
+
+  } catch (error) {
+    return jsonOutput({
+      success: false,
+      message: error.toString()
+    });
+  }
+}
+
+function uploadPortraitToDrive(base64Data, originalFileName, mimeType, personalCode) {
+  const folder = DriveApp.getFolderById(PORTRAIT_FOLDER_ID);
+
+  const extension = getExtensionFromFileName(originalFileName);
+  const safeFileName = personalCode + '_portrait' + extension;
+
+  const bytes = Utilities.base64Decode(base64Data);
+  const blob = Utilities.newBlob(bytes, mimeType, safeFileName);
+
+  const file = folder.createFile(blob);
+
+  file.setSharing(
+    DriveApp.Access.ANYONE_WITH_LINK,
+    DriveApp.Permission.VIEW
+  );
+
+  return file.getUrl();
+}
+
+function getExtensionFromFileName(fileName) {
+  if (!fileName || fileName.indexOf('.') === -1) {
+    return '.png';
+  }
+
+  return fileName.substring(fileName.lastIndexOf('.'));
+}
+
+function generatePersonalCode() {
+  const random = Math.floor(100000 + Math.random() * 900000);
+  return 'P-' + random;
+}
+
+function jsonOutput(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function testSheetAccess() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('개인');
+  Logger.log(sheet.getName());
 }
 
 function loginPlayer() {
