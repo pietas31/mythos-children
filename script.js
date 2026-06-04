@@ -14,7 +14,50 @@ function logout() {
 }
 
 function loginPlayer() {
-  alert('로그인 기능은 다음 단계에서 연결합니다.');
+  const personalCode = document.getElementById('login-code').value.trim();
+
+  if (!personalCode) {
+    alert('개인코드를 입력해주세요.');
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=loginPlayer'
+    + '&personalCode=' + encodeURIComponent(personalCode);
+
+  fetch(url)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      if (data.success) {
+        const player = data.player;
+
+        document.getElementById('character-name').textContent = player.characterName;
+        document.getElementById('character-origin').textContent = '클레이오니아 · ' + player.origin;
+        document.getElementById('character-age').textContent = player.age + '세';
+
+        if (player.portraitUrl) {
+          document.getElementById('character-portrait').src = player.portraitUrl;
+        }
+
+        document.getElementById('login-modal').style.display = 'none';
+
+        localStorage.setItem('mythosPersonalCode', personalCode);
+      } else {
+        alert('로그인 실패: ' + data.message);
+      }
+    })
+    .catch(function(error) {
+      alert(
+        '로그인 처리 중 오류가 발생했습니다.\n\n' +
+        '잠시 후 다시 시도해주세요.\n' +
+        '문제가 계속되면 관리자에게 문의해주세요.'
+      );
+
+      console.error(error);
+    });
 }
 
 function openRegisterModal() {
