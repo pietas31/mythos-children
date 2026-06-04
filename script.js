@@ -2,6 +2,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 
 let isRegistering = false;
 let issuedPersonalCode = '';
+let currentPersonalCode = '';
 
 console.log('MYTHOS READY');
 
@@ -10,54 +11,8 @@ function goHome() {
 }
 
 function logout() {
-  alert('로그아웃 기능은 데이터 연결 후 작동합니다.');
-}
-
-function loginPlayer() {
-  const personalCode = document.getElementById('login-code').value.trim();
-
-  if (!personalCode) {
-    alert('개인코드를 입력해주세요.');
-    return;
-  }
-
-  const url =
-    API_URL
-    + '?action=loginPlayer'
-    + '&personalCode=' + encodeURIComponent(personalCode);
-
-  fetch(url)
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(data) {
-      if (data.success) {
-        const player = data.player;
-
-        document.getElementById('character-name').textContent = player.characterName;
-        document.getElementById('character-origin').textContent = '클레이오니아 · ' + player.origin;
-        document.getElementById('character-age').textContent = player.age + '세';
-
-        if (player.portraitUrl) {
-          document.getElementById('character-portrait').src = player.portraitUrl;
-        }
-
-        document.getElementById('login-modal').style.display = 'none';
-
-        localStorage.setItem('mythosPersonalCode', personalCode);
-      } else {
-        alert('로그인 실패: ' + data.message);
-      }
-    })
-    .catch(function(error) {
-      alert(
-        '로그인 처리 중 오류가 발생했습니다.\n\n' +
-        '잠시 후 다시 시도해주세요.\n' +
-        '문제가 계속되면 관리자에게 문의해주세요.'
-      );
-
-      console.error(error);
-    });
+  localStorage.removeItem('mythosPersonalCode');
+  location.reload();
 }
 
 function openRegisterModal() {
@@ -71,9 +26,7 @@ function backToLoginModal() {
 }
 
 function registerPlayer() {
-  if (isRegistering) {
-    return;
-  }
+  if (isRegistering) return;
 
   const characterName = document.getElementById('characterName').value.trim();
   const age = document.getElementById('age').value.trim();
@@ -104,33 +57,25 @@ function registerPlayer() {
     + '&origin=' + encodeURIComponent(origin);
 
   fetch(url)
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(data) {
+    .then(response => response.json())
+    .then(data => {
       isRegistering = false;
 
       if (data.success) {
         issuedPersonalCode = data.personalCode;
 
-document.getElementById('issued-code').textContent = data.personalCode;
-document.getElementById('login-code').value = data.personalCode;
+        document.getElementById('issued-code').textContent = data.personalCode;
+        document.getElementById('login-code').value = data.personalCode;
 
-document.getElementById('register-modal').style.display = 'none';
-document.getElementById('register-complete-modal').style.display = 'flex';
+        document.getElementById('register-modal').style.display = 'none';
+        document.getElementById('register-complete-modal').style.display = 'flex';
       } else {
         alert('가입 실패: ' + data.message);
       }
     })
-    .catch(function(error) {
+    .catch(error => {
       isRegistering = false;
-
-      alert(
-        '회원가입 처리 중 오류가 발생했습니다.\n\n' +
-        '잠시 후 다시 시도해주세요.\n' +
-        '문제가 계속되면 관리자에게 문의해주세요.'
-      );
-
+      alert('회원가입 처리 중 오류가 발생했습니다.\n\n문제가 계속되면 관리자에게 문의해주세요.');
       console.error(error);
     });
 }
@@ -142,15 +87,111 @@ function copyIssuedCode() {
   }
 
   navigator.clipboard.writeText(issuedPersonalCode)
-    .then(function () {
-      alert('개인코드가 복사되었습니다.');
-    })
-    .catch(function () {
-      alert('복사에 실패했습니다. 개인코드를 직접 선택해서 복사해주세요.');
-    });
+    .then(() => alert('개인코드가 복사되었습니다.'))
+    .catch(() => alert('복사에 실패했습니다. 직접 선택해서 복사해주세요.'));
 }
 
 function closeCompleteModal() {
   document.getElementById('register-complete-modal').style.display = 'none';
   document.getElementById('login-modal').style.display = 'flex';
 }
+
+function loginPlayer() {
+  const personalCode = document.getElementById('login-code').value.trim();
+
+  if (!personalCode) {
+    alert('개인코드를 입력해주세요.');
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=loginPlayer'
+    + '&personalCode=' + encodeURIComponent(personalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        currentPersonalCode = personalCode;
+        localStorage.setItem('mythosPersonalCode', personalCode);
+
+        renderPlayer(data.player);
+
+        document.getElementById('login-modal').style.display = 'none';
+      } else {
+        alert('로그인 실패: ' + data.message);
+      }
+    })
+    .catch(error => {
+      alert('로그인 처리 중 오류가 발생했습니다.\n\n문제가 계속되면 관리자에게 문의해주세요.');
+      console.error(error);
+    });
+}
+
+function renderPlayer(player) {
+  document.getElementById('character-name').textContent = player.characterName || '캐릭터명';
+  document.getElementById('character-origin').textContent = '클레이오니아 · ' + (player.origin || '출신지');
+  document.getElementById('character-age').textContent = (player.age || '-') + '세';
+
+  document.getElementById('character-location').textContent =
+    '현재 위치 : ' + (player.currentPlaceId || '-');
+
+  document.getElementById('character-money').textContent =
+    '보유 재화 : 0골드';
+
+  if (player.portraitUrl) {
+    document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
+  }
+}
+
+function updatePortrait() {
+  if (!currentPersonalCode) {
+    alert('로그인 후 인장을 등록할 수 있습니다.');
+    return;
+  }
+
+  const portraitUrl = prompt('구글 드라이브에 업로드한 인장 이미지 링크를 붙여넣어주세요.');
+
+  if (!portraitUrl) return;
+
+  const url =
+    API_URL
+    + '?action=updatePortrait'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&portraitUrl=' + encodeURIComponent(portraitUrl);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
+        alert('인장이 등록되었습니다.');
+      } else {
+        alert('인장 등록 실패: ' + data.message);
+      }
+    })
+    .catch(error => {
+      alert('인장 등록 중 오류가 발생했습니다.\n\n문제가 계속되면 관리자에게 문의해주세요.');
+      console.error(error);
+    });
+}
+
+function convertDriveUrl(url) {
+  const match = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
+
+  if (match && match[1]) {
+    return 'https://drive.google.com/uc?export=view&id=' + match[1];
+  }
+
+  return url;
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  const savedCode = localStorage.getItem('mythosPersonalCode');
+
+  if (savedCode) {
+    document.getElementById('login-code').value = savedCode;
+    loginPlayer();
+  }
+});

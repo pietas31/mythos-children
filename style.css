@@ -340,3 +340,19 @@ button{
   color: #28477f;
   user-select: all;
 }
+
+.portrait-btn {
+  margin-top: 12px;
+  margin-bottom: 20px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: #28477f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.portrait-btn:hover {
+  background: #dfe8f7;
+}

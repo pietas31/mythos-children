@@ -29,23 +29,36 @@
 
   <section class="character-section">
     <div class="character-card">
+
       <img src="https://placehold.co/320x420" class="portrait" id="character-portrait">
+
+      <button class="portrait-btn" onclick="updatePortrait()">
+        인장 등록
+      </button>
+
       <h2 id="character-name">캐릭터명</h2>
-      <div class="sub-info" id="character-origin">클레이오니아 · 출신지</div>
+
+      <div class="sub-info" id="character-origin">
+        클레이오니아 · 출신지
+      </div>
+
       <div class="info-list">
         <div id="character-age">나이</div>
         <div id="character-location">현재 위치 : -</div>
         <div id="character-money">보유 재화 : 0골드</div>
       </div>
+
     </div>
   </section>
 
   <section class="panel">
     <div class="panel-title">NOTICE</div>
+
     <div class="card">
       <div class="small-title">안내</div>
       <p>조사는 지정된 시간에만 진행됩니다.</p>
     </div>
+
     <div class="card notice-card">
       <div class="small-title">현재 상태</div>
       <p>로그인 후 캐릭터 정보를 확인할 수 있습니다.</p>
@@ -73,14 +86,15 @@
 
     <input type="text" placeholder="캐릭터명" id="characterName">
     <input type="text" placeholder="나이" id="age">
+
     <select id="origin" class="modal-input">
-  <option value="">출신지를 선택하세요</option>
-  <option value="수도 탈리스">수도 탈리스</option>
-  <option value="동부 모네타">동부 모네타</option>
-  <option value="서부 아르스">서부 아르스</option>
-  <option value="남부 세렌티아">남부 세렌티아</option>
-  <option value="북부 니발리스">북부 니발리스</option>
-</select>
+      <option value="">출신지를 선택하세요</option>
+      <option value="수도 탈리스">수도 탈리스</option>
+      <option value="동부 모네타">동부 모네타</option>
+      <option value="서부 아르스">서부 아르스</option>
+      <option value="남부 세렌티아">남부 세렌티아</option>
+      <option value="북부 니발리스">북부 니발리스</option>
+    </select>
 
     <button class="modal-btn" onclick="registerPlayer()">가입하기</button>
     <button class="modal-btn" onclick="backToLoginModal()">돌아가기</button>
@@ -110,7 +124,7 @@
   </div>
 </div>
 
-<script src="script.js?v=2"></script>
+<script src="script.js?v=5"></script>
 
 </body>
 </html>
