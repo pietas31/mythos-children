@@ -51,5 +51,29 @@ function registerPlayer() {
     + '&age=' + encodeURIComponent(age)
     + '&origin=' + encodeURIComponent(origin);
 
-  window.open(url, '_blank');
+  fetch(url)
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(
+        '가입이 완료되었습니다!\n\n' +
+        '개인코드: ' + data.personalCode + '\n\n' +
+        '이 코드는 로그인에 필요하니 반드시 저장해주세요.'
+      );
+
+      document.getElementById('login-code').value = data.personalCode;
+      backToLoginModal();
+    } else {
+      alert('가입 실패: ' + data.message);
+    }
+  })
+  .catch(error => {
+    alert(
+      '회원가입 처리 중 오류가 발생했습니다.\n\n' +
+      '잠시 후 다시 시도해주세요.\n' +
+      '문제가 계속되면 관리자에게 문의해주세요.'
+    );
+
+    console.error(error);
+  });
 }
