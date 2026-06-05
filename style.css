@@ -532,3 +532,23 @@ button{
 .portrait-btn{
   font-size:12px;
 }
+
+/* v17 캐릭터 카드 크기 축소 */
+.character-card-wrap{
+  max-width:360px;
+  min-height:520px;
+}
+
+.character-card{
+  min-height:520px;
+}
+
+.character-card-face{
+  min-height:520px;
+  padding:24px;
+}
+
+.portrait-frame{
+  width:200px;
+  height:200px;
+}
