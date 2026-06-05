@@ -616,3 +616,18 @@ button{
 .stat-row strong{
   justify-content:flex-start;
 }
+
+/* v17 능력치 카드 최종 간격 조정 */
+.stat-list{
+  max-width:260px;
+  gap:10px;
+}
+
+.stat-row{
+  grid-template-columns:70px 1fr;
+  gap:14px;
+}
+
+.stat-row strong{
+  justify-content:flex-start;
+}
