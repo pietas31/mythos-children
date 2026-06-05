@@ -475,3 +475,40 @@ button{
   color:#223e72;
   margin-bottom:20px;
 }
+
+/* v17 프로필 카드 글자 크기 조정 */
+.character-card h2{
+  font-size:26px;
+  margin-bottom:6px;
+}
+
+.sub-info{
+  font-size:15px;
+  margin-bottom:18px;
+}
+
+.info-list{
+  gap:8px;
+  font-size:16px;
+}
+
+.portrait-btn{
+  font-size:13px;
+  padding:9px 17px;
+  margin-bottom:18px;
+}
+
+/* v17 능력치 카드 글자 크기 조정 */
+.stat-title{
+  font-size:22px;
+  margin-bottom:22px;
+}
+
+.stat-row{
+  font-size:15px;
+}
+
+.stat-row strong{
+  font-size:16px;
+  letter-spacing:1px;
+}
