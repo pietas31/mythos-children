@@ -247,7 +247,13 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 
   if (input) {
-    input.addEventListener('change', function () {
+    input.addEventListener('click', function (event) {
+      event.stopPropagation();
+    });
+
+    input.addEventListener('change', function (event) {
+      event.stopPropagation();
+
       const file = input.files[0];
       if (!file) return;
 

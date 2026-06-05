@@ -361,8 +361,8 @@ button{
 
 .portrait-frame{
   position:relative;
-  width:260px;
-  height:260px;
+  width:230px;
+  height:230px;
   margin:0 auto 14px;
   border-radius:24px;
   background:#d9d9d9;
@@ -402,4 +402,37 @@ button{
   padding:10px 16px;
   border-radius:999px;
   white-space:nowrap;
+}
+
+/* v17 능력치 입력창 정리 */
+.stat-input-title{
+  text-align:center;
+  padding-left:0;
+  margin:12px 0 12px;
+}
+
+.stat-input-grid{
+  position:relative;
+  gap:8px 20px;
+}
+
+.stat-input-grid::before{
+  content:"";
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  left:50%;
+  width:1px;
+  background:#e8edf5;
+  transform:translateX(-50%);
+}
+
+.stat-input-grid label{
+  grid-template-columns:32px 1fr;
+  font-size:11px;
+}
+
+.stat-input-grid select{
+  height:38px;
+  padding:0 9px;
 }
