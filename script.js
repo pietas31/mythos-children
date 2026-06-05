@@ -121,6 +121,8 @@ function loginPlayer() {
 
         document.getElementById('login-modal').style.display = 'none';
       } else {
+        localStorage.removeItem('mythosPersonalCode');
+        document.getElementById('login-modal').style.display = 'flex';
         alert('로그인 실패: ' + data.message);
       }
     })
@@ -168,8 +170,6 @@ window.addEventListener('DOMContentLoaded', function () {
       const file = input.files[0];
       if (!file) return;
 
-      alert('인장 업로드를 시작합니다.');
-
       resizeImage(file, function (base64Data) {
         uploadPortraitBase64(base64Data);
       });
@@ -179,8 +179,11 @@ window.addEventListener('DOMContentLoaded', function () {
   const savedCode = localStorage.getItem('mythosPersonalCode');
 
   if (savedCode) {
+    document.getElementById('login-modal').style.display = 'none';
     document.getElementById('login-code').value = savedCode;
     loginPlayer();
+  } else {
+    document.getElementById('login-modal').style.display = 'flex';
   }
 });
 
@@ -247,12 +250,11 @@ function uploadPortraitBase64(base64Data) {
     .then(function (response) {
       return response.json();
     })
-    .then(function (data) {
+        .then(function (data) {
       if (data.success) {
         document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
-document.getElementById('character-portrait').style.display = 'block';
-document.getElementById('portrait-empty').style.display = 'none';
-        alert('인장이 등록되었습니다.');
+        document.getElementById('character-portrait').style.display = 'block';
+        document.getElementById('portrait-empty').style.display = 'none';
       } else {
         alert('인장 등록 실패: ' + data.message);
       }
