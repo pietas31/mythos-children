@@ -619,3 +619,64 @@ button{
 .asset-credit a:hover{
   text-decoration:underline;
 }
+
+/* =========================
+   v19 MAIL
+========================= */
+
+.mail-list{
+  min-height:230px;
+  padding:14px;
+  border-radius:18px;
+  background:#f6f8fc;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:stretch;
+  justify-content:flex-start;
+}
+
+.mail-item{
+  width:100%;
+  padding:10px 12px;
+  border:none;
+  border-radius:14px;
+  background:white;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(30,60,100,.06);
+  transition:.15s;
+}
+
+.mail-item:hover{
+  transform:translateY(-1px);
+}
+
+.mail-item.is-unread{
+  color:#173567;
+  font-weight:800;
+}
+
+.mail-item.is-read{
+  color:#8a94a6;
+  font-weight:700;
+}
+
+.mail-keep-mark{
+  width:18px;
+  flex-shrink:0;
+}
+
+.mail-icon{
+  flex-shrink:0;
+}
+
+.mail-title{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}

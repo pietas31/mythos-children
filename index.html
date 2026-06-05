@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -296,27 +296,27 @@
     </div>
 
     <div class="mail-tabs">
-      <button class="mail-tab active">전체</button>
-      <button class="mail-tab">보관</button>
-      <button class="mail-tab">서신</button>
-      <button class="mail-tab">보급</button>
+      <button class="mail-tab active" onclick="selectMailTab('all')">전체</button>
+      <button class="mail-tab" onclick="selectMailTab('kept')">보관</button>
+      <button class="mail-tab" onclick="selectMailTab('letter')">서신</button>
+      <button class="mail-tab" onclick="selectMailTab('supply')">보급</button>
     </div>
 
-    <div class="mail-list">
+    <div class="mail-list" id="mail-list">
       <div class="mail-empty">받은 우편이 없습니다.</div>
     </div>
 
     <div class="mail-page">
-      <button disabled>이전</button>
-      <span>1 / 1</span>
-      <button disabled>다음</button>
+      <button onclick="goPrevMailPage()">이전</button>
+      <span id="mail-page-text">1 / 1</span>
+      <button onclick="goNextMailPage()">다음</button>
     </div>
 
-<div class="mail-actions">
-  <button class="modal-btn secondary">작성</button>
-  <button class="modal-btn secondary">수령</button>
-  <button class="modal-btn secondary">삭제</button>
-</div>
+    <div class="mail-actions">
+      <button class="modal-btn secondary">작성</button>
+      <button class="modal-btn secondary">수령</button>
+      <button class="modal-btn secondary">삭제</button>
+    </div>
 
   </div>
 </div>
@@ -358,7 +358,7 @@
   </a>
 </footer>
 
-<script src="script.js?v=18"></script>
+<script src="script.js?v=19"></script>
 
 </body>
 </html>

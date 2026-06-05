@@ -3,9 +3,13 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v18';
+let CURRENT_VERSION = 'v19';
 
-console.log('MYTHOS READY');
+let currentMailTab = 'all';
+let currentMailPage = 1;
+let currentMailTotalPages = 1;
+
+console.log('MYTHOS READY v19');
 
 function goHome() {
   location.reload();
@@ -20,56 +24,236 @@ function logout() {
 
 function setSystemStatus(message) {
   const status = document.getElementById('system-status');
-
   if (!status) return;
-
   status.textContent = CURRENT_VERSION + ' · ' + message;
 }
 
 function setMailCount(count) {
   const mailCount = document.getElementById('mail-count');
-
   if (!mailCount) return;
 
   const safeCount = Number(count || 0);
+  mailCount.textContent = safeCount >= 100 ? '99+' : String(safeCount);
+}
 
-  if (safeCount >= 100) {
-    mailCount.textContent = '99+';
+function refreshUnreadMailCount() {
+  if (!currentPersonalCode) {
+    setMailCount(0);
     return;
   }
 
-  mailCount.textContent = String(safeCount);
+  const url =
+    API_URL
+    + '?action=getUnreadMailCount'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        setMailCount(data.count);
+      } else {
+        setMailCount(0);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      setMailCount(0);
+    });
 }
 
 function openMailModal() {
   const modal = document.getElementById('mail-modal');
-
   if (!modal) return;
 
   modal.style.display = 'flex';
+  currentMailTab = 'all';
+  currentMailPage = 1;
+  loadMailList();
 }
 
 function closeMailModal() {
   const modal = document.getElementById('mail-modal');
-
   if (!modal) return;
-
   modal.style.display = 'none';
+}
+
+function selectMailTab(tab) {
+  currentMailTab = tab;
+  currentMailPage = 1;
+  loadMailList();
+}
+
+function loadMailList() {
+  if (!currentPersonalCode) return;
+
+  const list = document.getElementById('mail-list');
+  if (list) {
+    list.innerHTML = '<div class="mail-empty">우편을 불러오는 중입니다.</div>';
+  }
+
+  const url =
+    API_URL
+    + '?action=getMailList'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&tab=' + encodeURIComponent(currentMailTab)
+    + '&page=' + encodeURIComponent(currentMailPage);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        renderMailError(data.message || '우편을 불러오지 못했습니다.');
+        return;
+      }
+
+      currentMailPage = data.page || 1;
+      currentMailTotalPages = data.totalPages || 1;
+
+      renderMailList(data.mails || []);
+      renderMailPage();
+      refreshUnreadMailCount();
+    })
+    .catch(error => {
+      console.error(error);
+      renderMailError('우편을 불러오는 중 오류가 발생했습니다.');
+    });
+}
+
+function renderMailList(mails) {
+  const list = document.getElementById('mail-list');
+  if (!list) return;
+
+  if (!mails.length) {
+    list.innerHTML = '<div class="mail-empty">받은 우편이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = mails.map(mail => {
+    const readClass = mail.isRead ? 'is-read' : 'is-unread';
+    const keepMark = mail.isKept ? '★' : '☆';
+    const typeLabel = getMailTypeLabel(mail.mailType);
+    const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
+
+    return `
+      <button class="mail-item ${readClass}" type="button" onclick="openMailDetail('${escapeForAttribute(mail.mailId)}')">
+        <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
+        ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
+        <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function renderMailError(message) {
+  const list = document.getElementById('mail-list');
+  if (!list) return;
+  list.innerHTML = '<div class="mail-empty">' + escapeHtml(message) + '</div>';
+}
+
+function renderMailPage() {
+  const pageText = document.getElementById('mail-page-text');
+  if (pageText) {
+    pageText.textContent = currentMailPage + ' / ' + currentMailTotalPages;
+  }
+}
+
+function goPrevMailPage() {
+  if (currentMailPage <= 1) return;
+  currentMailPage--;
+  loadMailList();
+}
+
+function goNextMailPage() {
+  if (currentMailPage >= currentMailTotalPages) return;
+  currentMailPage++;
+  loadMailList();
+}
+
+function openMailDetail(mailId) {
+  markMailRead(mailId);
+}
+
+function markMailRead(mailId) {
+  if (!currentPersonalCode || !mailId) return;
+
+  const url =
+    API_URL
+    + '?action=markMailRead'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(() => {
+      loadMailList();
+      refreshUnreadMailCount();
+    })
+    .catch(error => console.error(error));
+}
+
+function toggleMailKeep(mailId) {
+  if (!currentPersonalCode || !mailId) return;
+
+  const url =
+    API_URL
+    + '?action=toggleMailKeep'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || '보관 상태를 변경하지 못했습니다.');
+        return;
+      }
+
+      loadMailList();
+    })
+    .catch(error => console.error(error));
+}
+
+function deleteMail(mailId) {
+  if (!currentPersonalCode || !mailId) return;
+
+  const url =
+    API_URL
+    + '?action=deleteMail'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || '우편을 삭제하지 못했습니다.');
+        return;
+      }
+
+      loadMailList();
+      refreshUnreadMailCount();
+    })
+    .catch(error => console.error(error));
+}
+
+function getMailTypeLabel(type) {
+  if (type === 'SUPPLY') return '보급';
+  if (type === 'ANON') return '서신';
+  if (type === 'PREMIUM') return '서신';
+  if (type === 'GM') return '서신';
+  return '서신';
 }
 
 function openSettingsModal() {
   const modal = document.getElementById('settings-modal');
-
   if (!modal) return;
-
   modal.style.display = 'flex';
 }
 
 function closeSettingsModal() {
   const modal = document.getElementById('settings-modal');
-
   if (!modal) return;
-
   modal.style.display = 'none';
 }
 
@@ -85,28 +269,20 @@ function backToLoginModal() {
 
 function getStatText(value) {
   const stat = Number(value || 0);
-
   if (!stat) return '-';
 
   let filled = '';
   let empty = '';
 
-  for (let i = 0; i < stat; i++) {
-    filled += '◆';
-  }
-
-  for (let i = stat; i < 5; i++) {
-    empty += '◇';
-  }
+  for (let i = 0; i < stat; i++) filled += '◆';
+  for (let i = stat; i < 5; i++) empty += '◇';
 
   return filled + empty;
 }
 
 function flipCharacterCard() {
   const cardWrap = document.querySelector('.character-card-wrap');
-
   if (!cardWrap) return;
-
   cardWrap.classList.toggle('is-flipped');
 }
 
@@ -228,7 +404,7 @@ function loginPlayer() {
         }
 
         setSystemStatus('접속 완료');
-        setMailCount(0);
+        refreshUnreadMailCount();
 
         document.getElementById('login-modal').style.display = 'none';
       } else {
@@ -442,4 +618,20 @@ function convertDriveUrl(url) {
   }
 
   return url;
+}
+
+function escapeHtml(text) {
+  return String(text || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function escapeForAttribute(text) {
+  return String(text || '')
+    .replaceAll('\\', '\\\\')
+    .replaceAll("'", "\\'")
+    .replaceAll('"', '&quot;');
 }
