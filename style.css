@@ -361,8 +361,8 @@ button{
 
 .portrait-frame{
   position:relative;
-  width:230px;
-  height:230px;
+  width:210px;
+  height:210px;
   margin:0 auto 14px;
   border-radius:24px;
   background:#d9d9d9;
@@ -435,4 +435,43 @@ button{
 .stat-input-grid select{
   height:38px;
   padding:0 9px;
+}
+
+.stat-input-grid{
+  margin-bottom:24px !important;
+}
+
+.stat-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  width:100%;
+  max-width:220px;
+  margin:0 auto;
+}
+
+.stat-row{
+  display:grid;
+  grid-template-columns:54px 1fr;
+  align-items:center;
+  gap:8px;
+  font-size:16px;
+  font-weight:700;
+}
+
+.portrait-frame{
+  position:relative;
+  width:210px;
+  height:210px;
+  margin:0 auto 14px;
+  border-radius:24px;
+  background:#d9d9d9;
+  overflow:hidden;
+}
+
+.stat-title{
+  font-size:24px;
+  font-weight:800;
+  color:#223e72;
+  margin-bottom:20px;
 }
