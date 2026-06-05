@@ -119,9 +119,20 @@ function loginPlayer() {
 
         renderPlayer(data.player);
 
+        const mainScreen = document.querySelector('.main-screen');
+        if (mainScreen) {
+          mainScreen.style.visibility = 'visible';
+        }
+
         document.getElementById('login-modal').style.display = 'none';
       } else {
         localStorage.removeItem('mythosPersonalCode');
+
+        const mainScreen = document.querySelector('.main-screen');
+        if (mainScreen) {
+          mainScreen.style.visibility = 'visible';
+        }
+
         document.getElementById('login-modal').style.display = 'flex';
         alert('로그인 실패: ' + data.message);
       }
@@ -163,7 +174,12 @@ function updatePortrait() {
 }
 
 window.addEventListener('DOMContentLoaded', function () {
+  const mainScreen = document.querySelector('.main-screen');
   const input = document.getElementById('portrait-upload-input');
+
+  if (mainScreen) {
+    mainScreen.style.visibility = 'hidden';
+  }
 
   if (input) {
     input.addEventListener('change', function () {
@@ -183,6 +199,10 @@ window.addEventListener('DOMContentLoaded', function () {
     document.getElementById('login-code').value = savedCode;
     loginPlayer();
   } else {
+    if (mainScreen) {
+      mainScreen.style.visibility = 'visible';
+    }
+
     document.getElementById('login-modal').style.display = 'flex';
   }
 });
