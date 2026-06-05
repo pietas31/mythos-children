@@ -652,3 +652,25 @@ button{
 .stat-row strong{
   justify-content:flex-start;
 }
+
+/* v17 능력치 카드 간격 최종 후보 */
+.stat-list{
+  max-width:260px;
+  margin:0 auto;
+  gap:10px;
+}
+
+.stat-row{
+  display:grid;
+  grid-template-columns:86px 130px;
+  justify-content:center;
+  gap:14px;
+}
+
+.stat-row span{
+  text-align:right;
+}
+
+.stat-row strong{
+  justify-content:flex-start;
+}
