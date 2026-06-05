@@ -68,14 +68,15 @@ body{
 
 .character-card-wrap{
   width:100%;
-  min-height:580px;
+  max-width:360px;
+  min-height:520px;
   cursor:pointer;
 }
 
 .character-card{
   position:relative;
   width:100%;
-  min-height:580px;
+  min-height:520px;
   transform-style:preserve-3d;
   transition:transform .6s ease;
 }
@@ -92,10 +93,10 @@ body{
   position:absolute;
   inset:0;
   width:100%;
-  min-height:580px;
+  min-height:520px;
   background:white;
   border-radius:28px;
-  padding:26px;
+  padding:34px 24px;
   text-align:center;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
@@ -104,6 +105,9 @@ body{
 
 .character-card-front{
   transform:rotateY(0deg);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
 .character-card-back{
@@ -114,33 +118,34 @@ body{
 }
 
 .character-card h2{
-  font-size:30px;
+  font-size:22px;
   margin-bottom:4px;
 }
 
 .sub-info{
+  font-size:13px;
   color:#6b7689;
-  margin-bottom:14px;
+  margin-bottom:12px;
 }
 
 .info-list{
   display:flex;
   flex-direction:column;
-  gap:10px;
-  font-size:18px;
+  gap:6px;
+  font-size:14px;
 }
 
 .stat-title{
-  font-size:24px;
+  font-size:20px;
   font-weight:800;
   color:#223e72;
-  margin-bottom:24px;
+  margin-bottom:18px;
 }
 
 .stat-list{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:10px;
   width:100%;
   max-width:260px;
   margin:0 auto;
@@ -148,24 +153,25 @@ body{
 
 .stat-row{
   display:grid;
-  grid-template-columns:70px 1fr;
+  grid-template-columns:86px 130px;
+  justify-content:center;
   align-items:center;
-  gap:12px;
-  font-size:16px;
+  gap:14px;
+  font-size:15px;
   font-weight:700;
 }
 
 .stat-row span{
-  text-align:left;
+  text-align:right;
   color:#223e72;
 }
 
 .stat-row strong{
   display:flex;
-  justify-content:flex-end;
+  justify-content:flex-start;
   gap:4px;
-  font-size:18px;
-  letter-spacing:2px;
+  font-size:16px;
+  letter-spacing:1px;
 }
 
 .notice-card{
@@ -255,25 +261,37 @@ button{
 }
 
 .stat-input-title{
-  margin:12px 0 10px;
-  padding-left:4px;
+  margin:12px 0 12px;
+  padding-left:0;
   font-size:12px;
   font-weight:800;
   color:#6b7689;
-  text-align:left;
+  text-align:center;
   letter-spacing:.06em;
 }
 
 .stat-input-grid{
+  position:relative;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px 10px;
-  margin-bottom:12px;
+  gap:8px 20px;
+  margin-bottom:24px;
+}
+
+.stat-input-grid::before{
+  content:"";
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  left:50%;
+  width:1px;
+  background:#e8edf5;
+  transform:translateX(-50%);
 }
 
 .stat-input-grid label{
   display:grid;
-  grid-template-columns:34px 1fr;
+  grid-template-columns:32px 1fr;
   align-items:center;
   gap:6px;
   font-size:11px;
@@ -288,7 +306,7 @@ button{
 
 .stat-input-grid select{
   height:38px;
-  padding:0 10px;
+  padding:0 9px;
   font-size:13px;
   margin-bottom:0;
 }
@@ -345,12 +363,16 @@ button{
 }
 
 .portrait-btn{
+  align-self:center;
+  width:auto;
+  min-width:104px;
   margin-top:12px;
-  margin-bottom:20px;
-  padding:10px 18px;
+  margin-bottom:18px;
+  padding:9px 18px;
   border-radius:999px;
   background:#eef3fb;
   color:#28477f;
+  font-size:12px;
   font-weight:700;
   cursor:pointer;
 }
@@ -361,8 +383,8 @@ button{
 
 .portrait-frame{
   position:relative;
-  width:210px;
-  height:210px;
+  width:200px;
+  height:200px;
   margin:0 auto 14px;
   border-radius:24px;
   background:#d9d9d9;
@@ -402,275 +424,4 @@ button{
   padding:10px 16px;
   border-radius:999px;
   white-space:nowrap;
-}
-
-/* v17 능력치 입력창 정리 */
-.stat-input-title{
-  text-align:center;
-  padding-left:0;
-  margin:12px 0 12px;
-}
-
-.stat-input-grid{
-  position:relative;
-  gap:8px 20px;
-}
-
-.stat-input-grid::before{
-  content:"";
-  position:absolute;
-  top:2px;
-  bottom:2px;
-  left:50%;
-  width:1px;
-  background:#e8edf5;
-  transform:translateX(-50%);
-}
-
-.stat-input-grid label{
-  grid-template-columns:32px 1fr;
-  font-size:11px;
-}
-
-.stat-input-grid select{
-  height:38px;
-  padding:0 9px;
-}
-
-.stat-input-grid{
-  margin-bottom:24px !important;
-}
-
-.stat-list{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  width:100%;
-  max-width:220px;
-  margin:0 auto;
-}
-
-.stat-row{
-  display:grid;
-  grid-template-columns:54px 1fr;
-  align-items:center;
-  gap:8px;
-  font-size:16px;
-  font-weight:700;
-}
-
-.portrait-frame{
-  position:relative;
-  width:210px;
-  height:210px;
-  margin:0 auto 14px;
-  border-radius:24px;
-  background:#d9d9d9;
-  overflow:hidden;
-}
-
-.stat-title{
-  font-size:24px;
-  font-weight:800;
-  color:#223e72;
-  margin-bottom:20px;
-}
-
-/* v17 프로필 카드 글자 크기 조정 */
-.character-card h2{
-  font-size:26px;
-  margin-bottom:6px;
-}
-
-.sub-info{
-  font-size:15px;
-  margin-bottom:18px;
-}
-
-.info-list{
-  gap:8px;
-  font-size:16px;
-}
-
-.portrait-btn{
-  font-size:13px;
-  padding:9px 17px;
-  margin-bottom:18px;
-}
-
-/* v17 능력치 카드 글자 크기 조정 */
-.stat-title{
-  font-size:22px;
-  margin-bottom:22px;
-}
-
-.stat-row{
-  font-size:15px;
-}
-
-.stat-row strong{
-  font-size:16px;
-  letter-spacing:1px;
-}
-
-/* v17 프로필 카드 글씨 최종 축소 */
-.character-card h2{
-  font-size:22px;
-  margin-bottom:4px;
-}
-
-.sub-info{
-  font-size:13px;
-  margin-bottom:12px;
-}
-
-.info-list{
-  gap:6px;
-  font-size:14px;
-}
-
-.portrait-btn{
-  font-size:12px;
-}
-
-/* v17 캐릭터 카드 크기 축소 */
-.character-card-wrap{
-  max-width:360px;
-  min-height:520px;
-}
-
-.character-card{
-  min-height:520px;
-}
-
-.character-card-face{
-  min-height:520px;
-  padding:24px;
-}
-
-.portrait-frame{
-  width:200px;
-  height:200px;
-}
-
-/* v17 카드 내용 세로 중앙 정렬 */
-.character-card-front{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-
-.character-card-back{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-
-.character-card-face{
-  padding-top:34px;
-  padding-bottom:34px;
-}
-
-/* v17 인장 버튼 폭 정리 */
-.portrait-btn{
-  align-self:center;
-  width:auto;
-  min-width:104px;
-  padding:9px 18px;
-}
-
-.stat-list{
-  max-width:240px;
-}
-
-.stat-row{
-  grid-template-columns:58px 1fr;
-  gap:12px;
-}
-
-/* v17 능력치 카드 간격 압축 */
-.stat-list{
-  max-width:200px;
-}
-
-.stat-row{
-  grid-template-columns:46px 1fr;
-  gap:10px;
-}
-
-.stat-row strong{
-  justify-content:flex-start;
-}
-
-/* v17 능력치 카드 간격 중간값 */
-.stat-list{
-  max-width:230px;
-  gap:10px;
-}
-
-.stat-row{
-  grid-template-columns:56px 1fr;
-  gap:12px;
-}
-
-.stat-row strong{
-  justify-content:flex-start;
-}
-
-/* v17 능력치 카드 최종 간격 조정 */
-.stat-list{
-  max-width:260px;
-  gap:10px;
-}
-
-.stat-row{
-  grid-template-columns:70px 1fr;
-  gap:14px;
-}
-
-.stat-row strong{
-  justify-content:flex-start;
-}
-
-/* v17 능력치 카드 중앙 정렬 */
-.stat-list{
-  max-width:240px;
-  margin:0 auto;
-}
-
-.stat-row{
-  display:grid;
-  grid-template-columns:80px 120px;
-  justify-content:center;
-  gap:12px;
-}
-
-.stat-row span{
-  text-align:right;
-}
-
-.stat-row strong{
-  justify-content:flex-start;
-}
-
-/* v17 능력치 카드 간격 최종 후보 */
-.stat-list{
-  max-width:260px;
-  margin:0 auto;
-  gap:10px;
-}
-
-.stat-row{
-  display:grid;
-  grid-template-columns:86px 130px;
-  justify-content:center;
-  gap:14px;
-}
-
-.stat-row span{
-  text-align:right;
-}
-
-.stat-row strong{
-  justify-content:flex-start;
 }
