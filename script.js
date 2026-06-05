@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v16';
+let CURRENT_VERSION = 'v17';
 
 console.log('MYTHOS READY');
 
@@ -36,12 +36,46 @@ function backToLoginModal() {
   document.getElementById('login-modal').style.display = 'flex';
 }
 
+function getStatText(value) {
+  const stat = Number(value || 0);
+
+  if (!stat) return '-';
+
+  let filled = '';
+  let empty = '';
+
+  for (let i = 0; i < stat; i++) {
+    filled += '◆';
+  }
+
+  for (let i = stat; i < 5; i++) {
+    empty += '◇';
+  }
+
+  return filled + empty;
+}
+
+function flipCharacterCard() {
+  const cardWrap = document.querySelector('.character-card-wrap');
+
+  if (!cardWrap) return;
+
+  cardWrap.classList.toggle('is-flipped');
+}
+
 function registerPlayer() {
   if (isRegistering) return;
 
   const characterName = document.getElementById('characterName').value.trim();
-  const age = document.getElementById('age').value.trim();
+  const age = document.getElementById('age').value;
   const origin = document.getElementById('origin').value;
+
+  const strength = document.getElementById('strength').value;
+  const stamina = document.getElementById('stamina').value;
+  const agility = document.getElementById('agility').value;
+  const mental = document.getElementById('mental').value;
+  const intelligence = document.getElementById('intelligence').value;
+  const luck = document.getElementById('luck').value;
 
   if (!characterName) {
     alert('캐릭터명을 입력해주세요.');
@@ -49,12 +83,17 @@ function registerPlayer() {
   }
 
   if (!age) {
-    alert('나이를 입력해주세요.');
+    alert('나이를 선택해주세요.');
     return;
   }
 
   if (!origin) {
     alert('출신지를 선택해주세요.');
+    return;
+  }
+
+  if (!strength || !stamina || !agility || !mental || !intelligence || !luck) {
+    alert('능력치를 모두 선택해주세요.');
     return;
   }
 
@@ -65,7 +104,13 @@ function registerPlayer() {
     + '?action=registerPlayer'
     + '&characterName=' + encodeURIComponent(characterName)
     + '&age=' + encodeURIComponent(age)
-    + '&origin=' + encodeURIComponent(origin);
+    + '&origin=' + encodeURIComponent(origin)
+    + '&strength=' + encodeURIComponent(strength)
+    + '&stamina=' + encodeURIComponent(stamina)
+    + '&agility=' + encodeURIComponent(agility)
+    + '&mental=' + encodeURIComponent(mental)
+    + '&intelligence=' + encodeURIComponent(intelligence)
+    + '&luck=' + encodeURIComponent(luck);
 
   fetch(url)
     .then(response => response.json())
@@ -166,6 +211,13 @@ function renderPlayer(player) {
 
   document.getElementById('character-money').textContent =
     '보유 재화 : 0골드';
+
+  document.getElementById('stat-strength').textContent = getStatText(player.strength);
+  document.getElementById('stat-stamina').textContent = getStatText(player.stamina);
+  document.getElementById('stat-agility').textContent = getStatText(player.agility);
+  document.getElementById('stat-mental').textContent = getStatText(player.mental);
+  document.getElementById('stat-intelligence').textContent = getStatText(player.intelligence);
+  document.getElementById('stat-luck').textContent = getStatText(player.luck);
 
   if (player.portraitUrl) {
     document.getElementById('character-portrait').src = convertDriveUrl(player.portraitUrl);
@@ -296,7 +348,7 @@ function uploadPortraitBase64(base64Data) {
     .then(function (response) {
       return response.json();
     })
-        .then(function (data) {
+    .then(function (data) {
       if (data.success) {
         document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
         document.getElementById('character-portrait').style.display = 'block';
