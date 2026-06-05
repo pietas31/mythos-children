@@ -12,6 +12,7 @@ function goHome() {
 
 function logout() {
   localStorage.removeItem('mythosPersonalCode');
+  localStorage.removeItem('mythosPlayerData');
   currentPersonalCode = '';
   location.reload();
 }
@@ -116,6 +117,7 @@ function loginPlayer() {
       if (data.success) {
         currentPersonalCode = personalCode;
         localStorage.setItem('mythosPersonalCode', personalCode);
+        localStorage.setItem('mythosPlayerData', JSON.stringify(data.player));
 
         renderPlayer(data.player);
 
@@ -197,6 +199,18 @@ window.addEventListener('DOMContentLoaded', function () {
   if (savedCode) {
     document.getElementById('login-modal').style.display = 'none';
     document.getElementById('login-code').value = savedCode;
+    currentPersonalCode = savedCode;
+
+    const savedPlayerData = localStorage.getItem('mythosPlayerData');
+
+    if (savedPlayerData) {
+      renderPlayer(JSON.parse(savedPlayerData));
+
+      if (mainScreen) {
+        mainScreen.style.visibility = 'visible';
+      }
+    }
+
     loginPlayer();
   } else {
     if (mainScreen) {
