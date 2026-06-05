@@ -631,3 +631,24 @@ button{
 .stat-row strong{
   justify-content:flex-start;
 }
+
+/* v17 능력치 카드 중앙 정렬 */
+.stat-list{
+  max-width:240px;
+  margin:0 auto;
+}
+
+.stat-row{
+  display:grid;
+  grid-template-columns:80px 120px;
+  justify-content:center;
+  gap:12px;
+}
+
+.stat-row span{
+  text-align:right;
+}
+
+.stat-row strong{
+  justify-content:flex-start;
+}
