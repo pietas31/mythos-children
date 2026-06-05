@@ -512,3 +512,23 @@ button{
   font-size:16px;
   letter-spacing:1px;
 }
+
+/* v17 프로필 카드 글씨 최종 축소 */
+.character-card h2{
+  font-size:22px;
+  margin-bottom:4px;
+}
+
+.sub-info{
+  font-size:13px;
+  margin-bottom:12px;
+}
+
+.info-list{
+  gap:6px;
+  font-size:14px;
+}
+
+.portrait-btn{
+  font-size:12px;
+}
