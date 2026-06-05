@@ -3,6 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
+let CURRENT_VERSION = 'v16';
 
 console.log('MYTHOS READY');
 
@@ -15,6 +16,14 @@ function logout() {
   localStorage.removeItem('mythosPlayerData');
   currentPersonalCode = '';
   location.reload();
+}
+
+function setSystemStatus(message) {
+  const status = document.getElementById('system-status');
+
+  if (!status) return;
+
+  status.textContent = CURRENT_VERSION + ' · ' + message;
 }
 
 function openRegisterModal() {
@@ -126,6 +135,7 @@ function loginPlayer() {
           mainScreen.style.visibility = 'visible';
         }
 
+        setSystemStatus('접속 완료');
         document.getElementById('login-modal').style.display = 'none';
       } else {
         localStorage.removeItem('mythosPersonalCode');
@@ -136,6 +146,7 @@ function loginPlayer() {
         }
 
         document.getElementById('login-modal').style.display = 'flex';
+        setSystemStatus('재로그인 필요');
         alert('로그인 실패: ' + data.message);
       }
     })
@@ -198,6 +209,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   if (savedCode) {
     document.getElementById('login-modal').style.display = 'none';
+    setSystemStatus('동기화 중...');
     document.getElementById('login-code').value = savedCode;
     currentPersonalCode = savedCode;
 

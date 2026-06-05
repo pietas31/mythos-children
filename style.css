@@ -385,3 +385,19 @@ button{
   font-weight: 700;
   letter-spacing: -1px;
 }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.system-status {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f6fb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
