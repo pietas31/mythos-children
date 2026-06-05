@@ -552,3 +552,21 @@ button{
   width:200px;
   height:200px;
 }
+
+/* v17 카드 내용 세로 중앙 정렬 */
+.character-card-front{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.character-card-back{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.character-card-face{
+  padding-top:34px;
+  padding-bottom:34px;
+}
