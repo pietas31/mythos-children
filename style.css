@@ -570,3 +570,34 @@ button{
   padding-top:34px;
   padding-bottom:34px;
 }
+
+/* v17 인장 버튼 폭 정리 */
+.portrait-btn{
+  align-self:center;
+  width:auto;
+  min-width:104px;
+  padding:9px 18px;
+}
+
+.stat-list{
+  max-width:240px;
+}
+
+.stat-row{
+  grid-template-columns:58px 1fr;
+  gap:12px;
+}
+
+/* v17 능력치 카드 간격 압축 */
+.stat-list{
+  max-width:200px;
+}
+
+.stat-row{
+  grid-template-columns:46px 1fr;
+  gap:10px;
+}
+
+.stat-row strong{
+  justify-content:flex-start;
+}
