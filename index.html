@@ -318,17 +318,22 @@
   </div>
 
   <div class="mail-detail-actions">
-    <button class="modal-btn secondary" id="mail-keep-btn" onclick="toggleCurrentMailKeep()">보관</button>
-    <button class="modal-btn secondary" id="mail-delete-btn" onclick="deleteCurrentMail()">삭제</button>
-    <button class="modal-btn" onclick="closeMailDetail()">목록으로</button>
-  </div>
+  <button class="modal-btn secondary" id="mail-keep-btn" onclick="toggleCurrentMailKeep()">보관</button>
+  <button class="modal-btn secondary" id="mail-delete-btn" onclick="deleteCurrentMail()">삭제</button>
+  <button class="modal-btn secondary" id="mail-receive-btn" onclick="receiveCurrentMail()" style="display:none;">수령</button>
+  <button class="modal-btn" onclick="closeMailDetail()">목록으로</button>
 </div>
 
     <div class="mail-page">
-      <button onclick="goPrevMailPage()">이전</button>
-      <span id="mail-page-text">1 / 1</span>
-      <button onclick="goNextMailPage()">다음</button>
-    </div>
+  <button onclick="goPrevMailPage()">이전</button>
+  <span id="mail-page-text">1 / 1</span>
+  <button onclick="goNextMailPage()">다음</button>
+</div>
+
+<div class="mail-detail-page">
+  <button onclick="goPrevMailInDetail()">이전 편지</button>
+  <button onclick="goNextMailInDetail()">다음 편지</button>
+</div>
 
     <div class="mail-actions">
       <button class="modal-btn secondary">작성</button>
