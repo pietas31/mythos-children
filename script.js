@@ -8,6 +8,9 @@ let CURRENT_VERSION = 'v19';
 let currentMailTab = 'all';
 let currentMailPage = 1;
 let currentMailTotalPages = 1;
+let currentMailDetailId = '';
+let currentMailCache = [];
+let currentMailUnreadCount = 0;
 
 console.log('MYTHOS READY v19');
 
@@ -30,10 +33,18 @@ function setSystemStatus(message) {
 
 function setMailCount(count) {
   const mailCount = document.getElementById('mail-count');
-  if (!mailCount) return;
 
   const safeCount = Number(count || 0);
-  mailCount.textContent = safeCount >= 100 ? '99+' : String(safeCount);
+  currentMailUnreadCount = safeCount;
+
+  if (!mailCount) return;
+
+  if (safeCount >= 100) {
+    mailCount.textContent = '99+';
+    return;
+  }
+
+  mailCount.textContent = String(safeCount);
 }
 
 function refreshUnreadMailCount() {
@@ -109,10 +120,14 @@ function loadMailList() {
 
       currentMailPage = data.page || 1;
       currentMailTotalPages = data.totalPages || 1;
+      currentMailCache = data.mails || [];
 
-      renderMailList(data.mails || []);
+      renderMailList(currentMailCache);
       renderMailPage();
-      refreshUnreadMailCount();
+
+      if (typeof data.unreadCount !== 'undefined') {
+        setMailCount(data.unreadCount);
+      }
     })
     .catch(error => {
       console.error(error);
@@ -171,7 +186,32 @@ function goNextMailPage() {
 }
 
 function openMailDetail(mailId) {
-  markMailRead(mailId);
+  if (!currentPersonalCode || !mailId) return;
+
+  currentMailDetailId = mailId;
+
+  const url =
+    API_URL
+    + '?action=getMailDetail'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || '우편을 불러오지 못했습니다.');
+        return;
+      }
+
+      renderMailDetail(data.mail);
+      refreshUnreadMailCount();
+      loadMailList();
+    })
+    .catch(error => {
+      console.error(error);
+      alert('우편 상세 정보를 불러오는 중 오류가 발생했습니다.');
+    });
 }
 
 function markMailRead(mailId) {
@@ -190,6 +230,102 @@ function markMailRead(mailId) {
       refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
+}
+
+function markMailReadSilently(mailId) {
+  if (!currentPersonalCode || !mailId) return;
+
+  const url =
+    API_URL
+    + '?action=markMailRead'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        console.warn(data.message || '읽음 처리 실패');
+      }
+    })
+    .catch(error => console.error(error));
+}
+
+function renderMailDetail(mail) {
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+
+  if (list) list.style.display = 'none';
+  if (detail) detail.style.display = 'block';
+
+  document.getElementById('mail-detail-title').textContent = mail.title || '제목 없음';
+  document.getElementById('mail-detail-content').textContent = mail.content || '';
+
+  document.getElementById('mail-detail-sender').textContent =
+    'From. ' + (mail.senderName || '-');
+
+  document.getElementById('mail-detail-date').textContent =
+    formatMailDateForView(mail.sentAt);
+
+  const reward = document.getElementById('mail-detail-reward');
+
+  if (reward) {
+    if (mail.mailType === 'SUPPLY') {
+      reward.style.display = 'block';
+      reward.innerHTML =
+        '<strong>보급품 정보</strong><br>' +
+        '골드 : ' + Number(mail.goldAmount || 0) + 'G' +
+        (mail.expiresAt ? '<br>수령 마감 : ' + formatMailDateForView(mail.expiresAt) : '');
+    } else {
+      reward.style.display = 'none';
+      reward.innerHTML = '';
+    }
+  }
+
+  const keepBtn = document.getElementById('mail-keep-btn');
+
+  if (keepBtn) {
+    if (mail.mailType === 'SUPPLY') {
+      keepBtn.style.display = 'none';
+    } else {
+      keepBtn.style.display = 'block';
+      keepBtn.textContent = mail.isKept ? '보관 해제' : '보관';
+    }
+  }
+}
+
+function closeMailDetail() {
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+
+  currentMailDetailId = '';
+
+  if (detail) detail.style.display = 'none';
+  if (list) list.style.display = 'flex';
+
+  renderMailList(currentMailCache);
+}
+
+function toggleCurrentMailKeep() {
+  if (!currentMailDetailId) return;
+
+  toggleMailKeep(currentMailDetailId);
+  closeMailDetail();
+}
+
+function deleteCurrentMail() {
+  if (!currentMailDetailId) return;
+
+  deleteMail(currentMailDetailId);
+  closeMailDetail();
+}
+
+function formatMailDateForView(value) {
+  if (!value) return '';
+
+  return String(value)
+    .replaceAll('-', '.')
+    .slice(0, 16);
 }
 
 function toggleMailKeep(mailId) {
