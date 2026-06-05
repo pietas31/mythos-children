@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v17';
+let CURRENT_VERSION = 'v18';
 
 console.log('MYTHOS READY');
 
@@ -24,6 +24,53 @@ function setSystemStatus(message) {
   if (!status) return;
 
   status.textContent = CURRENT_VERSION + ' · ' + message;
+}
+
+function setMailCount(count) {
+  const mailCount = document.getElementById('mail-count');
+
+  if (!mailCount) return;
+
+  const safeCount = Number(count || 0);
+
+  if (safeCount >= 100) {
+    mailCount.textContent = '99+';
+    return;
+  }
+
+  mailCount.textContent = String(safeCount);
+}
+
+function openMailModal() {
+  const modal = document.getElementById('mail-modal');
+
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+}
+
+function closeMailModal() {
+  const modal = document.getElementById('mail-modal');
+
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function openSettingsModal() {
+  const modal = document.getElementById('settings-modal');
+
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById('settings-modal');
+
+  if (!modal) return;
+
+  modal.style.display = 'none';
 }
 
 function openRegisterModal() {
@@ -181,6 +228,8 @@ function loginPlayer() {
         }
 
         setSystemStatus('접속 완료');
+        setMailCount(0);
+
         document.getElementById('login-modal').style.display = 'none';
       } else {
         localStorage.removeItem('mythosPersonalCode');
@@ -192,6 +241,8 @@ function loginPlayer() {
 
         document.getElementById('login-modal').style.display = 'flex';
         setSystemStatus('재로그인 필요');
+        setMailCount(0);
+
         alert('로그인 실패: ' + data.message);
       }
     })
@@ -241,6 +292,8 @@ function updatePortrait() {
 window.addEventListener('DOMContentLoaded', function () {
   const mainScreen = document.querySelector('.main-screen');
   const input = document.getElementById('portrait-upload-input');
+
+  setMailCount(0);
 
   if (mainScreen) {
     mainScreen.style.visibility = 'hidden';
@@ -359,6 +412,14 @@ function uploadPortraitBase64(base64Data) {
         document.getElementById('character-portrait').src = convertDriveUrl(data.portraitUrl);
         document.getElementById('character-portrait').style.display = 'block';
         document.getElementById('portrait-empty').style.display = 'none';
+
+        const savedPlayerData = localStorage.getItem('mythosPlayerData');
+
+        if (savedPlayerData) {
+          const player = JSON.parse(savedPlayerData);
+          player.portraitUrl = data.portraitUrl;
+          localStorage.setItem('mythosPlayerData', JSON.stringify(player));
+        }
       } else {
         alert('인장 등록 실패: ' + data.message);
       }
