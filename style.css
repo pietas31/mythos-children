@@ -812,3 +812,15 @@ button{
   grid-template-columns:1fr 1fr 1fr;
   gap:10px;
 }
+
+/* =========================
+   v19-2 MODE FIX
+========================= */
+
+.mail-page{
+  display:flex !important;
+}
+
+.mail-actions{
+  display:grid !important;
+}

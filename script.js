@@ -96,12 +96,6 @@ function selectMailTab(tab) {
   currentMailPage = 1;
   currentMailDetailId = '';
 
-  const list = document.getElementById('mail-list');
-  const detail = document.getElementById('mail-detail');
-
-  if (detail) detail.style.display = 'none';
-  if (list) list.style.display = 'flex';
-
   updateMailTabActive(tab);
   loadMailList();
 }
@@ -178,9 +172,7 @@ function loadMailList() {
       const page = document.querySelector('.mail-page');
       if (page) page.style.display = 'flex';
 
-      renderMailList(currentMailCache);
-      renderMailPage();
-      setMailBottomButtons('list');
+      showMailListMode();
 
       if (typeof data.unreadCount !== 'undefined') {
         setMailCount(data.unreadCount);
@@ -331,12 +323,6 @@ function markMailReadSilently(mailId) {
 }
 
 function renderMailDetail(mail) {
-  const list = document.getElementById('mail-list');
-  const detail = document.getElementById('mail-detail');
-
-  if (list) list.style.display = 'none';
-  if (detail) detail.style.display = 'block';
-
   document.getElementById('mail-detail-title').textContent = mail.title || '제목 없음';
   document.getElementById('mail-detail-content').textContent = mail.content || '';
 
@@ -368,24 +354,11 @@ function renderMailDetail(mail) {
     }
   }
 
-  setMailBottomButtons('detail', mail);
-  renderMailPage();
+  showMailDetailMode(mail);
 }
 
 function closeMailDetail() {
-  const list = document.getElementById('mail-list');
-  const detail = document.getElementById('mail-detail');
-  const page = document.querySelector('.mail-page');
-
-  currentMailDetailId = '';
-
-  if (detail) detail.style.display = 'none';
-  if (list) list.style.display = 'flex';
-  if (page) page.style.display = 'flex';
-
-  renderMailList(currentMailCache);
-  renderMailPage();
-  setMailBottomButtons('list');
+  showMailListMode();
 }
 
 function toggleCurrentMailKeep() {
@@ -467,6 +440,39 @@ function setMailBottomButtons(mode, mail) {
   };
 }
 
+function showMailListMode() {
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+  const page = document.querySelector('.mail-page');
+  const actions = document.getElementById('mail-bottom-actions');
+
+  currentMailDetailId = '';
+
+  if (detail) detail.style.display = 'none';
+  if (list) list.style.display = 'flex';
+  if (page) page.style.display = 'flex';
+  if (actions) actions.style.display = 'grid';
+
+  renderMailList(currentMailCache);
+  renderMailPage();
+  setMailBottomButtons('list');
+}
+
+function showMailDetailMode(mail) {
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+  const page = document.querySelector('.mail-page');
+  const actions = document.getElementById('mail-bottom-actions');
+
+  if (list) list.style.display = 'none';
+  if (detail) detail.style.display = 'block';
+  if (page) page.style.display = 'flex';
+  if (actions) actions.style.display = 'grid';
+
+  setMailBottomButtons('detail', mail);
+  renderMailPage();
+}
+
 function goPrevMailInDetail() {
   if (!currentMailDetailId || !currentMailCache.length) return;
 
@@ -486,29 +492,19 @@ function goNextMailInDetail() {
 }
 
 function receiveCurrentMail() {
-  alert('보급 수령 기능은 v19-3에서 연결할 예정입니다.');
-}
+  if (currentMailDetailId) {
+    alert('보급 수령 기능은 v19-3에서 연결할 예정입니다.');
 
-function toggleMailKeep(mailId) {
-  if (!currentPersonalCode || !mailId) return;
+    const mail = currentMailCache.find(item => String(item.mailId) === String(currentMailDetailId));
+    if (mail) {
+      showMailDetailMode(mail);
+    }
 
-  const url =
-    API_URL
-    + '?action=toggleMailKeep'
-    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&mailId=' + encodeURIComponent(mailId);
+    return;
+  }
 
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        alert(data.message || '보관 상태를 변경하지 못했습니다.');
-        return;
-      }
-
-      loadMailList();
-    })
-    .catch(error => console.error(error));
+  alert('수령 모드는 v19-3에서 연결할 예정입니다.');
+  showMailListMode();
 }
 
 function deleteMail(mailId) {
