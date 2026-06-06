@@ -794,3 +794,21 @@ button{
 .mail-page button:hover{
   background:#dfe8f7;
 }
+
+/* =========================
+   v19-2 MAIL PAGE RESTORE
+========================= */
+
+.mail-page{
+  display:flex !important;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin:16px 0;
+}
+
+.mail-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+}

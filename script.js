@@ -204,6 +204,9 @@ function renderMailList(mails) {
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
 
+  renderMailPage();
+  setMailBottomButtons('list');
+
     return `
       <button class="mail-item ${readClass}" type="button" onclick="openMailDetail('${escapeForAttribute(mail.mailId)}')">
         <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
@@ -414,6 +417,10 @@ function setMailBottomButtons(mode, mail) {
 
   if (!leftBtn || !centerBtn || !rightBtn) return;
 
+  leftBtn.style.display = 'block';
+  centerBtn.style.display = 'block';
+  rightBtn.style.display = 'block';
+
   if (mode === 'detail') {
     leftBtn.textContent = mail && mail.isKept ? '보관 해제' : '보관';
     leftBtn.onclick = function () {
@@ -434,10 +441,6 @@ function setMailBottomButtons(mode, mail) {
       leftBtn.style.display = 'none';
       rightBtn.style.display = 'none';
       centerBtn.style.display = 'block';
-    } else {
-      leftBtn.style.display = 'block';
-      centerBtn.style.display = 'none';
-      rightBtn.style.display = 'block';
     }
 
     return;
@@ -457,10 +460,6 @@ function setMailBottomButtons(mode, mail) {
   rightBtn.onclick = function () {
     alert('삭제 모드는 추후 연결할 예정입니다.');
   };
-
-  leftBtn.style.display = 'block';
-  centerBtn.style.display = 'block';
-  rightBtn.style.display = 'block';
 }
 
 function goPrevMailInDetail() {
