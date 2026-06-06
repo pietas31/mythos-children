@@ -741,3 +741,56 @@ button{
 .mail-detail-actions .modal-btn{
   margin-bottom:0;
 }
+
+/* =========================
+   v19-2 DETAIL FIX
+========================= */
+
+.mail-detail-page{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:12px 0 0;
+}
+
+.mail-detail-page button{
+  padding:8px 12px;
+  border-radius:999px;
+  background:#eef3fb;
+  color:#6b7689;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.mail-reward-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+}
+
+.mail-reward-icon{
+  flex-shrink:0;
+}
+
+.mail-detail-actions{
+  grid-template-columns:repeat(3,1fr);
+}
+
+/* =========================
+   v19-2 BUTTON FIX
+========================= */
+
+.mail-tab.active{
+  background:#223e72;
+  color:white;
+}
+
+.mail-page button{
+  cursor:pointer;
+}
+
+.mail-page button:hover{
+  background:#dfe8f7;
+}

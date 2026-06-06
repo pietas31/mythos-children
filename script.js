@@ -79,8 +79,10 @@ function openMailModal() {
 
   modal.style.display = 'flex';
   currentMailTab = 'all';
-  currentMailPage = 1;
-  loadMailList();
+currentMailPage = 1;
+currentMailDetailId = '';
+updateMailTabActive('all');
+loadMailList();
 }
 
 function closeMailModal() {
@@ -92,7 +94,58 @@ function closeMailModal() {
 function selectMailTab(tab) {
   currentMailTab = tab;
   currentMailPage = 1;
+  currentMailDetailId = '';
+
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+
+  if (detail) detail.style.display = 'none';
+  if (list) list.style.display = 'flex';
+
+  updateMailTabActive(tab);
   loadMailList();
+}
+
+function updateMailTabActive(tab) {
+  const tabs = document.querySelectorAll('.mail-tab');
+
+  tabs.forEach(button => {
+    button.classList.remove('active');
+  });
+
+  const tabMap = {
+    all: 0,
+    kept: 1,
+    letter: 2,
+    supply: 3
+  };
+
+  const index = tabMap[tab];
+
+  if (typeof index !== 'undefined' && tabs[index]) {
+    tabs[index].classList.add('active');
+  }
+}
+
+function updateMailTabActive(tab) {
+  const tabs = document.querySelectorAll('.mail-tab');
+
+  tabs.forEach(button => {
+    button.classList.remove('active');
+  });
+
+  const tabMap = {
+    all: 0,
+    kept: 1,
+    letter: 2,
+    supply: 3
+  };
+
+  const index = tabMap[tab];
+
+  if (typeof index !== 'undefined' && tabs[index]) {
+    tabs[index].classList.add('active');
+  }
 }
 
 function loadMailList() {
@@ -168,9 +221,16 @@ function renderMailError(message) {
 
 function renderMailPage() {
   const pageText = document.getElementById('mail-page-text');
-  if (pageText) {
-    pageText.textContent = currentMailPage + ' / ' + currentMailTotalPages;
+
+  if (!pageText) return;
+
+  if (currentMailDetailId) {
+    const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
+    pageText.textContent = (index + 1) + ' / ' + currentMailCache.length;
+    return;
   }
+
+  pageText.textContent = currentMailPage + ' / ' + currentMailTotalPages;
 }
 
 function goPrevMailPage() {
@@ -185,33 +245,45 @@ function goNextMailPage() {
   loadMailList();
 }
 
+function goPrevMail() {
+  if (currentMailDetailId) {
+    goPrevMailInDetail();
+    return;
+  }
+
+  goPrevMailPage();
+}
+
+function goNextMail() {
+  if (currentMailDetailId) {
+    goNextMailInDetail();
+    return;
+  }
+
+  goNextMailPage();
+}
+
 function openMailDetail(mailId) {
   if (!currentPersonalCode || !mailId) return;
 
+  const cachedMail = currentMailCache.find(mail => String(mail.mailId) === String(mailId));
+
+  if (!cachedMail) {
+    alert('우편 정보를 찾을 수 없습니다. 우편함을 다시 열어주세요.');
+    return;
+  }
+
   currentMailDetailId = mailId;
 
-  const url =
-    API_URL
-    + '?action=getMailDetail'
-    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&mailId=' + encodeURIComponent(mailId);
+  const wasUnread = !cachedMail.isRead;
+  cachedMail.isRead = true;
 
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        alert(data.message || '우편을 불러오지 못했습니다.');
-        return;
-      }
+  renderMailDetail(cachedMail);
 
-      renderMailDetail(data.mail);
-      refreshUnreadMailCount();
-      loadMailList();
-    })
-    .catch(error => {
-      console.error(error);
-      alert('우편 상세 정보를 불러오는 중 오류가 발생했습니다.');
-    });
+  if (wasUnread) {
+    setMailCount(Math.max(currentMailUnreadCount - 1, 0));
+    markMailReadSilently(mailId);
+  }
 }
 
 function markMailRead(mailId) {
@@ -271,11 +343,18 @@ function renderMailDetail(mail) {
 
   if (reward) {
     if (mail.mailType === 'SUPPLY') {
+      const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
+
       reward.style.display = 'block';
       reward.innerHTML =
-        '<strong>보급품 정보</strong><br>' +
-        '골드 : ' + Number(mail.goldAmount || 0) + 'G' +
-        (mail.expiresAt ? '<br>수령 마감 : ' + formatMailDateForView(mail.expiresAt) : '');
+        '<div class="mail-reward-row">' +
+          '<div>' +
+            '<strong>보급품 정보</strong><br>' +
+            '골드 : ' + Number(mail.goldAmount || 0) + 'G' +
+            (mail.expiresAt ? '<br>수령 마감 : ' + formatMailDateForView(mail.expiresAt) : '') +
+          '</div>' +
+          (iconPath ? '<img class="mail-reward-icon" src="' + iconPath + '" alt="">' : '') +
+        '</div>';
     } else {
       reward.style.display = 'none';
       reward.innerHTML = '';
@@ -283,14 +362,21 @@ function renderMailDetail(mail) {
   }
 
   const keepBtn = document.getElementById('mail-keep-btn');
+  const deleteBtn = document.getElementById('mail-delete-btn');
+  const receiveBtn = document.getElementById('mail-receive-btn');
 
-  if (keepBtn) {
-    if (mail.mailType === 'SUPPLY') {
-      keepBtn.style.display = 'none';
-    } else {
+  if (mail.mailType === 'SUPPLY') {
+    if (keepBtn) keepBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (receiveBtn) receiveBtn.style.display = 'block';
+  } else {
+    if (keepBtn) {
       keepBtn.style.display = 'block';
       keepBtn.textContent = mail.isKept ? '보관 해제' : '보관';
     }
+
+    if (deleteBtn) deleteBtn.style.display = 'block';
+    if (receiveBtn) receiveBtn.style.display = 'none';
   }
 }
 
@@ -304,13 +390,19 @@ function closeMailDetail() {
   if (list) list.style.display = 'flex';
 
   renderMailList(currentMailCache);
+  renderMailPage();
 }
 
 function toggleCurrentMailKeep() {
   if (!currentMailDetailId) return;
 
+  const mail = currentMailCache.find(item => String(item.mailId) === String(currentMailDetailId));
+  if (!mail) return;
+
+  mail.isKept = !mail.isKept;
+  renderMailDetail(mail);
+
   toggleMailKeep(currentMailDetailId);
-  closeMailDetail();
 }
 
 function deleteCurrentMail() {
@@ -326,6 +418,28 @@ function formatMailDateForView(value) {
   return String(value)
     .replaceAll('-', '.')
     .slice(0, 16);
+}
+
+function goPrevMailInDetail() {
+  if (!currentMailDetailId || !currentMailCache.length) return;
+
+  const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
+  if (index <= 0) return;
+
+  openMailDetail(currentMailCache[index - 1].mailId);
+}
+
+function goNextMailInDetail() {
+  if (!currentMailDetailId || !currentMailCache.length) return;
+
+  const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
+  if (index < 0 || index >= currentMailCache.length - 1) return;
+
+  openMailDetail(currentMailCache[index + 1].mailId);
+}
+
+function receiveCurrentMail() {
+  alert('보급 수령 기능은 v19-3에서 연결할 예정입니다.');
 }
 
 function toggleMailKeep(mailId) {
