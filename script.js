@@ -175,6 +175,9 @@ function loadMailList() {
       currentMailTotalPages = data.totalPages || 1;
       currentMailCache = data.mails || [];
 
+      const page = document.querySelector('.mail-page');
+      if (page) page.style.display = 'flex';
+
       renderMailList(currentMailCache);
       renderMailPage();
       setMailBottomButtons('list');
@@ -372,11 +375,13 @@ function renderMailDetail(mail) {
 function closeMailDetail() {
   const list = document.getElementById('mail-list');
   const detail = document.getElementById('mail-detail');
+  const page = document.querySelector('.mail-page');
 
   currentMailDetailId = '';
 
   if (detail) detail.style.display = 'none';
   if (list) list.style.display = 'flex';
+  if (page) page.style.display = 'flex';
 
   renderMailList(currentMailCache);
   renderMailPage();
