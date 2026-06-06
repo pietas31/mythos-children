@@ -362,11 +362,8 @@ function renderMailDetail(mail) {
     }
   }
 
-    setMailBottomButtons('detail', mail);
-
-    if (deleteBtn) deleteBtn.style.display = 'block';
-    if (receiveBtn) receiveBtn.style.display = 'none';
-  }
+  setMailBottomButtons('detail', mail);
+  renderMailPage();
 }
 
 function closeMailDetail() {
