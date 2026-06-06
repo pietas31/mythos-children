@@ -177,6 +177,7 @@ function loadMailList() {
 
       renderMailList(currentMailCache);
       renderMailPage();
+      setMailBottomButtons('list');
 
       if (typeof data.unreadCount !== 'undefined') {
         setMailCount(data.unreadCount);
@@ -361,19 +362,7 @@ function renderMailDetail(mail) {
     }
   }
 
-  const keepBtn = document.getElementById('mail-keep-btn');
-  const deleteBtn = document.getElementById('mail-delete-btn');
-  const receiveBtn = document.getElementById('mail-receive-btn');
-
-  if (mail.mailType === 'SUPPLY') {
-    if (keepBtn) keepBtn.style.display = 'none';
-    if (deleteBtn) deleteBtn.style.display = 'none';
-    if (receiveBtn) receiveBtn.style.display = 'block';
-  } else {
-    if (keepBtn) {
-      keepBtn.style.display = 'block';
-      keepBtn.textContent = mail.isKept ? '보관 해제' : '보관';
-    }
+    setMailBottomButtons('detail', mail);
 
     if (deleteBtn) deleteBtn.style.display = 'block';
     if (receiveBtn) receiveBtn.style.display = 'none';
@@ -391,6 +380,7 @@ function closeMailDetail() {
 
   renderMailList(currentMailCache);
   renderMailPage();
+  setMailBottomButtons('list');
 }
 
 function toggleCurrentMailKeep() {
@@ -418,6 +408,62 @@ function formatMailDateForView(value) {
   return String(value)
     .replaceAll('-', '.')
     .slice(0, 16);
+}
+
+function setMailBottomButtons(mode, mail) {
+  const leftBtn = document.getElementById('mail-bottom-left-btn');
+  const centerBtn = document.getElementById('mail-bottom-center-btn');
+  const rightBtn = document.getElementById('mail-bottom-right-btn');
+
+  if (!leftBtn || !centerBtn || !rightBtn) return;
+
+  if (mode === 'detail') {
+    leftBtn.textContent = mail && mail.isKept ? '보관 해제' : '보관';
+    leftBtn.onclick = function () {
+      toggleCurrentMailKeep();
+    };
+
+    centerBtn.textContent = '수령';
+    centerBtn.onclick = function () {
+      receiveCurrentMail();
+    };
+
+    rightBtn.textContent = '삭제';
+    rightBtn.onclick = function () {
+      deleteCurrentMail();
+    };
+
+    if (mail && mail.mailType === 'SUPPLY') {
+      leftBtn.style.display = 'none';
+      rightBtn.style.display = 'none';
+      centerBtn.style.display = 'block';
+    } else {
+      leftBtn.style.display = 'block';
+      centerBtn.style.display = 'none';
+      rightBtn.style.display = 'block';
+    }
+
+    return;
+  }
+
+  leftBtn.textContent = '작성';
+  leftBtn.onclick = function () {
+    alert('편지 작성 기능은 v19-3에서 연결할 예정입니다.');
+  };
+
+  centerBtn.textContent = '수령';
+  centerBtn.onclick = function () {
+    alert('수령 모드는 v19-3에서 연결할 예정입니다.');
+  };
+
+  rightBtn.textContent = '삭제';
+  rightBtn.onclick = function () {
+    alert('삭제 모드는 추후 연결할 예정입니다.');
+  };
+
+  leftBtn.style.display = 'block';
+  centerBtn.style.display = 'block';
+  rightBtn.style.display = 'block';
 }
 
 function goPrevMailInDetail() {
