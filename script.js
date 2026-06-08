@@ -121,27 +121,6 @@ function updateMailTabActive(tab) {
   }
 }
 
-function updateMailTabActive(tab) {
-  const tabs = document.querySelectorAll('.mail-tab');
-
-  tabs.forEach(button => {
-    button.classList.remove('active');
-  });
-
-  const tabMap = {
-    all: 0,
-    kept: 1,
-    letter: 2,
-    supply: 3
-  };
-
-  const index = tabMap[tab];
-
-  if (typeof index !== 'undefined' && tabs[index]) {
-    tabs[index].classList.add('active');
-  }
-}
-
 function loadMailList() {
   if (!currentPersonalCode) return;
 
@@ -190,6 +169,8 @@ function renderMailList(mails) {
 
   if (!mails.length) {
     list.innerHTML = '<div class="mail-empty">받은 우편이 없습니다.</div>';
+    renderMailPage();
+    setMailBottomButtons('list');
     return;
   }
 
@@ -199,9 +180,6 @@ function renderMailList(mails) {
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
 
-  renderMailPage();
-  setMailBottomButtons('list');
-
     return `
       <button class="mail-item ${readClass}" type="button" onclick="openMailDetail('${escapeForAttribute(mail.mailId)}')">
         <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
@@ -210,6 +188,9 @@ function renderMailList(mails) {
       </button>
     `;
   }).join('');
+
+  renderMailPage();
+  setMailBottomButtons('list');
 }
 
 function renderMailError(message) {
@@ -400,25 +381,38 @@ function setMailBottomButtons(mode, mail) {
   rightBtn.style.display = 'block';
 
   if (mode === 'detail') {
-    leftBtn.textContent = mail && mail.isKept ? '보관 해제' : '보관';
+    leftBtn.textContent = '보관';
     leftBtn.onclick = function () {
+      if (mail && mail.mailType === 'SUPPLY') {
+        alert('보급 우편은 보관할 수 없습니다.');
+        return;
+      }
+
       toggleCurrentMailKeep();
     };
 
     centerBtn.textContent = '수령';
     centerBtn.onclick = function () {
+      if (!mail || mail.mailType !== 'SUPPLY') {
+        alert('첨부된 보급품이 없습니다.');
+        return;
+      }
+
       receiveCurrentMail();
     };
 
     rightBtn.textContent = '삭제';
     rightBtn.onclick = function () {
+      if (mail && mail.mailType === 'SUPPLY') {
+        alert('수령을 마친 뒤 삭제해주세요.');
+        return;
+      }
+
       deleteCurrentMail();
     };
 
-    if (mail && mail.mailType === 'SUPPLY') {
-      leftBtn.style.display = 'none';
-      rightBtn.style.display = 'none';
-      centerBtn.style.display = 'block';
+    if (mail && mail.isKept && mail.mailType !== 'SUPPLY') {
+      leftBtn.textContent = '보관 해제';
     }
 
     return;
