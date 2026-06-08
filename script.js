@@ -11,6 +11,7 @@ let currentMailTotalPages = 1;
 let currentMailDetailId = '';
 let currentMailCache = [];
 let currentMailUnreadCount = 0;
+let hasLoadedMailOnce = false;
 
 console.log('MYTHOS READY v19');
 
@@ -79,10 +80,21 @@ function openMailModal() {
 
   modal.style.display = 'flex';
   currentMailTab = 'all';
-currentMailPage = 1;
-currentMailDetailId = '';
-updateMailTabActive('all');
-loadMailList();
+  currentMailPage = 1;
+  currentMailDetailId = '';
+
+  updateMailTabActive('all');
+
+  if (hasLoadedMailOnce && currentMailCache.length) {
+    showMailListMode();
+  } else {
+    const list = document.getElementById('mail-list');
+    if (list) {
+      list.innerHTML = '<div class="mail-empty">우편을 불러오는 중입니다.</div>';
+    }
+  }
+
+  loadMailList();
 }
 
 function closeMailModal() {
@@ -147,6 +159,7 @@ function loadMailList() {
       currentMailPage = data.page || 1;
       currentMailTotalPages = data.totalPages || 1;
       currentMailCache = data.mails || [];
+      hasLoadedMailOnce = true;
 
       const page = document.querySelector('.mail-page');
       if (page) page.style.display = 'flex';
