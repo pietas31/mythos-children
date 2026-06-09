@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-4">
+<link rel="stylesheet" href="style.css?v=19-5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -333,6 +333,46 @@
   </div>
 </div>
 
+<!-- 서신 작성 모달 -->
+<div id="mail-write-modal" class="modal" style="display: none;">
+  <div class="modal-box mail-box">
+
+    <div class="modal-header">
+      <h2>서신 작성</h2>
+      <button class="close-btn" onclick="closeMailWriteModal()">×</button>
+    </div>
+
+    <input
+      type="text"
+      id="mail-write-receiver-code"
+      class="modal-input"
+      placeholder="받는 사람 개인코드"
+    >
+
+    <input
+      type="text"
+      id="mail-write-title"
+      class="modal-input"
+      placeholder="제목"
+      maxlength="40"
+    >
+
+    <textarea
+      id="mail-write-content"
+      class="modal-input"
+      placeholder="내용"
+      maxlength="300"
+      rows="8"
+    ></textarea>
+
+    <div class="mail-actions">
+      <button class="modal-btn secondary" onclick="closeMailWriteModal()">취소</button>
+      <button class="modal-btn" id="mail-write-send-btn" onclick="sendUserLetter()">발송</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- 설정 모달 -->
 <div id="settings-modal" class="modal" style="display: none;">
   <div class="modal-box settings-box">
@@ -381,7 +421,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-4"></script>
+<script src="script.js?v=19-5"></script>
 
 </body>
 </html>

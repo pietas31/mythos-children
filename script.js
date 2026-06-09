@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19-4';
+let CURRENT_VERSION = 'v19-5';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -17,7 +17,7 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 
-console.log('MYTHOS READY v19-4');
+console.log('MYTHOS READY v19-5');
 
 function goHome() {
   location.reload();
@@ -825,9 +825,9 @@ rightBtn.disabled = false;
   }
 
   leftBtn.textContent = '작성';
-  leftBtn.onclick = function () {
-    alert('편지 작성 기능은 추후 연결할 예정입니다.');
-  };
+leftBtn.onclick = function () {
+  openMailWriteModal();
+};
 
   centerBtn.textContent = '수령';
 centerBtn.onclick = function () {
@@ -1113,6 +1113,92 @@ function deleteMail(mailId) {
       refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
+}
+
+function openMailWriteModal() {
+  const modal = document.getElementById('mail-write-modal');
+  if (!modal) return;
+
+  document.getElementById('mail-write-receiver-code').value = '';
+  document.getElementById('mail-write-title').value = '';
+  document.getElementById('mail-write-content').value = '';
+
+  modal.style.display = 'flex';
+}
+
+function closeMailWriteModal() {
+  const modal = document.getElementById('mail-write-modal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function sendUserLetter() {
+  if (!currentPersonalCode) {
+    openAlertModal('발송 불가', '로그인 후 서신을 보낼 수 있습니다.');
+    return;
+  }
+
+  const receiverCode = document.getElementById('mail-write-receiver-code').value.trim();
+  const title = document.getElementById('mail-write-title').value.trim();
+  const content = document.getElementById('mail-write-content').value.trim();
+  const sendBtn = document.getElementById('mail-write-send-btn');
+
+  if (!receiverCode) {
+    openAlertModal('입력 필요', '받는 사람 개인코드를 입력해주세요.');
+    return;
+  }
+
+  if (!title) {
+    openAlertModal('입력 필요', '제목을 입력해주세요.');
+    return;
+  }
+
+  if (!content) {
+    openAlertModal('입력 필요', '내용을 입력해주세요.');
+    return;
+  }
+
+  if (sendBtn) {
+    sendBtn.textContent = '발송 중...';
+    sendBtn.disabled = true;
+  }
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'sendUserLetter',
+      senderCode: currentPersonalCode,
+      receiverCode: receiverCode,
+      title: title,
+      content: content
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (sendBtn) {
+        sendBtn.textContent = '발송';
+        sendBtn.disabled = false;
+      }
+
+      if (!data.success) {
+        openAlertModal('발송 실패', data.message || '서신을 발송하지 못했습니다.');
+        return;
+      }
+
+      closeMailWriteModal();
+      openAlertModal('발송 완료', '서신을 발송했습니다.');
+    })
+    .catch(error => {
+      console.error(error);
+
+      if (sendBtn) {
+        sendBtn.textContent = '발송';
+        sendBtn.disabled = false;
+      }
+
+      openAlertModal('발송 오류', '서신 발송 중 오류가 발생했습니다.');
+    });
 }
 
 function getMailTypeLabel(type) {
