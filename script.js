@@ -14,6 +14,8 @@ let currentMailCache = [];
 let currentMailUnreadCount = 0;
 let currentMailTotalCount = 0;
 let hasLoadedMailOnce = false;
+let currentMailSelectionMode = '';
+let selectedMailIds = [];
 
 console.log('MYTHOS READY v19-3');
 
@@ -196,18 +198,135 @@ function renderMailList(mails) {
     const keepMark = mail.isKept ? '★' : '☆';
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
+    const canSelect = currentMailSelectionMode === 'delete' ? canSelectMailForDelete(mail) : false;
+    const selected = selectedMailIds.includes(String(mail.mailId));
+    const selectClass = currentMailSelectionMode ? ' is-select-mode' : '';
+    const disabledClass = currentMailSelectionMode && !canSelect ? ' is-disabled-select' : '';
 
     return `
-      <button class="mail-item ${readClass}" type="button" onclick="openMailDetailByIndex(${Number(mail.detailIndex || 0)})">
-        <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
+      <div class="mail-item ${readClass}${selectClass}${disabledClass}" onclick="handleMailItemClick(${Number(mail.detailIndex || 0)}, '${escapeForAttribute(mail.mailId)}')">
+        ${
+          currentMailSelectionMode
+            ? `<span class="mail-select-box">${selected ? '✓' : ''}</span>`
+            : `<span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>`
+        }
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
         <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
-      </button>
+      </div>
     `;
   }).join('');
 
   renderMailPage();
-  setMailBottomButtons('list');
+  setMailBottomButtons(currentMailSelectionMode ? 'delete-select' : 'list');
+}
+
+function handleMailItemClick(detailIndex, mailId) {
+  if (currentMailSelectionMode === 'delete') {
+    toggleMailSelection(mailId);
+    return;
+  }
+
+  openMailDetailByIndex(detailIndex);
+}
+
+function canSelectMailForDelete(mail) {
+  if (!mail) return false;
+  if (mail.mailType === 'SUPPLY' && !mail.isReceived) return false;
+  return true;
+}
+
+function toggleMailSelection(mailId) {
+  const mail = currentMailCache.find(item => String(item.mailId) === String(mailId));
+  if (!canSelectMailForDelete(mail)) {
+    openAlertModal('삭제 불가', '수령하지 않은 보급 우편은 삭제할 수 없습니다.');
+    return;
+  }
+
+  if (selectedMailIds.includes(String(mailId))) {
+    selectedMailIds = selectedMailIds.filter(id => id !== String(mailId));
+  } else {
+    selectedMailIds.push(String(mailId));
+  }
+
+  renderMailList(currentMailCache);
+}
+
+function enterMailDeleteMode() {
+  currentMailSelectionMode = 'delete';
+  selectedMailIds = [];
+  renderMailList(currentMailCache);
+}
+
+function cancelMailSelectionMode() {
+  currentMailSelectionMode = '';
+  selectedMailIds = [];
+  renderMailList(currentMailCache);
+}
+
+function selectAllVisibleMails() {
+  if (currentMailSelectionMode !== 'delete') return;
+
+  selectedMailIds = currentMailCache
+    .filter(mail => canSelectMailForDelete(mail))
+    .map(mail => String(mail.mailId));
+
+  if (!selectedMailIds.length) {
+    openAlertModal('선택 불가', '현재 페이지에 삭제할 수 있는 우편이 없습니다.');
+    return;
+  }
+
+  renderMailList(currentMailCache);
+}
+
+function deleteSelectedMails() {
+  if (!selectedMailIds.length) {
+    openAlertModal('선택 필요', '삭제할 우편을 선택해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    '선택 우편 삭제',
+    '선택한 우편을 삭제하시겠습니까?\n삭제한 우편은 복구할 수 없습니다.',
+    function () {
+      deleteSelectedMailsAfterConfirm();
+    }
+  );
+}
+
+function deleteSelectedMailsAfterConfirm() {
+  const targetIds = selectedMailIds.slice();
+
+  const requests = targetIds.map(mailId => {
+    const url =
+      API_URL
+      + '?action=deleteMail'
+      + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+      + '&mailId=' + encodeURIComponent(mailId);
+
+    return fetch(url).then(response => response.json());
+  });
+
+  Promise.all(requests)
+    .then(results => {
+      const failed = results.filter(data => !data.success);
+
+      currentMailSelectionMode = '';
+      selectedMailIds = [];
+
+      loadMailList();
+      refreshUnreadMailCount();
+
+      if (failed.length) {
+        openAlertModal('일부 삭제 실패', '일부 우편을 삭제하지 못했습니다.');
+        return;
+      }
+
+      openAlertModal('삭제 완료', '선택한 우편을 삭제했습니다.');
+    })
+    .catch(error => {
+      console.error(error);
+      openAlertModal('삭제 오류', '선택 우편 삭제 중 오류가 발생했습니다.');
+    });
 }
 
 function renderMailError(message) {
@@ -511,6 +630,25 @@ leftBtn.disabled = false;
 centerBtn.disabled = false;
 rightBtn.disabled = false;
 
+  if (mode === 'delete-select') {
+    leftBtn.textContent = '전체 선택';
+    leftBtn.onclick = function () {
+      selectAllVisibleMails();
+    };
+
+    centerBtn.textContent = '선택 삭제';
+    centerBtn.onclick = function () {
+      deleteSelectedMails();
+    };
+
+    rightBtn.textContent = '취소';
+    rightBtn.onclick = function () {
+      cancelMailSelectionMode();
+    };
+
+    return;
+  }
+
   if (mode === 'detail') {
     leftBtn.textContent = '보관';
     leftBtn.onclick = function () {
@@ -564,10 +702,10 @@ rightBtn.disabled = false;
     alert('수령할 우편을 먼저 열어주세요.');
   };
 
-  rightBtn.textContent = '삭제';
-  rightBtn.onclick = function () {
-    alert('삭제할 우편을 먼저 열어주세요.');
-  };
+rightBtn.textContent = '삭제';
+rightBtn.onclick = function () {
+  enterMailDeleteMode();
+};
 }
 
 function showMailListMode() {

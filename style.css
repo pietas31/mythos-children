@@ -928,3 +928,24 @@ button{
 .confirm-actions:has(#confirm-ok-btn[style*="display: none"]) #confirm-cancel-btn {
   width: 140px;
 }
+
+.mail-item.is-select-mode {
+  cursor: pointer;
+}
+
+.mail-select-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: #1f3f77;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.mail-item.is-disabled-select {
+  opacity: 0.45;
+}
