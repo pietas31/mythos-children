@@ -1226,11 +1226,6 @@ function sendUserLetter() {
   return;
 }
 
-if (receiverName !== selectedMailReceiverName) {
-  openAlertModal('선택 필요', '검색 결과에서 받는 사람을 선택해주세요.');
-  return;
-}
-
   if (!title) {
     openAlertModal('입력 필요', '제목을 입력해주세요.');
     return;
