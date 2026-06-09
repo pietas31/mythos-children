@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19';
+let CURRENT_VERSION = 'v19-3';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -15,7 +15,7 @@ let currentMailUnreadCount = 0;
 let currentMailTotalCount = 0;
 let hasLoadedMailOnce = false;
 
-console.log('MYTHOS READY v19');
+console.log('MYTHOS READY v19-3');
 
 function goHome() {
   location.reload();
@@ -84,6 +84,7 @@ function openMailModal() {
   currentMailTab = 'all';
   currentMailPage = 1;
   currentMailDetailId = '';
+  currentMailDetailIndex = 0;
 
   updateMailTabActive('all');
 
@@ -107,6 +108,7 @@ function selectMailTab(tab) {
   currentMailTab = tab;
   currentMailPage = 1;
   currentMailDetailId = '';
+  currentMailDetailIndex = 0;
 
   updateMailTabActive(tab);
   showMailLoading('우편을 불러오는 중입니다.');
@@ -194,12 +196,13 @@ function renderMailList(mails) {
     const keepMark = mail.isKept ? '★' : '☆';
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
+    const receivedMark = mail.mailType === 'SUPPLY' && mail.isReceived ? ' · 수령완료' : '';
 
     return `
-      <button class="mail-item ${readClass}" type="button" onclick="openMailDetailByIndex(${Number(mail.detailIndex || 0)})"
+      <button class="mail-item ${readClass}" type="button" onclick="openMailDetailByIndex(${Number(mail.detailIndex || 0)})">
         <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
-        <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
+        <span class="mail-title">[${typeLabel}${receivedMark}] ${escapeHtml(mail.title || '제목 없음')}</span>
       </button>
     `;
   }).join('');
@@ -242,10 +245,10 @@ function renderMailPage() {
 
   if (!pageText) return;
 
-if (currentMailDetailIndex) {
-  pageText.textContent = currentMailDetailIndex + ' / ' + currentMailTotalCount;
-  return;
-}
+  if (currentMailDetailIndex) {
+    pageText.textContent = currentMailDetailIndex + ' / ' + currentMailTotalCount;
+    return;
+  }
 
   pageText.textContent = currentMailPage + ' / ' + currentMailTotalPages;
 }
@@ -313,13 +316,14 @@ function openMailDetailByIndex(detailIndex) {
 }
 
 function markMailRead(mailId) {
-  if (!currentPersonalCode || !mailId) return;
+  if (!currentPersonalCode || !currentMailDetailIndex) return;
 
   const url =
     API_URL
     + '?action=markMailRead'
     + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&mailId=' + encodeURIComponent(mailId);
+    + '&tab=' + encodeURIComponent(currentMailTab)
+    + '&detailIndex=' + encodeURIComponent(currentMailDetailIndex);
 
   fetch(url)
     .then(response => response.json())
@@ -337,6 +341,7 @@ function markMailReadSilently(mailId) {
     API_URL
     + '?action=markMailRead'
     + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&tab=' + encodeURIComponent(currentMailTab)
     + '&detailIndex=' + encodeURIComponent(currentMailDetailIndex);
 
   fetch(url)
@@ -374,6 +379,10 @@ function renderMailDetail(mail) {
   if (reward) {
     if (mail.mailType === 'SUPPLY') {
       const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
+      const itemText = mail.itemData ? escapeHtml(mail.itemData) : '없음';
+      const receivedText = mail.isReceived
+        ? '<br>수령 상태 : 수령 완료' + (mail.receivedAt ? '<br>수령 시각 : ' + formatMailDateForView(mail.receivedAt) : '')
+        : '<br>수령 상태 : 미수령';
 
       reward.style.display = 'block';
       reward.innerHTML =
@@ -381,7 +390,9 @@ function renderMailDetail(mail) {
           '<div>' +
             '<strong>보급품 정보</strong><br>' +
             '골드 : ' + Number(mail.goldAmount || 0) + 'G' +
+            '<br>아이템 : ' + itemText +
             (mail.expiresAt ? '<br>수령 마감 : ' + formatMailDateForView(mail.expiresAt) : '') +
+            receivedText +
           '</div>' +
           (iconPath ? '<img class="mail-reward-icon" src="' + iconPath + '" alt="">' : '') +
         '</div>';
@@ -447,10 +458,15 @@ function setMailBottomButtons(mode, mail) {
       toggleCurrentMailKeep();
     };
 
-    centerBtn.textContent = '수령';
+    centerBtn.textContent = mail && mail.mailType === 'SUPPLY' && mail.isReceived ? '수령완료' : '수령';
     centerBtn.onclick = function () {
       if (!mail || mail.mailType !== 'SUPPLY') {
         alert('첨부된 보급품이 없습니다.');
+        return;
+      }
+
+      if (mail.isReceived) {
+        alert('이미 수령한 보급품입니다.');
         return;
       }
 
@@ -459,7 +475,7 @@ function setMailBottomButtons(mode, mail) {
 
     rightBtn.textContent = '삭제';
     rightBtn.onclick = function () {
-      if (mail && mail.mailType === 'SUPPLY') {
+      if (mail && mail.mailType === 'SUPPLY' && !mail.isReceived) {
         alert('수령을 마친 뒤 삭제해주세요.');
         return;
       }
@@ -476,17 +492,17 @@ function setMailBottomButtons(mode, mail) {
 
   leftBtn.textContent = '작성';
   leftBtn.onclick = function () {
-    alert('편지 작성 기능은 v19-3에서 연결할 예정입니다.');
+    alert('편지 작성 기능은 추후 연결할 예정입니다.');
   };
 
   centerBtn.textContent = '수령';
   centerBtn.onclick = function () {
-    alert('수령 모드는 v19-3에서 연결할 예정입니다.');
+    alert('수령할 우편을 먼저 열어주세요.');
   };
 
   rightBtn.textContent = '삭제';
   rightBtn.onclick = function () {
-    alert('삭제 모드는 추후 연결할 예정입니다.');
+    alert('삭제할 우편을 먼저 열어주세요.');
   };
 }
 
@@ -613,19 +629,85 @@ function getCurrentMailPageSize() {
 }
 
 function receiveCurrentMail() {
-  if (currentMailDetailId) {
-    alert('보급 수령 기능은 v19-3에서 연결할 예정입니다.');
-
-    const mail = currentMailCache.find(item => String(item.mailId) === String(currentMailDetailId));
-    if (mail) {
-      showMailDetailMode(mail);
-    }
-
+  if (!currentPersonalCode || !currentMailDetailIndex) {
+    alert('수령할 우편을 찾을 수 없습니다.');
     return;
   }
 
-  alert('수령 모드는 v19-3에서 연결할 예정입니다.');
-  showMailListMode();
+  const mail = currentMailCache.find(item => Number(item.detailIndex) === Number(currentMailDetailIndex));
+
+  if (!mail || mail.mailType !== 'SUPPLY') {
+    alert('첨부된 보급품이 없습니다.');
+    return;
+  }
+
+  if (mail.isReceived) {
+    alert('이미 수령한 보급품입니다.');
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=receiveSupplyMail'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&tab=' + encodeURIComponent(currentMailTab)
+    + '&detailIndex=' + encodeURIComponent(currentMailDetailIndex);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || '보급품을 수령하지 못했습니다.');
+        return;
+      }
+
+      mail.isReceived = true;
+      mail.receivedAt = data.receivedAt || '';
+      renderMailDetail(mail);
+
+      if (typeof data.balance !== 'undefined') {
+        updateGoldDisplay(data.balance);
+      }
+
+      alert(makeReceiveResultMessage(data));
+    })
+    .catch(error => {
+      console.error(error);
+      alert('보급품 수령 중 오류가 발생했습니다.');
+    });
+}
+
+function makeReceiveResultMessage(data) {
+  const lines = ['보급품을 수령했습니다.'];
+
+  if (Number(data.goldAmount || 0) > 0) {
+    lines.push('골드 +' + Number(data.goldAmount || 0) + 'G');
+  }
+
+  if (data.items && data.items.length) {
+    const itemText = data.items
+      .map(item => item.itemName + ' x' + item.quantity)
+      .join(', ');
+
+    lines.push('아이템 ' + itemText);
+  }
+
+  return lines.join('\n');
+}
+
+function updateGoldDisplay(balance) {
+  const money = document.getElementById('character-money');
+  if (money) {
+    money.textContent = '보유 재화 : ' + Number(balance || 0) + '골드';
+  }
+
+  const savedPlayerData = localStorage.getItem('mythosPlayerData');
+
+  if (savedPlayerData) {
+    const player = JSON.parse(savedPlayerData);
+    player.goldBalance = Number(balance || 0);
+    localStorage.setItem('mythosPlayerData', JSON.stringify(player));
+  }
 }
 
 function toggleMailKeep(mailId) {
@@ -881,7 +963,7 @@ function renderPlayer(player) {
     '현재 위치 : ' + (player.currentPlaceId || '-');
 
   document.getElementById('character-money').textContent =
-    '보유 재화 : 0골드';
+    '보유 재화 : ' + Number(player.goldBalance || 0) + '골드';
 
   document.getElementById('stat-strength').textContent = getStatText(player.strength);
   document.getElementById('stat-stamina').textContent = getStatText(player.stamina);
