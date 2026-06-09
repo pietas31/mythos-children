@@ -423,6 +423,10 @@ function toggleCurrentMailKeep() {
 function deleteCurrentMail() {
   if (!currentMailDetailId) return;
 
+  const ok = confirm('이 우편을 삭제하시겠습니까?\n삭제한 우편은 목록에서 보이지 않습니다.');
+
+  if (!ok) return;
+
   deleteMail(currentMailDetailId);
   closeMailDetail();
 }
