@@ -15,7 +15,7 @@ let currentMailUnreadCount = 0;
 let currentMailTotalCount = 0;
 let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
-let selectedMailIds = [];
+let selectedMailIndexes = [];
 
 console.log('MYTHOS READY v19-3');
 
@@ -199,7 +199,7 @@ function renderMailList(mails) {
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
     const canSelect = currentMailSelectionMode === 'delete' ? canSelectMailForDelete(mail) : false;
-    const selected = selectedMailIds.includes(String(mail.mailId));
+    const selected = selectedMailIndexes.includes(Number(mail.detailIndex));
     const selectClass = currentMailSelectionMode ? ' is-select-mode' : '';
     const disabledClass = currentMailSelectionMode && !canSelect ? ' is-disabled-select' : '';
 
@@ -222,7 +222,7 @@ function renderMailList(mails) {
 
 function handleMailItemClick(detailIndex, mailId) {
   if (currentMailSelectionMode === 'delete') {
-    toggleMailSelection(mailId);
+    toggleMailSelectionByIndex(detailIndex);
     return;
   }
 
@@ -235,17 +235,20 @@ function canSelectMailForDelete(mail) {
   return true;
 }
 
-function toggleMailSelection(mailId) {
-  const mail = currentMailCache.find(item => String(item.mailId) === String(mailId));
+function toggleMailSelectionByIndex(detailIndex) {
+  const mail = currentMailCache.find(item => Number(item.detailIndex) === Number(detailIndex));
+
   if (!canSelectMailForDelete(mail)) {
     openAlertModal('삭제 불가', '수령하지 않은 보급 우편은 삭제할 수 없습니다.');
     return;
   }
 
-  if (selectedMailIds.includes(String(mailId))) {
-    selectedMailIds = selectedMailIds.filter(id => id !== String(mailId));
+  const safeIndex = Number(detailIndex);
+
+  if (selectedMailIndexes.includes(safeIndex)) {
+    selectedMailIndexes = selectedMailIndexes.filter(index => index !== safeIndex);
   } else {
-    selectedMailIds.push(String(mailId));
+    selectedMailIndexes.push(safeIndex);
   }
 
   renderMailList(currentMailCache);
@@ -253,24 +256,24 @@ function toggleMailSelection(mailId) {
 
 function enterMailDeleteMode() {
   currentMailSelectionMode = 'delete';
-  selectedMailIds = [];
+  selectedMailIndexes = [];
   renderMailList(currentMailCache);
 }
 
 function cancelMailSelectionMode() {
   currentMailSelectionMode = '';
-  selectedMailIds = [];
+  selectedMailIndexes = [];
   renderMailList(currentMailCache);
 }
 
 function selectAllVisibleMails() {
   if (currentMailSelectionMode !== 'delete') return;
 
-  selectedMailIds = currentMailCache
+  selectedMailIndexes = currentMailCache
     .filter(mail => canSelectMailForDelete(mail))
-    .map(mail => String(mail.mailId));
+    .map(mail => Number(mail.detailIndex));
 
-  if (!selectedMailIds.length) {
+  if (!selectedMailIndexes.length) {
     openAlertModal('선택 불가', '현재 페이지에 삭제할 수 있는 우편이 없습니다.');
     return;
   }
@@ -279,7 +282,7 @@ function selectAllVisibleMails() {
 }
 
 function deleteSelectedMails() {
-  if (!selectedMailIds.length) {
+  if (!selectedMailIndexes.length) {
     openAlertModal('선택 필요', '삭제할 우편을 선택해주세요.');
     return;
   }
@@ -294,9 +297,12 @@ function deleteSelectedMails() {
 }
 
 function deleteSelectedMailsAfterConfirm() {
-  const targetIds = selectedMailIds.slice();
+  const targetIndexes = selectedMailIndexes.slice();
 
-  const requests = targetIds.map(mailId => {
+  const requests = targetIndexes.map(detailIndex => {
+    const mail = currentMailCache.find(item => Number(item.detailIndex) === Number(detailIndex));
+    const mailId = mail ? mail.mailId : '';
+
     const url =
       API_URL
       + '?action=deleteMail'
@@ -311,7 +317,7 @@ function deleteSelectedMailsAfterConfirm() {
       const failed = results.filter(data => !data.success);
 
       currentMailSelectionMode = '';
-      selectedMailIds = [];
+      selectedMailIndexes = [];
 
       loadMailList();
       refreshUnreadMailCount();

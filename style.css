@@ -949,3 +949,17 @@ button{
 .mail-item.is-disabled-select {
   opacity: 0.45;
 }
+
+.mail-item {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mail-title {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.mail-item.is-select-mode .mail-title {
+  font-size: 13px;
+}
