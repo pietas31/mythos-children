@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19-3';
+let CURRENT_VERSION = 'v19-4';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -17,7 +17,7 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 
-console.log('MYTHOS READY v19-3');
+console.log('MYTHOS READY v19-4');
 
 function goHome() {
   location.reload();
@@ -198,7 +198,12 @@ function renderMailList(mails) {
     const keepMark = mail.isKept ? '★' : '☆';
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
-    const canSelect = currentMailSelectionMode === 'delete' ? canSelectMailForDelete(mail) : false;
+    const canSelect =
+  currentMailSelectionMode === 'delete'
+    ? canSelectMailForDelete(mail)
+    : currentMailSelectionMode === 'receive'
+      ? canSelectMailForReceive(mail)
+      : false;
     const selected = selectedMailIndexes.includes(Number(mail.detailIndex));
     const selectClass = currentMailSelectionMode ? ' is-select-mode' : '';
     const disabledClass = currentMailSelectionMode && !canSelect ? ' is-disabled-select' : '';
@@ -217,11 +222,11 @@ function renderMailList(mails) {
   }).join('');
 
   renderMailPage();
-  setMailBottomButtons(currentMailSelectionMode ? 'delete-select' : 'list');
+  setMailBottomButtons(currentMailSelectionMode ? currentMailSelectionMode + '-select' : 'list');
 }
 
 function handleMailItemClick(detailIndex, mailId) {
-  if (currentMailSelectionMode === 'delete') {
+  if (currentMailSelectionMode === 'delete' || currentMailSelectionMode === 'receive') {
     toggleMailSelectionByIndex(detailIndex);
     return;
   }
@@ -235,13 +240,32 @@ function canSelectMailForDelete(mail) {
   return true;
 }
 
+function canSelectMailForReceive(mail) {
+  if (!mail) return false;
+  if (mail.mailType !== 'SUPPLY') return false;
+  if (mail.isReceived) return false;
+  return true;
+}
+
 function toggleMailSelectionByIndex(detailIndex) {
   const mail = currentMailCache.find(item => Number(item.detailIndex) === Number(detailIndex));
 
-  if (!canSelectMailForDelete(mail)) {
-    openAlertModal('삭제 불가', '수령하지 않은 보급 우편은 삭제할 수 없습니다.');
+  const canSelect =
+  currentMailSelectionMode === 'delete'
+    ? canSelectMailForDelete(mail)
+    : currentMailSelectionMode === 'receive'
+      ? canSelectMailForReceive(mail)
+      : false;
+
+if (!canSelect) {
+  if (currentMailSelectionMode === 'receive') {
+    openAlertModal('수령 불가', '수령 가능한 보급 우편만 선택할 수 있습니다.');
     return;
   }
+
+  openAlertModal('삭제 불가', '수령하지 않은 보급 우편은 삭제할 수 없습니다.');
+  return;
+}
 
   const safeIndex = Number(detailIndex);
 
@@ -260,6 +284,12 @@ function enterMailDeleteMode() {
   renderMailList(currentMailCache);
 }
 
+function enterMailReceiveMode() {
+  currentMailSelectionMode = 'receive';
+  selectedMailIndexes = [];
+  renderMailList(currentMailCache);
+}
+
 function cancelMailSelectionMode() {
   currentMailSelectionMode = '';
   selectedMailIndexes = [];
@@ -267,14 +297,23 @@ function cancelMailSelectionMode() {
 }
 
 function selectAllVisibleMails() {
-  if (currentMailSelectionMode !== 'delete') return;
+  if (currentMailSelectionMode !== 'delete' && currentMailSelectionMode !== 'receive') return;
 
   selectedMailIndexes = currentMailCache
-    .filter(mail => canSelectMailForDelete(mail))
+    .filter(mail => {
+      if (currentMailSelectionMode === 'delete') return canSelectMailForDelete(mail);
+      if (currentMailSelectionMode === 'receive') return canSelectMailForReceive(mail);
+      return false;
+    })
     .map(mail => Number(mail.detailIndex));
 
   if (!selectedMailIndexes.length) {
-    openAlertModal('선택 불가', '현재 페이지에 삭제할 수 있는 우편이 없습니다.');
+    const message =
+      currentMailSelectionMode === 'receive'
+        ? '현재 페이지에 수령 가능한 보급 우편이 없습니다.'
+        : '현재 페이지에 삭제할 수 있는 우편이 없습니다.';
+
+    openAlertModal('선택 불가', message);
     return;
   }
 
@@ -332,6 +371,74 @@ function deleteSelectedMailsAfterConfirm() {
     .catch(error => {
       console.error(error);
       openAlertModal('삭제 오류', '선택 우편 삭제 중 오류가 발생했습니다.');
+    });
+}
+
+function receiveSelectedMails() {
+  if (!selectedMailIndexes.length) {
+    openAlertModal('선택 필요', '수령할 보급 우편을 선택해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    '선택 보급 수령',
+    '선택한 보급품을 수령하시겠습니까?',
+    function () {
+      receiveSelectedMailsAfterConfirm();
+    }
+  );
+}
+
+function receiveSelectedMailsAfterConfirm() {
+  const targetIndexes = selectedMailIndexes.slice();
+
+  const centerBtn = document.getElementById('mail-bottom-center-btn');
+  if (centerBtn) {
+    centerBtn.textContent = '수령 중...';
+    centerBtn.disabled = true;
+  }
+
+  const url =
+    API_URL
+    + '?action=receiveSelectedSupplyMails'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&tab=' + encodeURIComponent(currentMailTab)
+    + '&detailIndexes=' + encodeURIComponent(targetIndexes.join(','));
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        if (centerBtn) {
+          centerBtn.textContent = '선택 수령';
+          centerBtn.disabled = false;
+        }
+
+        openAlertModal('수령 실패', data.message || '선택한 보급품을 수령하지 못했습니다.');
+        return;
+      }
+
+      currentMailSelectionMode = '';
+      selectedMailIndexes = [];
+
+      if (typeof data.balance !== 'undefined') {
+        updateGoldDisplay(data.balance);
+      }
+
+      loadMailList();
+      refreshUnreadMailCount();
+
+      openAlertModal('수령 완료', makeReceiveResultMessage(data));
+    })
+    .catch(error => {
+      console.error(error);
+
+      if (centerBtn) {
+        centerBtn.textContent = '선택 수령';
+        centerBtn.disabled = false;
+      }
+
+      openAlertModal('수령 오류', '선택 보급품 수령 중 오류가 발생했습니다.');
     });
 }
 
@@ -655,6 +762,25 @@ rightBtn.disabled = false;
     return;
   }
 
+  if (mode === 'receive-select') {
+    leftBtn.textContent = '전체 선택';
+    leftBtn.onclick = function () {
+      selectAllVisibleMails();
+    };
+
+    centerBtn.textContent = '선택 수령';
+    centerBtn.onclick = function () {
+      receiveSelectedMails();
+    };
+
+    rightBtn.textContent = '취소';
+    rightBtn.onclick = function () {
+      cancelMailSelectionMode();
+    };
+
+    return;
+  }
+
   if (mode === 'detail') {
     leftBtn.textContent = '보관';
     leftBtn.onclick = function () {
@@ -704,9 +830,9 @@ rightBtn.disabled = false;
   };
 
   centerBtn.textContent = '수령';
-  centerBtn.onclick = function () {
-    alert('수령할 우편을 먼저 열어주세요.');
-  };
+centerBtn.onclick = function () {
+  enterMailReceiveMode();
+};
 
 rightBtn.textContent = '삭제';
 rightBtn.onclick = function () {
