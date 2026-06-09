@@ -447,6 +447,25 @@ function openConfirmModal(title, message, onConfirm) {
   };
 }
 
+function openAlertModal(title, message) {
+  openConfirmModal(title, message, null);
+
+  const okBtn = document.getElementById('confirm-ok-btn');
+  const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+  if (okBtn) okBtn.style.display = 'none';
+  if (cancelBtn) {
+    cancelBtn.textContent = '확인';
+    cancelBtn.onclick = function () {
+      const modal = document.getElementById('confirm-modal');
+      if (modal) modal.style.display = 'none';
+
+      cancelBtn.textContent = '취소';
+      if (okBtn) okBtn.style.display = 'block';
+    };
+  }
+}
+
 function deleteCurrentMail() {
   if (!currentMailDetailId) return;
 
@@ -512,7 +531,7 @@ rightBtn.disabled = false;
     rightBtn.textContent = '삭제';
     rightBtn.onclick = function () {
       if (mail && mail.mailType === 'SUPPLY' && !mail.isReceived) {
-        alert('수령을 마친 뒤 삭제해주세요.');
+        openAlertModal('삭제 불가', '수령을 마친 뒤 삭제해주세요.');
         return;
       }
 
