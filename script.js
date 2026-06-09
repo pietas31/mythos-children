@@ -448,22 +448,31 @@ function openConfirmModal(title, message, onConfirm) {
 }
 
 function openAlertModal(title, message) {
-  openConfirmModal(title, message, null);
-
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-title');
+  const messageEl = document.getElementById('confirm-message');
   const okBtn = document.getElementById('confirm-ok-btn');
   const cancelBtn = document.getElementById('confirm-cancel-btn');
 
-  if (okBtn) okBtn.style.display = 'none';
-  if (cancelBtn) {
-    cancelBtn.textContent = '확인';
-    cancelBtn.onclick = function () {
-      const modal = document.getElementById('confirm-modal');
-      if (modal) modal.style.display = 'none';
-
-      cancelBtn.textContent = '취소';
-      if (okBtn) okBtn.style.display = 'block';
-    };
+  if (!modal || !titleEl || !messageEl || !okBtn || !cancelBtn) {
+    alert(message || title || '알림');
+    return;
   }
+
+  titleEl.textContent = title || '알림';
+  messageEl.textContent = message || '';
+
+  okBtn.style.display = 'none';
+  cancelBtn.style.display = 'block';
+  cancelBtn.textContent = '확인';
+
+  modal.style.display = 'flex';
+
+  cancelBtn.onclick = function () {
+    modal.style.display = 'none';
+    cancelBtn.textContent = '취소';
+    okBtn.style.display = 'block';
+  };
 }
 
 function deleteCurrentMail() {
@@ -506,7 +515,7 @@ rightBtn.disabled = false;
     leftBtn.textContent = '보관';
     leftBtn.onclick = function () {
       if (mail && mail.mailType === 'SUPPLY') {
-        alert('보급 우편은 보관할 수 없습니다.');
+        openAlertModal('보관 불가', '보급 우편은 보관할 수 없습니다.');
         return;
       }
 
@@ -516,12 +525,12 @@ rightBtn.disabled = false;
     centerBtn.textContent = mail && mail.mailType === 'SUPPLY' && mail.isReceived ? '수령 완료' : '수령';
     centerBtn.onclick = function () {
       if (!mail || mail.mailType !== 'SUPPLY') {
-        alert('첨부된 보급품이 없습니다.');
+        openAlertModal('수령 불가', '첨부된 보급품이 없습니다.');
         return;
       }
 
       if (mail.isReceived) {
-        alert('이미 수령한 보급품입니다.');
+        openAlertModal('수령 완료', '이미 수령한 보급품입니다.');
         return;
       }
 
@@ -718,7 +727,7 @@ if (centerBtn) {
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
-  alert(data.message || '보급품을 수령하지 못했습니다.');
+  openAlertModal('수령 실패', data.message || '보급품을 수령하지 못했습니다.');
 
   if (centerBtn) {
     centerBtn.textContent = '수령';
@@ -736,7 +745,7 @@ if (centerBtn) {
         updateGoldDisplay(data.balance);
       }
 
-      alert(makeReceiveResultMessage(data));
+      openAlertModal('수령 완료', makeReceiveResultMessage(data));
     })
     .catch(error => {
   console.error(error);
@@ -746,7 +755,7 @@ if (centerBtn) {
     centerBtn.disabled = false;
   }
 
-  alert('보급품 수령 중 오류가 발생했습니다.');
+  openAlertModal('수령 오류', '보급품 수령 중 오류가 발생했습니다.');
 });
 }
 
