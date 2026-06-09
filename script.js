@@ -9,6 +9,7 @@ let currentMailTab = 'all';
 let currentMailPage = 1;
 let currentMailTotalPages = 1;
 let currentMailDetailId = '';
+let currentMailDetailIndex = 0;
 let currentMailCache = [];
 let currentMailUnreadCount = 0;
 let currentMailTotalCount = 0;
@@ -195,7 +196,7 @@ function renderMailList(mails) {
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
 
     return `
-      <button class="mail-item ${readClass}" type="button" onclick="openMailDetail('${escapeForAttribute(mail.mailId)}')">
+      <button class="mail-item ${readClass}" type="button" onclick="openMailDetailByIndex(${Number(mail.detailIndex || 0)})"
         <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
         <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
@@ -241,13 +242,10 @@ function renderMailPage() {
 
   if (!pageText) return;
 
-  if (currentMailDetailId) {
-    const mail = currentMailCache.find(item => String(item.mailId) === String(currentMailDetailId));
-    const detailIndex = mail && mail.detailIndex ? mail.detailIndex : 1;
-
-    pageText.textContent = detailIndex + ' / ' + currentMailTotalCount;
-    return;
-  }
+if (currentMailDetailIndex) {
+  pageText.textContent = currentMailDetailIndex + ' / ' + currentMailTotalCount;
+  return;
+}
 
   pageText.textContent = currentMailPage + ' / ' + currentMailTotalPages;
 }
@@ -283,16 +281,24 @@ function goNextMail() {
 }
 
 function openMailDetail(mailId) {
-  if (!currentPersonalCode || !mailId) return;
-
   const cachedMail = currentMailCache.find(mail => String(mail.mailId) === String(mailId));
+  if (!cachedMail) return;
+
+  openMailDetailByIndex(Number(cachedMail.detailIndex || 0));
+}
+
+function openMailDetailByIndex(detailIndex) {
+  if (!currentPersonalCode || !detailIndex) return;
+
+  const cachedMail = currentMailCache.find(mail => Number(mail.detailIndex) === Number(detailIndex));
 
   if (!cachedMail) {
     alert('우편 정보를 찾을 수 없습니다. 우편함을 다시 열어주세요.');
     return;
   }
 
-  currentMailDetailId = mailId;
+  currentMailDetailId = cachedMail.mailId;
+  currentMailDetailIndex = Number(cachedMail.detailIndex || detailIndex);
 
   const wasUnread = !cachedMail.isRead;
   cachedMail.isRead = true;
@@ -302,7 +308,7 @@ function openMailDetail(mailId) {
 
   if (wasUnread) {
     setMailCount(Math.max(currentMailUnreadCount - 1, 0));
-    markMailReadSilently(mailId);
+    markMailReadSilently(cachedMail.mailId);
   }
 }
 
@@ -481,6 +487,7 @@ function showMailListMode() {
   const actions = document.getElementById('mail-bottom-actions');
 
   currentMailDetailId = '';
+  currentMailDetailIndex = 0;
 
   if (detail) detail.style.display = 'none';
   if (list) list.style.display = 'flex';
@@ -518,10 +525,7 @@ function goNextMailInDetail() {
 function moveMailDetailByOffset(offset) {
   if (!currentMailDetailId || !currentMailCache.length) return;
 
-  const currentMail = currentMailCache.find(mail => String(mail.mailId) === String(currentMailDetailId));
-  if (!currentMail) return;
-
-  const currentIndex = Number(currentMail.detailIndex || 1);
+const currentIndex = Number(currentMailDetailIndex || 1);
   const targetIndex = currentIndex + offset;
 
   if (targetIndex < 1 || targetIndex > currentMailTotalCount) return;
@@ -577,7 +581,7 @@ function loadMailPageAndOpenByIndex(targetIndex) {
         return;
       }
 
-      openMailDetail(targetMail.mailId);
+      openMailDetailByIndex(targetIndex);
     })
     .catch(error => {
       console.error(error);
