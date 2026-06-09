@@ -458,7 +458,7 @@ function setMailBottomButtons(mode, mail) {
       toggleCurrentMailKeep();
     };
 
-    centerBtn.textContent = mail && mail.mailType === 'SUPPLY' && mail.isReceived ? '수령완료' : '수령';
+    centerBtn.textContent = mail && mail.mailType === 'SUPPLY' && mail.isReceived ? '수령 완료' : '수령';
     centerBtn.onclick = function () {
       if (!mail || mail.mailType !== 'SUPPLY') {
         alert('첨부된 보급품이 없습니다.');
@@ -646,6 +646,12 @@ function receiveCurrentMail() {
     return;
   }
 
+const centerBtn = document.getElementById('mail-bottom-center-btn');
+if (centerBtn) {
+  centerBtn.textContent = '수령 중...';
+  centerBtn.disabled = true;
+}
+
   const url =
     API_URL
     + '?action=receiveSupplyMail'
@@ -657,9 +663,15 @@ function receiveCurrentMail() {
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
-        alert(data.message || '보급품을 수령하지 못했습니다.');
-        return;
-      }
+  alert(data.message || '보급품을 수령하지 못했습니다.');
+
+  if (centerBtn) {
+    centerBtn.textContent = '수령';
+    centerBtn.disabled = false;
+  }
+
+  return;
+}
 
       mail.isReceived = true;
       mail.receivedAt = data.receivedAt || '';
@@ -672,9 +684,15 @@ function receiveCurrentMail() {
       alert(makeReceiveResultMessage(data));
     })
     .catch(error => {
-      console.error(error);
-      alert('보급품 수령 중 오류가 발생했습니다.');
-    });
+  console.error(error);
+
+  if (centerBtn) {
+    centerBtn.textContent = '수령';
+    centerBtn.disabled = false;
+  }
+
+  alert('보급품 수령 중 오류가 발생했습니다.');
+});
 }
 
 function makeReceiveResultMessage(data) {
