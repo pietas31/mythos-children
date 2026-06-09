@@ -196,13 +196,12 @@ function renderMailList(mails) {
     const keepMark = mail.isKept ? '★' : '☆';
     const typeLabel = getMailTypeLabel(mail.mailType);
     const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
-    const receivedMark = mail.mailType === 'SUPPLY' && mail.isReceived ? ' · 수령완료' : '';
 
     return `
       <button class="mail-item ${readClass}" type="button" onclick="openMailDetailByIndex(${Number(mail.detailIndex || 0)})">
         <span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
-        <span class="mail-title">[${typeLabel}${receivedMark}] ${escapeHtml(mail.title || '제목 없음')}</span>
+        <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
       </button>
     `;
   }).join('');
@@ -446,6 +445,10 @@ function setMailBottomButtons(mode, mail) {
   leftBtn.style.display = 'block';
   centerBtn.style.display = 'block';
   rightBtn.style.display = 'block';
+
+leftBtn.disabled = false;
+centerBtn.disabled = false;
+rightBtn.disabled = false;
 
   if (mode === 'detail') {
     leftBtn.textContent = '보관';
