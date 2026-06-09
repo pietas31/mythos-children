@@ -919,3 +919,12 @@ button{
   background: #eef4ff;
   color: #1f3f77;
 }
+
+.confirm-actions:has(#confirm-ok-btn[style*="display: none"]) {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.confirm-actions:has(#confirm-ok-btn[style*="display: none"]) #confirm-cancel-btn {
+  width: 140px;
+}
