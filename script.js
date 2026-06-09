@@ -536,6 +536,36 @@ function receiveCurrentMail() {
   showMailListMode();
 }
 
+function toggleMailKeep(mailId) {
+  if (!currentPersonalCode || !mailId) return;
+
+  const url =
+    API_URL
+    + '?action=toggleMailKeep'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&mailId=' + encodeURIComponent(mailId);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || '보관 상태를 변경하지 못했습니다.');
+
+        const mail = currentMailCache.find(item => String(item.mailId) === String(mailId));
+        if (mail) {
+          mail.isKept = !mail.isKept;
+          renderMailDetail(mail);
+        }
+
+        return;
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert('보관 처리 중 오류가 발생했습니다.');
+    });
+}
+
 function deleteMail(mailId) {
   if (!currentPersonalCode || !mailId) return;
 
