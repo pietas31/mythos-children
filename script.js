@@ -263,7 +263,7 @@ function goNextMailPage() {
 }
 
 function goPrevMail() {
-  if (currentMailDetailId) {
+  if (currentMailDetailIndex) {
     goPrevMailInDetail();
     return;
   }
@@ -272,7 +272,7 @@ function goPrevMail() {
 }
 
 function goNextMail() {
-  if (currentMailDetailId) {
+  if (currentMailDetailIndex) {
     goNextMailInDetail();
     return;
   }
@@ -523,17 +523,17 @@ function goNextMailInDetail() {
 }
 
 function moveMailDetailByOffset(offset) {
-  if (!currentMailDetailId || !currentMailCache.length) return;
+  if (!currentMailDetailIndex || !currentMailTotalCount) return;
 
-const currentIndex = Number(currentMailDetailIndex || 1);
+  const currentIndex = Number(currentMailDetailIndex);
   const targetIndex = currentIndex + offset;
 
   if (targetIndex < 1 || targetIndex > currentMailTotalCount) return;
 
-  const cachedTarget = currentMailCache.find(mail => Number(mail.detailIndex) === targetIndex);
+  const cachedTarget = currentMailCache.find(mail => Number(mail.detailIndex) === Number(targetIndex));
 
   if (cachedTarget) {
-    openMailDetail(cachedTarget.mailId);
+    openMailDetailByIndex(targetIndex);
     return;
   }
 
