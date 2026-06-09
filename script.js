@@ -331,20 +331,30 @@ function markMailRead(mailId) {
 }
 
 function markMailReadSilently(mailId) {
-  if (!currentPersonalCode || !mailId) return;
+  if (!currentPersonalCode || !currentMailDetailIndex) return;
 
   const url =
     API_URL
     + '?action=markMailRead'
     + '&personalCode=' + encodeURIComponent(currentPersonalCode)
-    + '&mailId=' + encodeURIComponent(mailId);
+    + '&detailIndex=' + encodeURIComponent(currentMailDetailIndex);
 
   fetch(url)
     .then(response => response.json())
     .then(data => {
+      console.log('읽음 처리 결과:', data);
+
       if (!data.success) {
         console.warn(data.message || '읽음 처리 실패');
+        return;
       }
+
+      const mail = currentMailCache.find(item => Number(item.detailIndex) === Number(currentMailDetailIndex));
+      if (mail) {
+        mail.isRead = true;
+      }
+
+      refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
 }
