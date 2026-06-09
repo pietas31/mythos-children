@@ -420,15 +420,44 @@ function toggleCurrentMailKeep() {
   toggleMailKeep(currentMailDetailId);
 }
 
+function openConfirmModal(title, message, onConfirm) {
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-title');
+  const messageEl = document.getElementById('confirm-message');
+  const cancelBtn = document.getElementById('confirm-cancel-btn');
+  const okBtn = document.getElementById('confirm-ok-btn');
+
+  if (!modal || !titleEl || !messageEl || !cancelBtn || !okBtn) return;
+
+  titleEl.textContent = title || '확인';
+  messageEl.textContent = message || '';
+
+  modal.style.display = 'flex';
+
+  cancelBtn.onclick = function () {
+    modal.style.display = 'none';
+  };
+
+  okBtn.onclick = function () {
+    modal.style.display = 'none';
+
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+    }
+  };
+}
+
 function deleteCurrentMail() {
   if (!currentMailDetailId) return;
 
-  const ok = confirm('이 우편을 삭제하시겠습니까?\n삭제한 우편은 목록에서 보이지 않습니다.');
-
-  if (!ok) return;
-
-  deleteMail(currentMailDetailId);
-  closeMailDetail();
+  openConfirmModal(
+    '우편 삭제',
+    '이 우편을 삭제하시겠습니까?\n삭제한 우편은 복구할 수 없습니다.',
+    function () {
+      deleteMail(currentMailDetailId);
+      closeMailDetail();
+    }
+  );
 }
 
 function formatMailDateForView(value) {
