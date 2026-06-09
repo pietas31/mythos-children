@@ -824,3 +824,37 @@ button{
 .mail-actions{
   display:grid !important;
 }
+
+/* =========================
+   v19-2 LOADING FEEDBACK
+========================= */
+
+.mail-loading{
+  min-height:190px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color:#6b7689;
+  font-size:14px;
+  font-weight:800;
+}
+
+.mail-loading-dot{
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  border:3px solid #d6dfec;
+  border-top-color:#223e72;
+  animation:mailSpin .8s linear infinite;
+}
+
+@keyframes mailSpin{
+  from{
+    transform:rotate(0deg);
+  }
+  to{
+    transform:rotate(360deg);
+  }
+}

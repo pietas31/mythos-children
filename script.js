@@ -89,9 +89,7 @@ function openMailModal() {
     showMailListMode();
   } else {
     const list = document.getElementById('mail-list');
-    if (list) {
-      list.innerHTML = '<div class="mail-empty">우편을 불러오는 중입니다.</div>';
-    }
+    showMailLoading('우편을 불러오는 중입니다.');
   }
 
   loadMailList();
@@ -109,6 +107,7 @@ function selectMailTab(tab) {
   currentMailDetailId = '';
 
   updateMailTabActive(tab);
+  showMailLoading('우편을 불러오는 중입니다.');
   loadMailList();
 }
 
@@ -210,6 +209,29 @@ function renderMailError(message) {
   const list = document.getElementById('mail-list');
   if (!list) return;
   list.innerHTML = '<div class="mail-empty">' + escapeHtml(message) + '</div>';
+}
+
+function showMailLoading(message) {
+  const list = document.getElementById('mail-list');
+  const detail = document.getElementById('mail-detail');
+  const page = document.querySelector('.mail-page');
+  const actions = document.getElementById('mail-bottom-actions');
+
+  if (detail) detail.style.display = 'none';
+  if (list) {
+    list.style.display = 'flex';
+    list.innerHTML =
+      '<div class="mail-loading">' +
+        '<div class="mail-loading-dot"></div>' +
+        '<div>' + escapeHtml(message || '불러오는 중입니다.') + '</div>' +
+      '</div>';
+  }
+
+  if (page) page.style.display = 'flex';
+  if (actions) actions.style.display = 'grid';
+
+  renderMailPage();
+  setMailBottomButtons('list');
 }
 
 function renderMailPage() {
