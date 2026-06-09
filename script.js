@@ -11,6 +11,7 @@ let currentMailTotalPages = 1;
 let currentMailDetailId = '';
 let currentMailCache = [];
 let currentMailUnreadCount = 0;
+let currentMailTotalCount = 0;
 let hasLoadedMailOnce = false;
 
 console.log('MYTHOS READY v19');
@@ -158,6 +159,7 @@ function loadMailList() {
       currentMailPage = data.page || 1;
       currentMailTotalPages = data.totalPages || 1;
       currentMailCache = data.mails || [];
+      currentMailTotalCount = data.totalCount || 0;
       hasLoadedMailOnce = true;
 
       const page = document.querySelector('.mail-page');
@@ -240,8 +242,10 @@ function renderMailPage() {
   if (!pageText) return;
 
   if (currentMailDetailId) {
-    const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
-    pageText.textContent = (index + 1) + ' / ' + currentMailCache.length;
+    const mail = currentMailCache.find(item => String(item.mailId) === String(currentMailDetailId));
+    const detailIndex = mail && mail.detailIndex ? mail.detailIndex : 1;
+
+    pageText.textContent = detailIndex + ' / ' + currentMailTotalCount;
     return;
   }
 
@@ -506,18 +510,77 @@ function goPrevMailInDetail() {
   if (!currentMailDetailId || !currentMailCache.length) return;
 
   const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
-  if (index <= 0) return;
 
-  openMailDetail(currentMailCache[index - 1].mailId);
+  if (index > 0) {
+    openMailDetail(currentMailCache[index - 1].mailId);
+    return;
+  }
+
+  if (currentMailPage <= 1) return;
+
+  loadMailPageAndOpen(currentMailPage - 1, 'last');
 }
 
 function goNextMailInDetail() {
   if (!currentMailDetailId || !currentMailCache.length) return;
 
   const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
-  if (index < 0 || index >= currentMailCache.length - 1) return;
 
-  openMailDetail(currentMailCache[index + 1].mailId);
+  if (index >= 0 && index < currentMailCache.length - 1) {
+    openMailDetail(currentMailCache[index + 1].mailId);
+    return;
+  }
+
+  if (currentMailPage >= currentMailTotalPages) return;
+
+  loadMailPageAndOpen(currentMailPage + 1, 'first');
+}
+
+function loadMailPageAndOpen(page, target) {
+  currentMailPage = page;
+
+  showMailLoading('우편을 불러오는 중입니다.');
+
+  const url =
+    API_URL
+    + '?action=getMailList'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&tab=' + encodeURIComponent(currentMailTab)
+    + '&page=' + encodeURIComponent(currentMailPage);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        renderMailError(data.message || '우편을 불러오지 못했습니다.');
+        return;
+      }
+
+      currentMailPage = data.page || 1;
+      currentMailTotalPages = data.totalPages || 1;
+      currentMailTotalCount = data.totalCount || 0;
+      currentMailCache = data.mails || [];
+
+      if (typeof data.unreadCount !== 'undefined') {
+        setMailCount(data.unreadCount);
+      }
+
+      if (!currentMailCache.length) {
+        showMailListMode();
+        return;
+      }
+
+      const mail =
+        target === 'last'
+          ? currentMailCache[currentMailCache.length - 1]
+          : currentMailCache[0];
+
+      openMailDetail(mail.mailId);
+    })
+    .catch(error => {
+      console.error(error);
+      renderMailError('우편을 불러오는 중 오류가 발생했습니다.');
+    });
 }
 
 function receiveCurrentMail() {
