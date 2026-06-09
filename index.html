@@ -343,11 +343,15 @@
     </div>
 
     <input
-      type="text"
-      id="mail-write-receiver-code"
-      class="modal-input"
-      placeholder="받는 사람 개인코드"
-    >
+  type="text"
+  id="mail-write-receiver-name"
+  class="modal-input"
+  placeholder="받는 사람 캐릭터명"
+  autocomplete="off"
+  oninput="searchMailReceiverCandidates()"
+>
+
+<div id="mail-receiver-candidates" class="mail-receiver-candidates"></div>
 
     <input
       type="text"
@@ -358,12 +362,17 @@
     >
 
     <textarea
-      id="mail-write-content"
-      class="modal-input"
-      placeholder="내용"
-      maxlength="300"
-      rows="8"
-    ></textarea>
+  id="mail-write-content"
+  class="modal-input mail-write-textarea"
+  placeholder="내용"
+  maxlength="300"
+  rows="8"
+  oninput="updateMailWriteCount()"
+></textarea>
+
+<div class="mail-write-count">
+  <span id="mail-write-count-current">0</span> / 300
+</div>
 
     <div class="mail-actions">
       <button class="modal-btn secondary" onclick="closeMailWriteModal()">취소</button>

@@ -1115,13 +1115,21 @@ function deleteMail(mailId) {
     .catch(error => console.error(error));
 }
 
+let selectedMailReceiverName = '';
+
 function openMailWriteModal() {
   const modal = document.getElementById('mail-write-modal');
   if (!modal) return;
 
-  document.getElementById('mail-write-receiver-code').value = '';
+  document.getElementById('mail-write-receiver-name').value = '';
   document.getElementById('mail-write-title').value = '';
   document.getElementById('mail-write-content').value = '';
+  updateMailWriteCount();
+
+  selectedMailReceiverName = '';
+
+  const candidates = document.getElementById('mail-receiver-candidates');
+  if (candidates) candidates.innerHTML = '';
 
   modal.style.display = 'flex';
 }
@@ -1133,21 +1141,95 @@ function closeMailWriteModal() {
   modal.style.display = 'none';
 }
 
+function searchMailReceiverCandidates() {
+  const input = document.getElementById('mail-write-receiver-name');
+  const candidates = document.getElementById('mail-receiver-candidates');
+
+  if (!input || !candidates) return;
+
+  const keyword = input.value.trim();
+  selectedMailReceiverName = '';
+
+  if (keyword.length < 2) {
+    candidates.innerHTML = '<div class="mail-receiver-hint">2글자 이상 입력하면 후보가 표시됩니다.</div>';
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=searchMailReceivers'
+    + '&keyword=' + encodeURIComponent(keyword);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
+        return;
+      }
+
+      if (!data.receivers || !data.receivers.length) {
+        candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 캐릭터가 없습니다.</div>';
+        return;
+      }
+
+      candidates.innerHTML = data.receivers.map(receiver => {
+        return `
+          <button
+            type="button"
+            class="mail-receiver-candidate"
+            onclick="selectMailReceiver('${escapeForAttribute(receiver.characterName)}')"
+          >
+            ${escapeHtml(receiver.characterName)}
+          </button>
+        `;
+      }).join('');
+    })
+    .catch(error => {
+      console.error(error);
+      candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
+    });
+}
+
+function selectMailReceiver(characterName) {
+  const input = document.getElementById('mail-write-receiver-name');
+  const candidates = document.getElementById('mail-receiver-candidates');
+
+  selectedMailReceiverName = characterName;
+
+  if (input) input.value = characterName;
+  if (candidates) candidates.innerHTML = '<div class="mail-receiver-selected">선택됨 : ' + escapeHtml(characterName) + '</div>';
+}
+
+function updateMailWriteCount() {
+  const content = document.getElementById('mail-write-content');
+  const count = document.getElementById('mail-write-count-current');
+
+  if (!content || !count) return;
+
+  count.textContent = String(content.value.length);
+}
+
 function sendUserLetter() {
   if (!currentPersonalCode) {
     openAlertModal('발송 불가', '로그인 후 서신을 보낼 수 있습니다.');
     return;
   }
 
-  const receiverCode = document.getElementById('mail-write-receiver-code').value.trim();
+  const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
   const title = document.getElementById('mail-write-title').value.trim();
   const content = document.getElementById('mail-write-content').value.trim();
   const sendBtn = document.getElementById('mail-write-send-btn');
 
-  if (!receiverCode) {
-    openAlertModal('입력 필요', '받는 사람 개인코드를 입력해주세요.');
-    return;
-  }
+  if (!receiverName) {
+  openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력해주세요.');
+  return;
+}
+
+if (receiverName !== selectedMailReceiverName) {
+  openAlertModal('선택 필요', '검색 결과에서 받는 사람을 선택해주세요.');
+  return;
+}
 
   if (!title) {
     openAlertModal('입력 필요', '제목을 입력해주세요.');
@@ -1169,7 +1251,7 @@ function sendUserLetter() {
     body: JSON.stringify({
       action: 'sendUserLetter',
       senderCode: currentPersonalCode,
-      receiverCode: receiverCode,
+      receiverName: receiverName,
       title: title,
       content: content
     })
