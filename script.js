@@ -1116,6 +1116,7 @@ function deleteMail(mailId) {
 }
 
 let selectedMailReceiverName = '';
+let mailReceiverSearchSeq = 0;
 
 function openMailWriteModal() {
   const modal = document.getElementById('mail-write-modal');
@@ -1155,6 +1156,8 @@ function searchMailReceiverCandidates() {
     return;
   }
 
+const searchSeq = ++mailReceiverSearchSeq;
+
   const url =
     API_URL
     + '?action=searchMailReceivers'
@@ -1163,6 +1166,8 @@ function searchMailReceiverCandidates() {
   fetch(url)
     .then(response => response.json())
     .then(data => {
+  if (searchSeq !== mailReceiverSearchSeq) return;
+
       if (!data.success) {
         candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
         return;
@@ -1186,9 +1191,11 @@ function searchMailReceiverCandidates() {
       }).join('');
     })
     .catch(error => {
-      console.error(error);
-      candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
-    });
+  if (searchSeq !== mailReceiverSearchSeq) return;
+
+  console.error(error);
+  candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
+});
 }
 
 function selectMailReceiver(characterName) {
