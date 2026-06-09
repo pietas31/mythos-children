@@ -298,6 +298,7 @@ function openMailDetail(mailId) {
   cachedMail.isRead = true;
 
   renderMailDetail(cachedMail);
+  renderMailPage();
 
   if (wasUnread) {
     setMailCount(Math.max(currentMailUnreadCount - 1, 0));
@@ -512,28 +513,14 @@ function goPrevMailInDetail() {
   const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
 
   if (index > 0) {
-    openMailDetail(currentMailCache[index - 1].mailId);
+    const prevMail = currentMailCache[index - 1];
+    openMailDetail(prevMail.mailId);
     return;
   }
 
   if (currentMailPage <= 1) return;
 
   loadMailPageAndOpen(currentMailPage - 1, 'last');
-}
-
-function goNextMailInDetail() {
-  if (!currentMailDetailId || !currentMailCache.length) return;
-
-  const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
-
-  if (index >= 0 && index < currentMailCache.length - 1) {
-    openMailDetail(currentMailCache[index + 1].mailId);
-    return;
-  }
-
-  if (currentMailPage >= currentMailTotalPages) return;
-
-  loadMailPageAndOpen(currentMailPage + 1, 'first');
 }
 
 function loadMailPageAndOpen(page, target) {
