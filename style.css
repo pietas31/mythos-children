@@ -1020,3 +1020,90 @@ button{
   width: 100%;
   box-sizing: border-box;
 }
+
+#mail-write-modal .mail-box {
+  max-width: 460px;
+}
+
+#mail-write-modal .modal-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#mail-write-content.mail-write-textarea {
+  width: 100%;
+  min-height: 170px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  border: 1px solid #d6deef;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1f2a44;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+}
+
+#mail-write-content.mail-write-textarea:focus {
+  border-color: #28487f;
+  box-shadow: 0 0 0 3px rgba(40, 72, 127, 0.10);
+}
+
+.mail-write-count {
+  margin-top: 4px;
+  margin-bottom: 14px;
+  text-align: right;
+  font-size: 12px;
+  color: #6f7788;
+}
+
+.mail-write-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mail-write-actions .modal-btn {
+  width: 128px;
+}
+
+.mail-write-actions .modal-btn {
+  width: 100%;
+  min-width: 0;
+}
+
+.mail-receiver-candidates {
+  margin-top: -4px;
+  margin-bottom: 10px;
+  max-height: 132px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mail-receiver-candidate {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d6deef;
+  background: #f7f9fd;
+  color: #1f2a44;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mail-receiver-candidate:hover {
+  background: #edf2fb;
+}
+
+.mail-receiver-hint,
+.mail-receiver-selected {
+  font-size: 12px;
+  color: #6f7788;
+  padding: 2px 4px;
+}
