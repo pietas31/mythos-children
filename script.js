@@ -1117,6 +1117,7 @@ function deleteMail(mailId) {
 
 let selectedMailReceiverName = '';
 let mailReceiverSearchSeq = 0;
+let mailReceiverSearchTimer = null;
 
 function openMailWriteModal() {
   const modal = document.getElementById('mail-write-modal');
@@ -1151,51 +1152,63 @@ function searchMailReceiverCandidates() {
   const keyword = input.value.trim();
   selectedMailReceiverName = '';
 
+  mailReceiverSearchSeq++;
+
+  if (mailReceiverSearchTimer) {
+    clearTimeout(mailReceiverSearchTimer);
+  }
+
   if (keyword.length < 2) {
     candidates.innerHTML = '<div class="mail-receiver-hint">2글자 이상 입력하면 후보가 표시됩니다.</div>';
     return;
   }
 
-const searchSeq = ++mailReceiverSearchSeq;
+  candidates.innerHTML = '<div class="mail-receiver-hint">입력을 멈추면 검색합니다.</div>';
 
-  const url =
-    API_URL
-    + '?action=searchMailReceivers'
-    + '&keyword=' + encodeURIComponent(keyword);
+  mailReceiverSearchTimer = setTimeout(function () {
+    const searchSeq = mailReceiverSearchSeq;
 
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-  if (searchSeq !== mailReceiverSearchSeq) return;
+    candidates.innerHTML = '<div class="mail-receiver-hint">검색 중...</div>';
 
-      if (!data.success) {
-        candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
-        return;
-      }
+    const url =
+      API_URL
+      + '?action=searchMailReceivers'
+      + '&keyword=' + encodeURIComponent(keyword);
 
-      if (!data.receivers || !data.receivers.length) {
-        candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 캐릭터가 없습니다.</div>';
-        return;
-      }
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (searchSeq !== mailReceiverSearchSeq) return;
 
-      candidates.innerHTML = data.receivers.map(receiver => {
-        return `
-          <button
-            type="button"
-            class="mail-receiver-candidate"
-            onclick="selectMailReceiver('${escapeForAttribute(receiver.characterName)}')"
-          >
-            ${escapeHtml(receiver.characterName)}
-          </button>
-        `;
-      }).join('');
-    })
-    .catch(error => {
-  if (searchSeq !== mailReceiverSearchSeq) return;
+        if (!data.success) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
+          return;
+        }
 
-  console.error(error);
-  candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
-});
+        if (!data.receivers || !data.receivers.length) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 캐릭터가 없습니다.</div>';
+          return;
+        }
+
+        candidates.innerHTML = data.receivers.map(receiver => {
+          return `
+            <button
+              type="button"
+              class="mail-receiver-candidate"
+              onclick="selectMailReceiver('${escapeForAttribute(receiver.characterName)}')"
+            >
+              ${escapeHtml(receiver.characterName)}
+            </button>
+          `;
+        }).join('');
+      })
+      .catch(error => {
+        if (searchSeq !== mailReceiverSearchSeq) return;
+
+        console.error(error);
+        candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
+      });
+  }, 350);
 }
 
 function selectMailReceiver(characterName) {
