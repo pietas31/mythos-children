@@ -508,23 +508,40 @@ function showMailDetailMode(mail) {
 }
 
 function goPrevMailInDetail() {
+  moveMailDetailByOffset(-1);
+}
+
+function goNextMailInDetail() {
+  moveMailDetailByOffset(1);
+}
+
+function moveMailDetailByOffset(offset) {
   if (!currentMailDetailId || !currentMailCache.length) return;
 
-  const index = currentMailCache.findIndex(mail => String(mail.mailId) === String(currentMailDetailId));
+  const currentMail = currentMailCache.find(mail => String(mail.mailId) === String(currentMailDetailId));
+  if (!currentMail) return;
 
-  if (index > 0) {
-    const prevMail = currentMailCache[index - 1];
-    openMailDetail(prevMail.mailId);
+  const currentIndex = Number(currentMail.detailIndex || 1);
+  const targetIndex = currentIndex + offset;
+
+  if (targetIndex < 1 || targetIndex > currentMailTotalCount) return;
+
+  const cachedTarget = currentMailCache.find(mail => Number(mail.detailIndex) === targetIndex);
+
+  if (cachedTarget) {
+    openMailDetail(cachedTarget.mailId);
     return;
   }
 
-  if (currentMailPage <= 1) return;
-
-  loadMailPageAndOpen(currentMailPage - 1, 'last');
+  loadMailPageAndOpenByIndex(targetIndex);
 }
 
-function loadMailPageAndOpen(page, target) {
-  currentMailPage = page;
+function loadMailPageAndOpenByIndex(targetIndex) {
+  const pageSize = getCurrentMailPageSize();
+  const targetPage = Math.ceil(targetIndex / pageSize);
+
+  currentMailPage = targetPage;
+  currentMailDetailId = '';
 
   showMailLoading('우편을 불러오는 중입니다.');
 
@@ -543,7 +560,7 @@ function loadMailPageAndOpen(page, target) {
         return;
       }
 
-      currentMailPage = data.page || 1;
+      currentMailPage = data.page || targetPage;
       currentMailTotalPages = data.totalPages || 1;
       currentMailTotalCount = data.totalCount || 0;
       currentMailCache = data.mails || [];
@@ -552,22 +569,33 @@ function loadMailPageAndOpen(page, target) {
         setMailCount(data.unreadCount);
       }
 
-      if (!currentMailCache.length) {
+      const targetMail = currentMailCache.find(mail => Number(mail.detailIndex) === Number(targetIndex));
+
+      if (!targetMail) {
         showMailListMode();
+        alert('해당 우편을 찾지 못했습니다. 우편함을 다시 불러왔습니다.');
         return;
       }
 
-      const mail =
-        target === 'last'
-          ? currentMailCache[currentMailCache.length - 1]
-          : currentMailCache[0];
-
-      openMailDetail(mail.mailId);
+      openMailDetail(targetMail.mailId);
     })
     .catch(error => {
       console.error(error);
       renderMailError('우편을 불러오는 중 오류가 발생했습니다.');
     });
+}
+
+function getCurrentMailPageSize() {
+  if (!currentMailCache.length) return 5;
+
+  const firstMail = currentMailCache[0];
+  const firstIndex = Number(firstMail.detailIndex || 1);
+
+  if (currentMailPage > 1 && firstIndex > 1) {
+    return Math.max(1, Math.round((firstIndex - 1) / (currentMailPage - 1)));
+  }
+
+  return Math.max(1, currentMailCache.length);
 }
 
 function receiveCurrentMail() {
