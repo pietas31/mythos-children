@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19-5';
+let CURRENT_VERSION = 'v19-6';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -17,7 +17,7 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 
-console.log('MYTHOS READY v19-5');
+console.log('MYTHOS READY v19-6');
 
 function goHome() {
   location.reload();
@@ -1458,6 +1458,7 @@ function loginPlayer() {
         localStorage.setItem('mythosPlayerData', JSON.stringify(data.player));
 
         renderPlayer(data.player);
+        applyAdminUi(data.player);
 
         const mainScreen = document.querySelector('.main-screen');
         if (mainScreen) {
@@ -1487,6 +1488,15 @@ function loginPlayer() {
       alert('로그인 처리 중 오류가 발생했습니다.\n\n문제가 계속되면 관리자에게 문의해주세요.');
       console.error(error);
     });
+}
+
+function applyAdminUi(player) {
+  const isAdmin = !!(player && player.isAdmin);
+
+  document.body.classList.toggle('is-admin', isAdmin);
+  document.body.classList.toggle('is-user', !isAdmin);
+
+  console.log('관리자 UI 여부:', isAdmin, player ? player.role : '');
 }
 
 function renderPlayer(player) {
@@ -1564,7 +1574,9 @@ window.addEventListener('DOMContentLoaded', function () {
     const savedPlayerData = localStorage.getItem('mythosPlayerData');
 
     if (savedPlayerData) {
-      renderPlayer(JSON.parse(savedPlayerData));
+      const savedPlayer = JSON.parse(savedPlayerData);
+      renderPlayer(savedPlayer);
+      applyAdminUi(savedPlayer);
 
       if (mainScreen) {
         mainScreen.style.visibility = 'visible';
