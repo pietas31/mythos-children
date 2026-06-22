@@ -1358,10 +1358,13 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .portrait-frame{
+  width:200px;
   border-radius:18px;
+  border-width:4px;
 }
 
 .portrait-frame::after{
+  inset:6px;
   border-radius:12px;
 }
 
@@ -1379,6 +1382,208 @@ body.is-admin .mail-write-actions .admin-only{
   text-align:right;
 }
 
+.submenu{
+  padding:8px 0 0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+
+.submenu button{
+  position:relative;
+  min-height:44px;
+  padding:12px 14px 12px 40px;
+  border:1px solid rgba(37,59,102,.12);
+  border-radius:8px;
+  background:rgba(255,253,248,.78);
+  color:#192235;
+  box-shadow:0 8px 18px rgba(31,42,68,.08);
+}
+
+.submenu button::before{
+  content:"✦";
+  position:absolute;
+  left:16px;
+  top:50%;
+  color:#c99a45;
+  transform:translateY(-50%);
+}
+
+.submenu button:hover{
+  border-color:rgba(201,154,69,.42);
+  background:linear-gradient(135deg,#263f6c,#813f54);
+  color:#fffaf1;
+  transform:translateX(4px);
+}
+
+.memo-page{
+  width:min(760px,calc(100% - 44px));
+  margin:0 auto;
+  padding:50px 0 72px;
+}
+
+.memo-panel{
+  position:relative;
+  padding:28px;
+  border:1px solid rgba(84,67,47,.18);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(255,250,241,.96),rgba(239,228,209,.92));
+  box-shadow:0 12px 30px rgba(24,30,44,.12);
+}
+
+.memo-panel::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  pointer-events:none;
+  border:1px solid rgba(201,154,69,.30);
+  border-radius:6px;
+}
+
+.memo-header{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.memo-header h2{
+  color:#253b66;
+  font-size:26px;
+  font-weight:900;
+}
+
+.memo-back-btn,
+.memo-save-btn{
+  border:1px solid rgba(37,59,102,.16);
+  border-radius:8px;
+  background:linear-gradient(135deg,#253b66,#375a8c);
+  color:#fffaf1;
+  cursor:pointer;
+  font-weight:900;
+  box-shadow:0 12px 22px rgba(37,59,102,.18);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+
+.memo-back-btn{
+  min-height:40px;
+  padding:10px 15px;
+  background:linear-gradient(180deg,#fffdf8,#eadfc9);
+  color:#253b66;
+}
+
+.memo-save-btn{
+  width:100%;
+  min-height:46px;
+  margin:12px 0 22px;
+  padding:13px 16px;
+}
+
+.memo-back-btn:hover,
+.memo-save-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 28px rgba(37,59,102,.24);
+}
+
+.memo-input{
+  position:relative;
+  z-index:1;
+  width:100%;
+  min-height:180px;
+  padding:16px;
+  border:1px solid rgba(37,59,102,.18);
+  border-radius:8px;
+  background:rgba(255,255,255,.74);
+  color:#192235;
+  font-size:14px;
+  line-height:1.7;
+  resize:vertical;
+  outline:none;
+}
+
+.memo-input:focus{
+  border-color:rgba(201,154,69,.72);
+  background:#fffdf8;
+  box-shadow:0 0 0 3px rgba(201,154,69,.16);
+}
+
+.memo-list-title{
+  position:relative;
+  z-index:1;
+  margin-bottom:12px;
+  color:#253b66;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.memo-list{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.memo-empty{
+  padding:22px;
+  border:1px dashed rgba(37,59,102,.18);
+  border-radius:8px;
+  background:rgba(255,255,255,.42);
+  color:#6b7689;
+  font-size:14px;
+  font-weight:800;
+  text-align:center;
+}
+
+.memo-item{
+  position:relative;
+  padding:18px 44px 16px 16px;
+  border:1px solid rgba(37,59,102,.10);
+  border-radius:8px;
+  background:rgba(255,253,248,.82);
+  box-shadow:0 8px 18px rgba(24,30,44,.08);
+}
+
+.memo-delete-btn{
+  position:absolute;
+  top:9px;
+  right:9px;
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  background:rgba(37,59,102,.08);
+  color:#253b66;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+
+.memo-delete-btn:hover{
+  background:#8d3f52;
+  color:#fffaf1;
+}
+
+.memo-content{
+  color:#202734;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.7;
+  white-space:pre-wrap;
+}
+
+.memo-date{
+  margin-top:10px;
+  color:#8a94a6;
+  font-size:12px;
+  font-weight:800;
+  text-align:right;
+}
+
 @media (max-width:980px){
   .layout{
     width:min(620px,calc(100% - 32px));
@@ -1388,6 +1593,11 @@ body.is-admin .mail-write-actions .admin-only{
 
 @media (max-width:640px){
   .portrait-frame{
-    width:min(220px,72vw);
+    width:min(200px,72vw);
+  }
+
+  .memo-header{
+    align-items:stretch;
+    flex-direction:column;
   }
 }

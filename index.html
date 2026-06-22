@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-simple-2">
+<link rel="stylesheet" href="style.css?v=19-7-memo-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
     <div class="panel-title">PLAY MENU</div>
     <button class="menu-btn">조사하러 가기</button>
     <button class="menu-btn">조사일지</button>
-    <button class="menu-btn">개인 메모</button>
+    <button class="menu-btn" onclick="showMemoPage()">개인 메모</button>
     <button class="menu-btn">인벤토리</button>
     <div class="menu-dropdown admin-only">
   <button class="menu-btn">운영진 메뉴</button>
@@ -150,6 +150,28 @@
     </div>
   </section>
 
+</main>
+
+<main id="memo-page" class="memo-page" style="display: none;">
+  <section class="memo-panel">
+    <div class="memo-header">
+      <h2>개인 메모</h2>
+      <button class="memo-back-btn" onclick="showMainPage()">메인으로 돌아가기</button>
+    </div>
+
+    <textarea
+      id="memo-input"
+      class="memo-input"
+      placeholder="메모를 입력하세요."
+    ></textarea>
+
+    <button class="memo-save-btn" onclick="saveLocalMemo()">메모 저장</button>
+
+    <div class="memo-list-title">기존 메모 목록</div>
+    <div id="memo-list" class="memo-list">
+      <div class="memo-empty">저장된 메모가 없습니다.</div>
+    </div>
+  </section>
 </main>
 
 <!-- 로그인 모달 -->

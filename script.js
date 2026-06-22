@@ -1984,6 +1984,116 @@ function closeSettingsModal() {
   modal.style.display = 'none';
 }
 
+function getLocalMemoStorageKey() {
+  return 'mythosLocalMemos:' + (currentPersonalCode || 'guest');
+}
+
+function getLocalMemos() {
+  try {
+    return JSON.parse(localStorage.getItem(getLocalMemoStorageKey()) || '[]');
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+function setLocalMemos(memos) {
+  localStorage.setItem(getLocalMemoStorageKey(), JSON.stringify(memos));
+}
+
+function closeModalIfExists(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+function showMemoPage() {
+  closeModalIfExists('mail-modal');
+  closeModalIfExists('letter-paper-modal');
+  closeModalIfExists('mail-write-modal');
+  closeModalIfExists('supply-write-modal');
+  closeModalIfExists('settings-modal');
+  closeModalIfExists('confirm-modal');
+
+  const mainScreen = document.querySelector('.main-screen');
+  const memoPage = document.getElementById('memo-page');
+  const memoInput = document.getElementById('memo-input');
+
+  if (mainScreen) mainScreen.style.display = 'none';
+  if (memoPage) memoPage.style.display = 'block';
+  if (memoInput) memoInput.value = '';
+
+  renderLocalMemos();
+}
+
+function showMainPage() {
+  const mainScreen = document.querySelector('.main-screen');
+  const memoPage = document.getElementById('memo-page');
+
+  if (memoPage) memoPage.style.display = 'none';
+  if (mainScreen) mainScreen.style.display = 'grid';
+}
+
+function saveLocalMemo() {
+  const memoInput = document.getElementById('memo-input');
+  if (!memoInput) return;
+
+  const content = memoInput.value.trim();
+
+  if (!content) {
+    openAlertModal('저장 불가', '메모 내용을 입력해주세요.');
+    return;
+  }
+
+  const memos = getLocalMemos();
+
+  memos.unshift({
+    content: content,
+    createdAt: new Date().toISOString()
+  });
+
+  setLocalMemos(memos);
+  memoInput.value = '';
+  renderLocalMemos();
+}
+
+function renderLocalMemos() {
+  const list = document.getElementById('memo-list');
+  if (!list) return;
+
+  const memos = getLocalMemos();
+
+  if (!memos.length) {
+    list.innerHTML = '<div class="memo-empty">저장된 메모가 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = memos.map((memo, index) => {
+    const dateText = memo.createdAt
+      ? String(memo.createdAt).replace('T', ' ').slice(0, 16)
+      : '';
+
+    return `
+      <div class="memo-item">
+        <button class="memo-delete-btn" onclick="deleteLocalMemo(${index})">×</button>
+        <div class="memo-content">${escapeHtml(memo.content)}</div>
+        <div class="memo-date">${escapeHtml(dateText)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteLocalMemo(index) {
+  const memos = getLocalMemos();
+  const safeIndex = Number(index);
+
+  if (Number.isNaN(safeIndex) || safeIndex < 0 || safeIndex >= memos.length) return;
+
+  memos.splice(safeIndex, 1);
+  setLocalMemos(memos);
+  renderLocalMemos();
+}
+
 function openRegisterModal() {
   document.getElementById('login-modal').style.display = 'none';
   document.getElementById('register-modal').style.display = 'flex';
