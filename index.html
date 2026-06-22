@@ -428,13 +428,26 @@
       placeholder="지급 골드"
     >
 
-    <input
-  id="supply-item-search"
-  class="modal-input"
-  placeholder="아이템명 검색"
-  autocomplete="off"
-  oninput="searchSupplyItemCandidates()"
->
+<div class="supply-item-row">
+
+  <input
+    id="supply-item-search"
+    class="modal-input"
+    placeholder="아이템명 검색"
+    autocomplete="off"
+    oninput="searchSupplyItemCandidates()"
+  >
+
+  <input
+    id="supply-item-quantity"
+    class="modal-input"
+    type="number"
+    min="1"
+    value="1"
+    placeholder="수량"
+  >
+
+</div>
 
 <div id="supply-item-candidates" class="mail-receiver-candidates"></div>
 
@@ -442,15 +455,7 @@
   id="supply-item"
   class="modal-input"
   placeholder="선택된 아이템ID"
->
-
-<input
-  id="supply-item-quantity"
-  class="modal-input"
-  type="number"
-  min="1"
-  value="1"
-  placeholder="아이템 수량"
+  readonly
 >
 
     <button

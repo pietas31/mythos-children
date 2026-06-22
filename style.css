@@ -1015,3 +1015,18 @@ body.is-admin .mail-write-actions .admin-only{
   background:#1f4784;
   color:white;
 }
+
+.supply-item-row{
+  display:grid;
+  grid-template-columns:1fr 110px;
+  gap:10px;
+}
+
+#supply-item-search,
+#supply-item-quantity{
+  margin-bottom:0;
+}
+
+#supply-item{
+  margin-top:10px;
+}
