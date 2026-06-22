@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19-6';
+let CURRENT_VERSION = 'v19-7';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -18,7 +18,7 @@ let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 let currentLetterMode = 'basic';
 
-console.log('MYTHOS READY v19-6');
+console.log('MYTHOS READY v19-7');
 
 function goHome() {
   location.reload();
@@ -210,14 +210,15 @@ function renderMailList(mails) {
     const disabledClass = currentMailSelectionMode && !canSelect ? ' is-disabled-select' : '';
 
     return `
-      <div class="mail-item ${readClass}${selectClass}${disabledClass}" onclick="handleMailItemClick(${Number(mail.detailIndex || 0)}, '${escapeForAttribute(mail.mailId)}')">
+      <div class="mail-item ${readClass}${selectClass}${disabledClass} ${getMailTypeClass(mail.mailType)}" onclick="handleMailItemClick(${Number(mail.detailIndex || 0)}, '${escapeForAttribute(mail.mailId)}')">
         ${
           currentMailSelectionMode
             ? `<span class="mail-select-box">${selected ? '✓' : ''}</span>`
             : `<span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>`
         }
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
-        <span class="mail-title">[${typeLabel}] ${escapeHtml(mail.title || '제목 없음')}</span>
+        <span class="mail-type-badge">${typeLabel}</span>
+        <span class="mail-title">${escapeHtml(mail.title || '제목 없음')}</span>
       </div>
     `;
   }).join('');
@@ -1621,10 +1622,17 @@ function sendGmLetterAfterConfirm(isAllSend, receiverName, title, content, gmBtn
 
 function getMailTypeLabel(type) {
   if (type === 'SUPPLY') return '보급';
-  if (type === 'ANON') return '서신';
-  if (type === 'PREMIUM') return '서신';
-  if (type === 'GM') return '서신';
+  if (type === 'PREMIUM') return '고급';
+  if (type === 'GM') return 'GM';
+  if (type === 'ANON') return '일반';
   return '서신';
+}
+
+function getMailTypeClass(type) {
+  if (type === 'SUPPLY') return 'type-supply';
+  if (type === 'PREMIUM') return 'type-premium';
+  if (type === 'GM') return 'type-gm';
+  return 'type-letter';
 }
 
 function openAdminGmWrite() {
