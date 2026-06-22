@@ -1056,3 +1056,12 @@ body.is-admin .mail-write-actions .admin-only{
   margin-top:4px;
   margin-bottom:14px;
 }
+
+.premium-letter-btn{
+  background:#6f4aa8;
+  color:white;
+}
+
+.premium-letter-btn:hover{
+  background:#5b3a8f;
+}

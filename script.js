@@ -1314,7 +1314,7 @@ function sendUserLetter() {
       }
 
       closeMailWriteModal();
-      openAlertModal('발송 완료', '서신을 발송했습니다.');
+      openAlertModal('발송 완료', '일반 서신을 발송했습니다.');
     })
     .catch(error => {
       console.error(error);
@@ -1325,6 +1325,89 @@ function sendUserLetter() {
       }
 
       openAlertModal('발송 오류', '서신 발송 중 오류가 발생했습니다.');
+    });
+}
+
+function sendPremiumLetter() {
+  if (!currentPersonalCode) {
+    openAlertModal('발송 불가', '로그인 후 고급 서신을 보낼 수 있습니다.');
+    return;
+  }
+
+  const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
+  const title = document.getElementById('mail-write-title').value.trim();
+  const content = document.getElementById('mail-write-content').value.trim();
+  const premiumBtn = document.getElementById('mail-write-premium-btn');
+
+  if (!receiverName) {
+    openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력해주세요.');
+    return;
+  }
+
+  if (!title) {
+    openAlertModal('입력 필요', '제목을 입력해주세요.');
+    return;
+  }
+
+  if (!content) {
+    openAlertModal('입력 필요', '내용을 입력해주세요.');
+    return;
+  }
+
+  if (content.length > 1000) {
+    openAlertModal('입력 오류', '고급 서신 내용은 1000자 이내로 작성해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    '고급 서신 발송',
+    receiverName + '님에게 고급 서신을 발송하시겠습니까?\n고급 편지지 1개가 소모됩니다.',
+    function () {
+      sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn);
+    }
+  );
+}
+
+function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn) {
+  if (premiumBtn) {
+    premiumBtn.textContent = '발송 중...';
+    premiumBtn.disabled = true;
+  }
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'sendPremiumLetter',
+      senderCode: currentPersonalCode,
+      receiverName: receiverName,
+      title: title,
+      content: content
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (premiumBtn) {
+        premiumBtn.textContent = '고급 발송';
+        premiumBtn.disabled = false;
+      }
+
+      if (!data.success) {
+        openAlertModal('발송 실패', data.message || '고급 서신을 발송하지 못했습니다.');
+        return;
+      }
+
+      closeMailWriteModal();
+      openAlertModal('발송 완료', '고급 서신을 발송했습니다.');
+    })
+    .catch(error => {
+      console.error(error);
+
+      if (premiumBtn) {
+        premiumBtn.textContent = '고급 발송';
+        premiumBtn.disabled = false;
+      }
+
+      openAlertModal('발송 오류', '고급 서신 발송 중 오류가 발생했습니다.');
     });
 }
 
