@@ -1030,3 +1030,29 @@ body.is-admin .mail-write-actions .admin-only{
 #supply-item{
   margin-top:10px;
 }
+
+#supply-content.mail-write-textarea{
+  width:100%;
+  min-height:170px;
+  padding:14px 16px;
+  border:1px solid #d6deef;
+  border-radius:16px;
+  background:#fff;
+  color:#1f2a44;
+  font-family:inherit;
+  font-size:14px;
+  line-height:1.7;
+  resize:none;
+  outline:none;
+}
+
+#supply-content.mail-write-textarea:focus{
+  border-color:#28487f;
+  box-shadow:0 0 0 3px rgba(40,72,127,.10);
+}
+
+#supply-receiver-candidates,
+#supply-item-candidates{
+  margin-top:4px;
+  margin-bottom:14px;
+}

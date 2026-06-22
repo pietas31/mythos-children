@@ -1123,6 +1123,10 @@ let selectedSupplyItemId = '';
 let supplyItemSearchSeq = 0;
 let supplyItemSearchTimer = null;
 
+let selectedSupplyReceiverName = '';
+let supplyReceiverSearchSeq = 0;
+let supplyReceiverSearchTimer = null;
+
 function openMailWriteModal() {
   const modal = document.getElementById('mail-write-modal');
   if (!modal) return;
@@ -1415,7 +1419,7 @@ const itemQuantity = document.getElementById('supply-item-quantity');
   if (receiver) receiver.value = '';
   if (title) title.value = '';
   if (content) content.value = '';
-  if (gold) gold.value = '0';
+  if (gold) gold.value = '';
   if (item) item.value = '';
 if (itemQuantity) itemQuantity.value = '1';
 
@@ -1427,6 +1431,12 @@ if (itemQuantity) itemQuantity.value = '1';
   if (itemSearch) itemSearch.value = '';
   if (itemCandidates) itemCandidates.innerHTML = '';
 
+  const receiverCandidates = document.getElementById('supply-receiver-candidates');
+
+  selectedSupplyReceiverName = '';
+
+  if (receiverCandidates) receiverCandidates.innerHTML = '';
+
   modal.style.display = 'flex';
 }
 
@@ -1435,6 +1445,89 @@ function closeSupplyWriteModal() {
   if (!modal) return;
 
   modal.style.display = 'none';
+}
+
+function searchSupplyReceiverCandidates() {
+  const input = document.getElementById('supply-receiver-name');
+  const candidates = document.getElementById('supply-receiver-candidates');
+
+  if (!input || !candidates) return;
+
+  const keyword = input.value.trim();
+  selectedSupplyReceiverName = '';
+
+  supplyReceiverSearchSeq++;
+
+  if (supplyReceiverSearchTimer) {
+    clearTimeout(supplyReceiverSearchTimer);
+  }
+
+  if (keyword === '전원') {
+    candidates.innerHTML = '<div class="mail-receiver-selected">전원 발송으로 선택됨</div>';
+    return;
+  }
+
+  if (keyword.length < 2) {
+    candidates.innerHTML = '<div class="mail-receiver-hint">2글자 이상 입력하면 후보가 표시됩니다.</div>';
+    return;
+  }
+
+  candidates.innerHTML = '<div class="mail-receiver-hint">입력을 멈추면 검색합니다.</div>';
+
+  supplyReceiverSearchTimer = setTimeout(function () {
+    const searchSeq = supplyReceiverSearchSeq;
+
+    candidates.innerHTML = '<div class="mail-receiver-hint">검색 중...</div>';
+
+    const url =
+      API_URL
+      + '?action=searchMailReceivers'
+      + '&keyword=' + encodeURIComponent(keyword);
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (searchSeq !== supplyReceiverSearchSeq) return;
+
+        if (!data.success) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
+          return;
+        }
+
+        if (!data.receivers || !data.receivers.length) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 캐릭터가 없습니다.</div>';
+          return;
+        }
+
+        candidates.innerHTML = data.receivers.map(receiver => {
+          return `
+            <button
+              type="button"
+              class="mail-receiver-candidate"
+              onclick="selectSupplyReceiver('${escapeForAttribute(receiver.characterName)}')"
+            >
+              ${escapeHtml(receiver.characterName)}
+            </button>
+          `;
+        }).join('');
+      })
+      .catch(error => {
+        if (searchSeq !== supplyReceiverSearchSeq) return;
+
+        console.error(error);
+        candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
+      });
+  }, 350);
+}
+
+function selectSupplyReceiver(characterName) {
+  const input = document.getElementById('supply-receiver-name');
+  const candidates = document.getElementById('supply-receiver-candidates');
+
+  selectedSupplyReceiverName = characterName;
+
+  if (input) input.value = characterName;
+  if (candidates) candidates.innerHTML = '<div class="mail-receiver-selected">선택됨 : ' + escapeHtml(characterName) + '</div>';
 }
 
 function searchSupplyItemCandidates() {

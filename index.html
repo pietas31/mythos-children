@@ -401,10 +401,14 @@
     </div>
 
     <input
-      id="supply-receiver-name"
-      class="modal-input"
-      placeholder="캐릭터명 또는 전원"
-    >
+  id="supply-receiver-name"
+  class="modal-input"
+  placeholder="캐릭터명 또는 전원"
+  autocomplete="off"
+  oninput="searchSupplyReceiverCandidates()"
+>
+
+<div id="supply-receiver-candidates" class="mail-receiver-candidates"></div>
 
     <input
       id="supply-title"
@@ -414,19 +418,18 @@
     >
 
     <textarea
-      id="supply-content"
-      class="mail-write-textarea"
-      placeholder="내용"
-    ></textarea>
+  id="supply-content"
+  class="modal-input mail-write-textarea"
+  placeholder="내용"
+></textarea>
 
     <input
-      id="supply-gold"
-      class="modal-input"
-      type="number"
-      min="0"
-      value="0"
-      placeholder="지급 골드"
-    >
+  id="supply-gold"
+  class="modal-input"
+  type="number"
+  min="0"
+  placeholder="지급 골드"
+>
 
 <div class="supply-item-row">
 
