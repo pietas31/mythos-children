@@ -950,28 +950,6 @@ body.is-admin .mail-write-actions .admin-only{
    ADMIN MENU
 ========================= */
 
-.admin-box{
-  width:520px;
-}
-
-.admin-menu-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:14px;
-  margin-top:10px;
-}
-
-.admin-menu-card{
-  width:100%;
-  padding:20px;
-  border:none;
-  border-radius:18px;
-  background:#f6f8fc;
-  text-align:left;
-  cursor:pointer;
-  transition:.18s ease;
-}
-
 .admin-menu-card:hover{
   background:#edf2fb;
   transform:translateY(-2px);
@@ -990,4 +968,50 @@ body.is-admin .mail-write-actions .admin-only{
   color:#6f7788;
   font-size:13px;
   line-height:1.6;
+}
+
+/* =========================
+   HOVER SUBMENU
+========================= */
+
+.menu-dropdown{
+  position:relative;
+  width:100%;
+  margin-bottom:12px;
+}
+
+.menu-dropdown .menu-btn{
+  margin-bottom:0;
+}
+
+.submenu{
+  display:none;
+  margin-top:8px;
+  padding:8px;
+  border-radius:16px;
+  background:white;
+  box-shadow:0 8px 20px rgba(30,60,100,.08);
+}
+
+.menu-dropdown:hover .submenu{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.submenu button{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#f6f8fc;
+  color:#173567;
+  font-size:13px;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+}
+
+.submenu button:hover{
+  background:#1f4784;
+  color:white;
 }

@@ -1393,22 +1393,7 @@ function getMailTypeLabel(type) {
   return '서신';
 }
 
-function openAdminModal() {
-  const modal = document.getElementById('admin-modal');
-  if (!modal) return;
-
-  modal.style.display = 'flex';
-}
-
-function closeAdminModal() {
-  const modal = document.getElementById('admin-modal');
-  if (!modal) return;
-
-  modal.style.display = 'none';
-}
-
 function openAdminGmWrite() {
-  closeAdminModal();
   openMailWriteModal();
 }
 

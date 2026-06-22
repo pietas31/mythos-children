@@ -34,7 +34,14 @@
     <button class="menu-btn">조사일지</button>
     <button class="menu-btn">개인 메모</button>
     <button class="menu-btn">인벤토리</button>
-    <button class="menu-btn admin-only" onclick="openAdminModal()">운영진 메뉴</button>
+    <div class="menu-dropdown admin-only">
+  <button class="menu-btn">운영진 메뉴</button>
+
+  <div class="submenu">
+    <button onclick="openAdminGmWrite()">GM 우편 작성</button>
+    <button onclick="openAdminSupplyWrite()">보급 우편 작성</button>
+  </div>
+</div>
     <button class="menu-btn" onclick="openSettingsModal()">설정</button>
   </section>
 
@@ -380,30 +387,6 @@
   <button class="modal-btn admin-only" id="mail-write-gm-btn" onclick="sendGmLetter()">GM 발송</button>
   <button class="modal-btn" id="mail-write-send-btn" onclick="sendUserLetter()">발송</button>
 </div>
-
-  </div>
-</div>
-
-<!-- 운영진 메뉴 모달 -->
-<div id="admin-modal" class="modal" style="display: none;">
-  <div class="modal-box admin-box">
-
-    <div class="modal-header">
-      <h2>운영진 메뉴</h2>
-      <button class="close-btn" onclick="closeAdminModal()">×</button>
-    </div>
-
-    <div class="admin-menu-grid">
-      <button class="admin-menu-card" onclick="openAdminGmWrite()">
-        <strong>GM 우편 작성</strong>
-        <span>공지형 우편을 개별 또는 전원에게 발송합니다.</span>
-      </button>
-
-      <button class="admin-menu-card" onclick="openAdminSupplyWrite()">
-        <strong>보급 우편 작성</strong>
-        <span>골드와 아이템을 개별 또는 전원에게 지급합니다.</span>
-      </button>
-    </div>
 
   </div>
 </div>
