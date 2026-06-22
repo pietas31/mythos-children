@@ -1393,6 +1393,29 @@ function getMailTypeLabel(type) {
   return '서신';
 }
 
+function openAdminModal() {
+  const modal = document.getElementById('admin-modal');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+}
+
+function closeAdminModal() {
+  const modal = document.getElementById('admin-modal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function openAdminGmWrite() {
+  closeAdminModal();
+  openMailWriteModal();
+}
+
+function openAdminSupplyWrite() {
+  openAlertModal('준비 중', '보급 우편 작성 기능을 준비 중입니다.');
+}
+
 function openSettingsModal() {
   const modal = document.getElementById('settings-modal');
   if (!modal) return;

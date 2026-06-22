@@ -945,3 +945,49 @@ body.is-admin .mail-write-actions .admin-only{
 .asset-credit a:hover{
   text-decoration:underline;
 }
+
+/* =========================
+   ADMIN MENU
+========================= */
+
+.admin-box{
+  width:520px;
+}
+
+.admin-menu-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:10px;
+}
+
+.admin-menu-card{
+  width:100%;
+  padding:20px;
+  border:none;
+  border-radius:18px;
+  background:#f6f8fc;
+  text-align:left;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.admin-menu-card:hover{
+  background:#edf2fb;
+  transform:translateY(-2px);
+}
+
+.admin-menu-card strong{
+  display:block;
+  margin-bottom:6px;
+  color:#1f3f77;
+  font-size:16px;
+  font-weight:800;
+}
+
+.admin-menu-card span{
+  display:block;
+  color:#6f7788;
+  font-size:13px;
+  line-height:1.6;
+}
