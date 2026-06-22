@@ -1337,6 +1337,10 @@ body.is-admin .mail-write-actions .admin-only{
   }
 }
 /* v19-7 simple correction */
+.logo::after{
+  display:none;
+}
+
 .layout{
   width:min(1080px,calc(100% - 48px));
   grid-template-columns:230px 430px 230px;
@@ -1345,12 +1349,34 @@ body.is-admin .mail-write-actions .admin-only{
   gap:28px;
 }
 
+.panel-title{
+  text-align:center;
+}
+
+.panel-title::after{
+  display:none;
+}
+
 .portrait-frame{
   border-radius:18px;
 }
 
 .portrait-frame::after{
   border-radius:12px;
+}
+
+.stat-list{
+  max-width:280px;
+}
+
+.stat-row{
+  grid-template-columns:86px 130px;
+  justify-content:center;
+  gap:14px;
+}
+
+.stat-row span{
+  text-align:right;
 }
 
 @media (max-width:980px){
