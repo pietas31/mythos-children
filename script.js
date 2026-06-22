@@ -1119,6 +1119,10 @@ let selectedMailReceiverName = '';
 let mailReceiverSearchSeq = 0;
 let mailReceiverSearchTimer = null;
 
+let selectedSupplyItemId = '';
+let supplyItemSearchSeq = 0;
+let supplyItemSearchTimer = null;
+
 function openMailWriteModal() {
   const modal = document.getElementById('mail-write-modal');
   if (!modal) return;
@@ -1398,7 +1402,244 @@ function openAdminGmWrite() {
 }
 
 function openAdminSupplyWrite() {
-  openAlertModal('준비 중', '보급 우편 작성 기능을 준비 중입니다.');
+  const modal = document.getElementById('supply-write-modal');
+  if (!modal) return;
+
+  const receiver = document.getElementById('supply-receiver-name');
+  const title = document.getElementById('supply-title');
+  const content = document.getElementById('supply-content');
+  const gold = document.getElementById('supply-gold');
+  const item = document.getElementById('supply-item');
+const itemQuantity = document.getElementById('supply-item-quantity');
+
+  if (receiver) receiver.value = '';
+  if (title) title.value = '';
+  if (content) content.value = '';
+  if (gold) gold.value = '0';
+  if (item) item.value = '';
+if (itemQuantity) itemQuantity.value = '1';
+
+  const itemSearch = document.getElementById('supply-item-search');
+  const itemCandidates = document.getElementById('supply-item-candidates');
+
+  selectedSupplyItemId = '';
+
+  if (itemSearch) itemSearch.value = '';
+  if (itemCandidates) itemCandidates.innerHTML = '';
+
+  modal.style.display = 'flex';
+}
+
+function closeSupplyWriteModal() {
+  const modal = document.getElementById('supply-write-modal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function searchSupplyItemCandidates() {
+  const input = document.getElementById('supply-item-search');
+  const candidates = document.getElementById('supply-item-candidates');
+  const itemInput = document.getElementById('supply-item');
+
+  if (!input || !candidates || !itemInput) return;
+
+  const keyword = input.value.trim();
+  selectedSupplyItemId = '';
+
+  supplyItemSearchSeq++;
+
+  if (supplyItemSearchTimer) {
+    clearTimeout(supplyItemSearchTimer);
+  }
+
+  if (keyword.length < 1) {
+    candidates.innerHTML = '<div class="mail-receiver-hint">아이템명을 입력하면 후보가 표시됩니다.</div>';
+    return;
+  }
+
+  candidates.innerHTML = '<div class="mail-receiver-hint">입력을 멈추면 검색합니다.</div>';
+
+  supplyItemSearchTimer = setTimeout(function () {
+    const searchSeq = supplyItemSearchSeq;
+
+    candidates.innerHTML = '<div class="mail-receiver-hint">검색 중...</div>';
+
+    const url =
+      API_URL
+      + '?action=searchSupplyItems'
+      + '&senderCode=' + encodeURIComponent(currentPersonalCode)
+      + '&keyword=' + encodeURIComponent(keyword);
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (searchSeq !== supplyItemSearchSeq) return;
+
+        if (!data.success) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
+          return;
+        }
+
+        if (!data.items || !data.items.length) {
+          candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 아이템이 없습니다.</div>';
+          return;
+        }
+
+        candidates.innerHTML = data.items.map(item => {
+          return `
+            <button
+              type="button"
+              class="mail-receiver-candidate"
+              onclick="selectSupplyItem('${escapeForAttribute(item.itemId)}', '${escapeForAttribute(item.itemName)}')"
+            >
+              ${escapeHtml(item.itemName)} <span style="opacity:.65;">${escapeHtml(item.itemId)}</span>
+            </button>
+          `;
+        }).join('');
+      })
+      .catch(error => {
+        if (searchSeq !== supplyItemSearchSeq) return;
+
+        console.error(error);
+        candidates.innerHTML = '<div class="mail-receiver-hint">검색 중 오류가 발생했습니다.</div>';
+      });
+  }, 350);
+}
+
+function selectSupplyItem(itemId, itemName) {
+  const searchInput = document.getElementById('supply-item-search');
+  const itemInput = document.getElementById('supply-item');
+  const candidates = document.getElementById('supply-item-candidates');
+
+  selectedSupplyItemId = itemId;
+
+  if (searchInput) searchInput.value = itemName;
+  if (itemInput) itemInput.value = itemId;
+  if (candidates) {
+    candidates.innerHTML =
+      '<div class="mail-receiver-selected">선택됨 : ' +
+      escapeHtml(itemName) +
+      ' / ' +
+      escapeHtml(itemId) +
+      '</div>';
+  }
+}
+
+function sendSupplyMail() {
+  if (!currentPersonalCode) {
+    openAlertModal('발송 불가', '로그인 후 보급 우편을 보낼 수 있습니다.');
+    return;
+  }
+
+  const receiverName = document.getElementById('supply-receiver-name').value.trim();
+  const title = document.getElementById('supply-title').value.trim();
+  const content = document.getElementById('supply-content').value.trim();
+  const goldAmount = Number(document.getElementById('supply-gold').value || 0);
+  const itemId = document.getElementById('supply-item').value.trim();
+const itemQuantity = Number(document.getElementById('supply-item-quantity').value || 1);
+const itemData = itemId ? itemId + ':' + Math.max(1, itemQuantity) : '';
+  const sendBtn = document.getElementById('supply-send-btn');
+
+  const isAllSend = receiverName === '전원';
+
+  if (!isAllSend && !receiverName) {
+    openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력하거나, 전원 발송은 받는 사람에 전원을 입력해주세요.');
+    return;
+  }
+
+  if (!title) {
+    openAlertModal('입력 필요', '제목을 입력해주세요.');
+    return;
+  }
+
+  if (!content) {
+    openAlertModal('입력 필요', '내용을 입력해주세요.');
+    return;
+  }
+
+  if (title.length > 40) {
+    openAlertModal('입력 오류', '제목은 40자 이내로 입력해주세요.');
+    return;
+  }
+
+  if (goldAmount < 0) {
+    openAlertModal('입력 오류', '골드는 0 이상으로 입력해주세요.');
+    return;
+  }
+
+  if (goldAmount <= 0 && !itemData) {
+    openAlertModal('입력 필요', '지급할 골드 또는 아이템을 입력해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    isAllSend ? '보급 전원 발송' : '보급 우편 발송',
+    isAllSend
+      ? '보급 우편을 전원에게 발송하시겠습니까?'
+      : receiverName + '님에게 보급 우편을 발송하시겠습니까?',
+    function () {
+      sendSupplyMailAfterConfirm(
+        isAllSend,
+        receiverName,
+        title,
+        content,
+        goldAmount,
+        itemData,
+        sendBtn
+      );
+    }
+  );
+}
+
+function sendSupplyMailAfterConfirm(isAllSend, receiverName, title, content, goldAmount, itemData, sendBtn) {
+  if (sendBtn) {
+    sendBtn.textContent = '보급 발송 중...';
+    sendBtn.disabled = true;
+  }
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'sendSupplyMail',
+      senderCode: currentPersonalCode,
+      mode: isAllSend ? 'all' : 'single',
+      receiverName: isAllSend ? '' : receiverName,
+      title: title,
+      content: content,
+      goldAmount: goldAmount,
+      itemData: itemData
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (sendBtn) {
+        sendBtn.textContent = '보급 발송';
+        sendBtn.disabled = false;
+      }
+
+      if (!data.success) {
+        openAlertModal('보급 발송 실패', data.message || '보급 우편을 발송하지 못했습니다.');
+        return;
+      }
+
+      closeSupplyWriteModal();
+
+      openAlertModal(
+        '보급 발송 완료',
+        '보급 우편을 발송했습니다.\n발송 수: ' + Number(data.sentCount || 0)
+      );
+    })
+    .catch(error => {
+      console.error(error);
+
+      if (sendBtn) {
+        sendBtn.textContent = '보급 발송';
+        sendBtn.disabled = false;
+      }
+
+      openAlertModal('보급 발송 오류', '보급 우편 발송 중 오류가 발생했습니다.');
+    });
 }
 
 function openSettingsModal() {

@@ -391,6 +391,78 @@
   </div>
 </div>
 
+<!-- 보급 우편 작성 모달 -->
+<div id="supply-write-modal" class="modal" style="display:none;">
+  <div class="modal-box mail-box">
+
+    <div class="modal-header">
+      <h2>보급 우편 작성</h2>
+      <button class="close-btn" onclick="closeSupplyWriteModal()">×</button>
+    </div>
+
+    <input
+      id="supply-receiver-name"
+      class="modal-input"
+      placeholder="캐릭터명 또는 전원"
+    >
+
+    <input
+      id="supply-title"
+      class="modal-input"
+      maxlength="40"
+      placeholder="제목 (최대 40자)"
+    >
+
+    <textarea
+      id="supply-content"
+      class="mail-write-textarea"
+      placeholder="내용"
+    ></textarea>
+
+    <input
+      id="supply-gold"
+      class="modal-input"
+      type="number"
+      min="0"
+      value="0"
+      placeholder="지급 골드"
+    >
+
+    <input
+  id="supply-item-search"
+  class="modal-input"
+  placeholder="아이템명 검색"
+  autocomplete="off"
+  oninput="searchSupplyItemCandidates()"
+>
+
+<div id="supply-item-candidates" class="mail-receiver-candidates"></div>
+
+<input
+  id="supply-item"
+  class="modal-input"
+  placeholder="선택된 아이템ID"
+>
+
+<input
+  id="supply-item-quantity"
+  class="modal-input"
+  type="number"
+  min="1"
+  value="1"
+  placeholder="아이템 수량"
+>
+
+    <button
+      class="modal-btn"
+      onclick="sendSupplyMail()"
+    >
+      보급 발송
+    </button>
+
+  </div>
+</div>
+
 <!-- 설정 모달 -->
 <div id="settings-modal" class="modal" style="display: none;">
   <div class="modal-box settings-box">
