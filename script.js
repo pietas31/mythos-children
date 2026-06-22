@@ -1298,6 +1298,93 @@ function sendUserLetter() {
     });
 }
 
+function sendGmLetter() {
+  if (!currentPersonalCode) {
+    openAlertModal('발송 불가', '로그인 후 GM 우편을 보낼 수 있습니다.');
+    return;
+  }
+
+  const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
+  const title = document.getElementById('mail-write-title').value.trim();
+  const content = document.getElementById('mail-write-content').value.trim();
+  const gmBtn = document.getElementById('mail-write-gm-btn');
+
+  const isAllSend = receiverName === '전원';
+
+  if (!isAllSend && !receiverName) {
+    openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력하거나, 전원 발송은 받는 사람에 전원을 입력해주세요.');
+    return;
+  }
+
+  if (!title) {
+    openAlertModal('입력 필요', '제목을 입력해주세요.');
+    return;
+  }
+
+  if (!content) {
+    openAlertModal('입력 필요', '내용을 입력해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    isAllSend ? 'GM 전원 발송' : 'GM 우편 발송',
+    isAllSend
+      ? 'GM 우편을 전원에게 발송하시겠습니까?'
+      : receiverName + '님에게 GM 우편을 발송하시겠습니까?',
+    function () {
+      sendGmLetterAfterConfirm(isAllSend, receiverName, title, content, gmBtn);
+    }
+  );
+}
+
+function sendGmLetterAfterConfirm(isAllSend, receiverName, title, content, gmBtn) {
+  if (gmBtn) {
+    gmBtn.textContent = 'GM 발송 중...';
+    gmBtn.disabled = true;
+  }
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'sendGmLetter',
+      senderCode: currentPersonalCode,
+      mode: isAllSend ? 'all' : 'single',
+      receiverName: isAllSend ? '' : receiverName,
+      title: title,
+      content: content
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (gmBtn) {
+        gmBtn.textContent = 'GM 발송';
+        gmBtn.disabled = false;
+      }
+
+      if (!data.success) {
+        openAlertModal('GM 발송 실패', data.message || 'GM 우편을 발송하지 못했습니다.');
+        return;
+      }
+
+      closeMailWriteModal();
+
+      openAlertModal(
+        'GM 발송 완료',
+        'GM 우편을 발송했습니다.\n발송 수: ' + Number(data.sentCount || 0)
+      );
+    })
+    .catch(error => {
+      console.error(error);
+
+      if (gmBtn) {
+        gmBtn.textContent = 'GM 발송';
+        gmBtn.disabled = false;
+      }
+
+      openAlertModal('GM 발송 오류', 'GM 우편 발송 중 오류가 발생했습니다.');
+    });
+}
+
 function getMailTypeLabel(type) {
   if (type === 'SUPPLY') return '보급';
   if (type === 'ANON') return '서신';
