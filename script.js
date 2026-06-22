@@ -16,6 +16,7 @@ let currentMailTotalCount = 0;
 let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
+let currentLetterMode = 'basic';
 
 console.log('MYTHOS READY v19-6');
 
@@ -830,7 +831,7 @@ rightBtn.disabled = false;
 
   leftBtn.textContent = '작성';
 leftBtn.onclick = function () {
-  openMailWriteModal();
+  openLetterPaperSelectModal();
 };
 
   centerBtn.textContent = '수령';
@@ -1146,21 +1147,122 @@ let selectedSupplyReceiverName = '';
 let supplyReceiverSearchSeq = 0;
 let supplyReceiverSearchTimer = null;
 
-function openMailWriteModal() {
+function openMailWriteModal(mode) {
   const modal = document.getElementById('mail-write-modal');
   if (!modal) return;
+
+  currentLetterMode = mode || 'basic';
 
   document.getElementById('mail-write-receiver-name').value = '';
   document.getElementById('mail-write-title').value = '';
   document.getElementById('mail-write-content').value = '';
-  updateMailWriteCount();
 
   selectedMailReceiverName = '';
 
   const candidates = document.getElementById('mail-receiver-candidates');
   if (candidates) candidates.innerHTML = '';
 
+  updateMailWriteLimit();
+  updateMailWriteCount();
+
   modal.style.display = 'flex';
+}
+
+function openLetterPaperSelectModal() {
+  if (!currentPersonalCode) {
+    openAlertModal('작성 불가', '로그인 후 서신을 작성할 수 있습니다.');
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=getLetterPaperStatus'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        openAlertModal('확인 실패', data.message || '편지지 보유량을 확인하지 못했습니다.');
+        return;
+      }
+
+      const basicCount = Number(data.basicCount || 0);
+      const premiumCount = Number(data.premiumCount || 0);
+
+      if (basicCount <= 0 && premiumCount <= 0) {
+        openAlertModal('작성 불가', '보유한 편지지가 없어 서신을 작성할 수 없습니다.');
+        return;
+      }
+
+      if (basicCount > 0 && premiumCount <= 0) {
+        openMailWriteModal('basic');
+        return;
+      }
+
+      if (basicCount <= 0 && premiumCount > 0) {
+        openMailWriteModal('premium');
+        return;
+      }
+
+      openLetterPaperModal(basicCount, premiumCount);
+    })
+    .catch(error => {
+      console.error(error);
+      openAlertModal('확인 오류', '편지지 보유량 확인 중 오류가 발생했습니다.');
+    });
+}
+
+function openLetterPaperModal(basicCount, premiumCount) {
+  const modal = document.getElementById('letter-paper-modal');
+  const basicText = document.getElementById('basic-paper-count');
+  const premiumText = document.getElementById('premium-paper-count');
+
+  if (!modal) return;
+
+  if (basicText) basicText.textContent = '보유 ' + Number(basicCount || 0) + '개';
+  if (premiumText) premiumText.textContent = '보유 ' + Number(premiumCount || 0) + '개';
+
+  modal.style.display = 'flex';
+}
+
+function closeLetterPaperModal() {
+  const modal = document.getElementById('letter-paper-modal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+}
+
+function chooseLetterPaper(mode) {
+  closeLetterPaperModal();
+  openMailWriteModal(mode);
+}
+
+function updateMailWriteLimit() {
+  const content = document.getElementById('mail-write-content');
+  const maxText = document.getElementById('mail-write-count-max');
+
+  const limit = currentLetterMode === 'premium' ? 1000 : 300;
+
+  if (content) {
+    content.maxLength = limit;
+    content.placeholder = currentLetterMode === 'premium'
+      ? '내용을 입력해주세요. (고급 서신, 최대 1000자)'
+      : '내용을 입력해주세요. (일반 서신, 최대 300자)';
+  }
+
+  if (maxText) {
+    maxText.textContent = String(limit);
+  }
+}
+
+function sendSelectedLetter() {
+  if (currentLetterMode === 'premium') {
+    sendPremiumLetter();
+    return;
+  }
+
+  sendUserLetter();
 }
 
 function closeMailWriteModal() {
@@ -1272,9 +1374,9 @@ function sendUserLetter() {
   const sendBtn = document.getElementById('mail-write-send-btn');
 
   if (!receiverName) {
-  openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력해주세요.');
-  return;
-}
+    openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력해주세요.');
+    return;
+  }
 
   if (!title) {
     openAlertModal('입력 필요', '제목을 입력해주세요.');
@@ -1286,6 +1388,21 @@ function sendUserLetter() {
     return;
   }
 
+  if (content.length > 300) {
+    openAlertModal('입력 오류', '일반 서신 내용은 300자 이내로 작성해주세요.');
+    return;
+  }
+
+  openConfirmModal(
+    '일반 서신 발송',
+    receiverName + '님에게 일반 서신을 발송하시겠습니까?\n일반 편지지 1개가 소모됩니다.',
+    function () {
+      sendUserLetterAfterConfirm(receiverName, title, content, sendBtn);
+    }
+  );
+}
+
+function sendUserLetterAfterConfirm(receiverName, title, content, sendBtn) {
   if (sendBtn) {
     sendBtn.textContent = '발송 중...';
     sendBtn.disabled = true;
@@ -1337,7 +1454,7 @@ function sendPremiumLetter() {
   const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
   const title = document.getElementById('mail-write-title').value.trim();
   const content = document.getElementById('mail-write-content').value.trim();
-  const premiumBtn = document.getElementById('mail-write-premium-btn');
+  const premiumBtn = document.getElementById('mail-write-send-btn');
 
   if (!receiverName) {
     openAlertModal('입력 필요', '받는 사람 캐릭터명을 입력해주세요.');
@@ -1387,7 +1504,7 @@ function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn)
     .then(response => response.json())
     .then(data => {
       if (premiumBtn) {
-        premiumBtn.textContent = '고급 발송';
+        premiumBtn.textContent = '발송';
         premiumBtn.disabled = false;
       }
 

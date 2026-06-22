@@ -1065,3 +1065,71 @@ body.is-admin .mail-write-actions .admin-only{
 .premium-letter-btn:hover{
   background:#5b3a8f;
 }
+
+/* =========================
+   LETTER PAPER SELECT
+========================= */
+
+.letter-paper-box{
+  width:430px;
+}
+
+.letter-paper-guide{
+  margin-bottom:18px;
+  color:#6f7788;
+  font-size:14px;
+  font-weight:700;
+}
+
+.letter-paper-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.letter-paper-card{
+  min-height:120px;
+  padding:18px 14px;
+  border-radius:18px;
+  background:#f6f8fc;
+  color:#173567;
+  cursor:pointer;
+  transition:.18s ease;
+  text-align:left;
+}
+
+.letter-paper-card:hover{
+  background:#edf2fb;
+  transform:translateY(-2px);
+}
+
+.letter-paper-card strong{
+  display:block;
+  margin-bottom:8px;
+  font-size:16px;
+  font-weight:900;
+}
+
+.letter-paper-card span{
+  display:block;
+  margin-bottom:8px;
+  font-size:13px;
+  font-weight:800;
+  color:#50607a;
+}
+
+.letter-paper-card em{
+  display:block;
+  font-size:12px;
+  font-style:normal;
+  color:#8a94a6;
+}
+
+.letter-paper-card.premium{
+  background:#f4effb;
+  color:#5b3a8f;
+}
+
+.letter-paper-card.premium:hover{
+  background:#eadff8;
+}
