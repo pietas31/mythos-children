@@ -1189,9 +1189,12 @@ function searchMailReceiverCandidates() {
         if (searchSeq !== mailReceiverSearchSeq) return;
 
         if (!data.success) {
-          candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
-          return;
-        }
+  candidates.innerHTML =
+    '<div class="mail-receiver-hint">검색 실패: ' +
+    escapeHtml(data.message || '알 수 없는 오류') +
+    '</div>';
+  return;
+}
 
         if (!data.receivers || !data.receivers.length) {
           candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 캐릭터가 없습니다.</div>';
@@ -1421,7 +1424,7 @@ const itemQuantity = document.getElementById('supply-item-quantity');
   if (content) content.value = '';
   if (gold) gold.value = '';
   if (item) item.value = '';
-if (itemQuantity) itemQuantity.value = '1';
+if (itemQuantity) itemQuantity.value = '';
 
   const itemSearch = document.getElementById('supply-item-search');
   const itemCandidates = document.getElementById('supply-item-candidates');
