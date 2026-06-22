@@ -1573,9 +1573,12 @@ function searchSupplyItemCandidates() {
         if (searchSeq !== supplyItemSearchSeq) return;
 
         if (!data.success) {
-          candidates.innerHTML = '<div class="mail-receiver-hint">검색에 실패했습니다.</div>';
-          return;
-        }
+  candidates.innerHTML =
+    '<div class="mail-receiver-hint">검색 실패: ' +
+    escapeHtml(data.message || '알 수 없는 오류') +
+    '</div>';
+  return;
+}
 
         if (!data.items || !data.items.length) {
           candidates.innerHTML = '<div class="mail-receiver-hint">일치하는 아이템이 없습니다.</div>';
