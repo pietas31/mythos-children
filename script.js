@@ -1356,10 +1356,14 @@ function selectMailReceiver(characterName) {
 function updateMailWriteCount() {
   const content = document.getElementById('mail-write-content');
   const count = document.getElementById('mail-write-count-current');
+  const maxText = document.getElementById('mail-write-count-max');
 
   if (!content || !count) return;
 
+  const limit = currentLetterMode === 'premium' ? 1000 : 300;
+
   count.textContent = String(content.value.length);
+  if (maxText) maxText.textContent = String(limit);
 }
 
 function sendUserLetter() {
