@@ -610,7 +610,11 @@ function renderMailDetail(mail) {
   if (reward) {
     if (mail.mailType === 'SUPPLY') {
       const iconPath = mail.iconFileName ? 'assets/icons/' + mail.iconFileName : '';
-      const itemText = mail.itemData ? escapeHtml(mail.itemData) : '없음';
+      const itemText = mail.itemDataDisplay
+  ? escapeHtml(mail.itemDataDisplay)
+  : mail.itemData
+    ? escapeHtml(formatSupplyItemText(mail.itemData))
+    : '없음';
       const receivedText = mail.isReceived
         ? '<br>수령 상태 : 수령 완료' + (mail.receivedAt ? '<br>수령 시각 : ' + formatMailDateForView(mail.receivedAt) : '')
         : '<br>수령 상태 : 미수령';
@@ -1027,6 +1031,21 @@ if (centerBtn) {
 
   openAlertModal('수령 오류', '보급품 수령 중 오류가 발생했습니다.');
 });
+}
+
+function formatSupplyItemText(itemData) {
+  if (!itemData) return '없음';
+
+  return String(itemData)
+    .split(',')
+    .map(part => {
+      const split = part.split(':');
+      const itemId = String(split[0] || '').trim();
+      const quantity = Number(split[1] || 1);
+
+      return itemId + ' x' + quantity;
+    })
+    .join(', ');
 }
 
 function makeReceiveResultMessage(data) {
