@@ -26,8 +26,11 @@ const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
-const MEMO_DETAIL_PAGE_LENGTH = 320;
+const MEMO_DETAIL_LEFT_LENGTH = 260;
+const MEMO_DETAIL_RIGHT_LENGTH = 360;
 let currentMemoDetailBaseMeta = '';
+let currentMemoEditIndex = -1;
+let currentMemoEditId = '';
 
 console.log('MYTHOS READY v19-7');
 
@@ -2227,11 +2230,17 @@ function showMainPage() {
 
 function openMemoWriteModal() {
   const modal = document.getElementById('memo-write-modal');
+  const modalTitle = modal ? modal.querySelector('.modal-header h2') : null;
   const memoTitleInput = document.getElementById('memo-title-input');
   const memoInput = document.getElementById('memo-input');
+  const saveBtn = document.querySelector('.memo-save-btn');
 
   if (!modal) return;
 
+  currentMemoEditIndex = -1;
+  currentMemoEditId = '';
+  if (modalTitle) modalTitle.textContent = '메모 작성';
+  if (saveBtn) saveBtn.textContent = '메모 저장';
   if (memoTitleInput) memoTitleInput.value = '';
   if (memoInput) {
     memoInput.value = '';
@@ -2242,10 +2251,35 @@ function openMemoWriteModal() {
   modal.style.display = 'flex';
 }
 
+function openMemoEditModal() {
+  const memo = currentMemoRenderCache[currentMemoDetailMemoIndex];
+  if (!memo) return;
+
+  const modal = document.getElementById('memo-write-modal');
+  const modalTitle = modal ? modal.querySelector('.modal-header h2') : null;
+  const memoTitleInput = document.getElementById('memo-title-input');
+  const memoInput = document.getElementById('memo-input');
+  const saveBtn = document.querySelector('.memo-save-btn');
+
+  if (!modal || !memoTitleInput || !memoInput) return;
+
+  currentMemoEditIndex = currentMemoDetailMemoIndex;
+  currentMemoEditId = memo.memoId || '';
+  if (modalTitle) modalTitle.textContent = '메모 수정';
+  if (saveBtn) saveBtn.textContent = '수정 저장';
+  memoTitleInput.value = getMemoTitle(memo);
+  memoInput.value = memo.content || '';
+  memoInput.oninput = updateMemoContentCount;
+  updateMemoContentCount();
+  modal.style.display = 'flex';
+}
+
 function closeMemoWriteModal() {
   const modal = document.getElementById('memo-write-modal');
   if (!modal) return;
   modal.style.display = 'none';
+  currentMemoEditIndex = -1;
+  currentMemoEditId = '';
 }
 
 function updateMemoContentCount() {
@@ -2284,6 +2318,11 @@ function saveLocalMemo() {
 
   if (content.length > 10000) {
     openAlertModal('저장 불가', '메모 내용은 10000자 이내로 입력해주세요.');
+    return;
+  }
+
+  if (currentMemoEditIndex >= 0) {
+    updateLocalMemo(title, content);
     return;
   }
 
@@ -2354,6 +2393,58 @@ function saveLocalMemoContent(title, content) {
   });
 
   setLocalMemos(memos);
+}
+
+function updateLocalMemo(title, content) {
+  const targetMemo = currentMemoRenderCache[currentMemoEditIndex];
+  const memoTitleInput = document.getElementById('memo-title-input');
+  const memoInput = document.getElementById('memo-input');
+
+  if (!targetMemo) return;
+
+  if (currentPersonalCode && currentMemoEditId.indexOf('server:') === 0) {
+    isMemoSaving = true;
+    setMemoSaveButtonState(true);
+
+    targetMemo.title = title;
+    targetMemo.content = content;
+    setCachedServerMemos(currentMemoRenderCache);
+    renderLocalMemos(currentMemoRenderCache);
+
+    updateServerMemo(currentMemoEditId, title, content)
+      .then(updated => {
+        if (!updated) {
+          loadPersonalMemos({ silent: true });
+          return;
+        }
+
+        const updatedIndex = currentMemoEditIndex;
+        closeMemoWriteModal();
+        openMemoDetailModal(updatedIndex);
+      })
+      .finally(() => {
+        isMemoSaving = false;
+        setMemoSaveButtonState(false);
+      });
+
+    return;
+  }
+
+  const memos = getLocalMemos();
+  const safeIndex = Number(currentMemoEditIndex);
+
+  if (Number.isNaN(safeIndex) || safeIndex < 0 || safeIndex >= memos.length) return;
+
+  memos[safeIndex].title = title;
+  memos[safeIndex].content = content;
+  setLocalMemos(memos);
+
+  if (memoTitleInput) memoTitleInput.value = '';
+  if (memoInput) memoInput.value = '';
+  const updatedIndex = safeIndex;
+  closeMemoWriteModal();
+  renderLocalMemos();
+  openMemoDetailModal(updatedIndex);
 }
 
 function loadPersonalMemos() {
@@ -2530,9 +2621,17 @@ function goNextMemoItem() {
 function splitMemoDetailPages(content) {
   const text = String(content || '');
   const pages = [];
+  let cursor = 0;
+  let pageIndex = 0;
 
-  for (let i = 0; i < text.length; i += MEMO_DETAIL_PAGE_LENGTH) {
-    pages.push(text.slice(i, i + MEMO_DETAIL_PAGE_LENGTH));
+  while (cursor < text.length) {
+    const length = pageIndex % 2 === 0
+      ? MEMO_DETAIL_LEFT_LENGTH
+      : MEMO_DETAIL_RIGHT_LENGTH;
+
+    pages.push(text.slice(cursor, cursor + length));
+    cursor += length;
+    pageIndex++;
   }
 
   return pages.length ? pages : [''];
@@ -2637,6 +2736,33 @@ function toggleServerMemoBookmark(memoId) {
       setCachedServerMemos(currentMemoRenderCache);
       renderLocalMemos(currentMemoRenderCache);
       openAlertModal('책갈피 오류', '책갈피 변경 중 오류가 발생했습니다.');
+    });
+}
+
+function updateServerMemo(memoId, title, content) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'updatePersonalMemo',
+      personalCode: currentPersonalCode,
+      memoId: memoId,
+      title: title,
+      content: content
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        openAlertModal('수정 실패', data.message || '메모를 수정하지 못했습니다.');
+        return false;
+      }
+
+      return true;
+    })
+    .catch(error => {
+      console.error(error);
+      openAlertModal('수정 오류', '메모 수정 중 오류가 발생했습니다.');
+      return false;
     });
 }
 

@@ -1438,7 +1438,7 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-page{
-  width:min(980px,calc(100% - 44px));
+  width:min(820px,calc(100% - 44px));
   margin:0 auto;
   padding:50px 0 72px;
 }
@@ -1527,7 +1527,7 @@ body.is-admin .mail-write-actions .admin-only{
   color:#192235;
   font-size:14px;
   line-height:1.7;
-  resize:vertical;
+  resize:none;
   outline:none;
 }
 
@@ -1538,7 +1538,10 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-input{
+  height:260px;
   min-height:260px;
+  max-height:260px;
+  overflow-y:auto;
 }
 
 .memo-title-input:focus,
@@ -1666,8 +1669,7 @@ body.is-admin .mail-write-actions .admin-only{
 
 .memo-title-btn:hover{
   color:#8d3f52;
-  text-decoration:underline;
-  text-underline-offset:3px;
+  text-decoration:none;
 }
 
 .memo-place{
@@ -1728,8 +1730,8 @@ body.is-admin .mail-write-actions .admin-only{
 
 .memo-detail-box{
   position:relative;
-  width:min(1040px,calc(100vw - 44px));
-  max-width:1040px;
+  width:min(900px,calc(100vw - 44px));
+  max-width:900px;
   max-height:calc(100vh - 44px);
   overflow:hidden;
   padding:54px 28px 24px;
@@ -1785,6 +1787,12 @@ body.is-admin .mail-write-actions .admin-only{
   color:#8d3f52;
 }
 
+.memo-book-tab-edit{
+  order:1;
+  background:linear-gradient(180deg,#fffdf8,#eadfc9);
+  color:#253b66;
+}
+
 .memo-book-tab-prev,
 .memo-book-tab-next{
   background:linear-gradient(180deg,#fffdf8,#eadfc9);
@@ -1803,7 +1811,7 @@ body.is-admin .mail-write-actions .admin-only{
   position:relative;
   display:grid;
   grid-template-columns:minmax(0,1fr) 10px minmax(0,1fr);
-  height:min(560px,calc(100vh - 176px));
+  height:min(540px,calc(100vh - 176px));
   min-height:390px;
   padding:10px;
   border:1px solid rgba(201,154,69,.28);
