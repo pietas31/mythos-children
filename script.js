@@ -2342,8 +2342,32 @@ function renderInventoryDetail(item) {
     <div class="inventory-detail-row"><span>수량</span><strong>${Number(item.quantity || 0)}</strong></div>
     <div class="inventory-detail-row"><span>사용 여부</span><strong>${usableText}</strong></div>
     <div class="inventory-detail-desc">${escapeHtml(item.description || '설명이 등록되지 않은 아이템입니다.')}</div>
-    <button type="button" class="inventory-use-btn" ${item.isUsable ? '' : 'disabled'}>사용하기</button>
+    <button type="button" class="inventory-use-btn" onclick="useSelectedInventoryItem()" ${item.isUsable ? '' : 'disabled'}>사용하기</button>
   `;
+}
+
+function useSelectedInventoryItem() {
+  const item = currentInventoryItems[currentInventorySelectedIndex];
+  if (!item) return;
+
+  const itemId = String(item.itemId || '').toUpperCase();
+
+  if (itemId.indexOf('LETTER') !== -1) {
+    closeInventoryModal();
+
+    if (itemId.indexOf('002') !== -1 || itemId.indexOf('PREMIUM') !== -1) {
+      openMailWriteModal('premium');
+      return;
+    }
+
+    openMailWriteModal('basic');
+    return;
+  }
+
+  openAlertModal(
+    '사용 준비 중',
+    '이 아이템은 아직 사용 기능이 연결되지 않았습니다.\n아이템 효과와 소모 정책을 정한 뒤 서버에서 처리할 예정입니다.'
+  );
 }
 
 function getLocalMemoStorageKey() {
