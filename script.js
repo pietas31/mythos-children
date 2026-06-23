@@ -17,6 +17,7 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 let currentLetterMode = 'basic';
+let currentAnonymousLetterForced = false;
 let letterPaperStatusCache = null;
 let letterPaperStatusCacheAt = 0;
 const LETTER_PAPER_CACHE_TTL = 30000;
@@ -1196,18 +1197,29 @@ let selectedSupplyReceiverName = '';
 let supplyReceiverSearchSeq = 0;
 let supplyReceiverSearchTimer = null;
 
-function openMailWriteModal(mode) {
+function openMailWriteModal(mode, options) {
   const modal = document.getElementById('mail-write-modal');
   if (!modal) return;
 
   currentLetterMode = mode || 'basic';
+  currentAnonymousLetterForced = !!(options && options.forceAnonymous);
 
   document.getElementById('mail-write-receiver-name').value = '';
   document.getElementById('mail-write-title').value = '';
   document.getElementById('mail-write-content').value = '';
 
   const anonymousInput = document.getElementById('mail-write-anonymous');
-  if (anonymousInput) anonymousInput.checked = false;
+  const anonymousOption = document.querySelector('.mail-anonymous-option');
+  const canUseAnonymous = currentLetterMode === 'basic' && currentAnonymousLetterForced;
+
+  if (anonymousInput) {
+    anonymousInput.checked = currentAnonymousLetterForced;
+    anonymousInput.disabled = currentAnonymousLetterForced;
+  }
+
+  if (anonymousOption) {
+    anonymousOption.style.display = canUseAnonymous ? 'flex' : 'none';
+  }
 
   selectedMailReceiverName = '';
 
@@ -1264,7 +1276,8 @@ function getCachedLetterPaperStatus() {
 function setCachedLetterPaperStatus(data) {
   letterPaperStatusCache = {
     basicCount: Number(data.basicCount || 0),
-    premiumCount: Number(data.premiumCount || 0)
+    premiumCount: Number(data.premiumCount || 0),
+    anonymousCount: Number(data.anonymousCount || 0)
   };
   letterPaperStatusCacheAt = Date.now();
 }
@@ -1293,34 +1306,52 @@ function prefetchLetterPaperStatus() {
 function handleLetterPaperStatus(data) {
   const basicCount = Number(data.basicCount || 0);
   const premiumCount = Number(data.premiumCount || 0);
+  const anonymousCount = Number(data.anonymousCount || 0);
+  const availableTypeCount =
+    (basicCount > 0 ? 1 : 0)
+    + (premiumCount > 0 ? 1 : 0)
+    + (anonymousCount > 0 ? 1 : 0);
 
-  if (basicCount <= 0 && premiumCount <= 0) {
+  if (availableTypeCount <= 0) {
     openAlertModal('작성 불가', '보유한 편지지가 없어 서신을 작성할 수 없습니다.');
     return;
   }
 
-  if (basicCount > 0 && premiumCount <= 0) {
+  if (availableTypeCount === 1 && basicCount > 0) {
     openMailWriteModal('basic');
     return;
   }
 
-  if (basicCount <= 0 && premiumCount > 0) {
+  if (availableTypeCount === 1 && premiumCount > 0) {
     openMailWriteModal('premium');
     return;
   }
 
-  openLetterPaperModal(basicCount, premiumCount);
+  if (availableTypeCount === 1 && anonymousCount > 0) {
+    openMailWriteModal('basic', { forceAnonymous: true });
+    return;
+  }
+
+  openLetterPaperModal(basicCount, premiumCount, anonymousCount);
 }
 
-function openLetterPaperModal(basicCount, premiumCount) {
+function openLetterPaperModal(basicCount, premiumCount, anonymousCount) {
   const modal = document.getElementById('letter-paper-modal');
   const basicText = document.getElementById('basic-paper-count');
   const premiumText = document.getElementById('premium-paper-count');
+  const anonymousText = document.getElementById('anonymous-paper-count');
+  const basicBtn = document.getElementById('basic-paper-btn');
+  const premiumBtn = document.getElementById('premium-paper-btn');
+  const anonymousBtn = document.getElementById('anonymous-paper-btn');
 
   if (!modal) return;
 
   if (basicText) basicText.textContent = '보유 ' + Number(basicCount || 0) + '개';
   if (premiumText) premiumText.textContent = '보유 ' + Number(premiumCount || 0) + '개';
+  if (anonymousText) anonymousText.textContent = '보유 ' + Number(anonymousCount || 0) + '개';
+  if (basicBtn) basicBtn.style.display = Number(basicCount || 0) > 0 ? 'block' : 'none';
+  if (premiumBtn) premiumBtn.style.display = Number(premiumCount || 0) > 0 ? 'block' : 'none';
+  if (anonymousBtn) anonymousBtn.style.display = Number(anonymousCount || 0) > 0 ? 'block' : 'none';
 
   modal.style.display = 'flex';
 }
@@ -1334,6 +1365,11 @@ function closeLetterPaperModal() {
 
 function chooseLetterPaper(mode) {
   closeLetterPaperModal();
+  if (mode === 'anonymous') {
+    openMailWriteModal('basic', { forceAnonymous: true });
+    return;
+  }
+
   openMailWriteModal(mode);
 }
 
@@ -1568,8 +1604,6 @@ function sendPremiumLetter() {
   const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
   const title = document.getElementById('mail-write-title').value.trim();
   const content = document.getElementById('mail-write-content').value.trim();
-  const anonymousInput = document.getElementById('mail-write-anonymous');
-  const isAnonymous = !!(anonymousInput && anonymousInput.checked);
   const premiumBtn = document.getElementById('mail-write-send-btn');
 
   if (!receiverName) {
@@ -1596,12 +1630,12 @@ function sendPremiumLetter() {
     '고급 서신 발송',
     receiverName + '님에게 고급 서신을 발송하시겠습니까?\n고급 편지지 1개가 소모됩니다.',
     function () {
-      sendPremiumLetterAfterConfirm(receiverName, title, content, isAnonymous, premiumBtn);
+      sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn);
     }
   );
 }
 
-function sendPremiumLetterAfterConfirm(receiverName, title, content, isAnonymous, premiumBtn) {
+function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn) {
   if (premiumBtn) {
     premiumBtn.textContent = '발송 중...';
     premiumBtn.disabled = true;
@@ -1614,8 +1648,7 @@ function sendPremiumLetterAfterConfirm(receiverName, title, content, isAnonymous
       senderCode: currentPersonalCode,
       receiverName: receiverName,
       title: title,
-      content: content,
-      isAnonymous: isAnonymous
+      content: content
     })
   })
     .then(response => response.json())
@@ -2443,10 +2476,16 @@ function useSelectedInventoryItem() {
   if (!item) return;
 
   const itemId = String(item.itemId || '').toUpperCase();
+  const fileName = String(item.fileName || '').toLowerCase();
 
   if (itemId.indexOf('LETTER') !== -1) {
     shouldReturnToInventoryAfterMailWrite = true;
     closeInventoryModal();
+
+    if (fileName.indexOf('letter-anonymous') !== -1 || itemId.indexOf('ANONYMOUS') !== -1) {
+      openMailWriteModal('basic', { forceAnonymous: true });
+      return;
+    }
 
     if (itemId.indexOf('002') !== -1 || itemId.indexOf('PREMIUM') !== -1) {
       openMailWriteModal('premium');

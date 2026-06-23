@@ -1749,6 +1749,11 @@ body.is-admin .mail-write-actions .admin-only{
   color:var(--wine);
 }
 
+.letter-paper-card.anonymous{
+  background:linear-gradient(135deg,rgba(141,63,82,.16),rgba(255,253,248,.82));
+  color:var(--wine);
+}
+
 @media (max-width:980px){
   .layout{
     grid-template-columns:minmax(0,1fr);
