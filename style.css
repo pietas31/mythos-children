@@ -1121,6 +1121,224 @@ body.is-admin .mail-write-actions .admin-only{
   width:min(430px,100%);
 }
 
+.inventory-box{
+  width:min(780px,calc(100vw - 44px));
+  text-align:left;
+}
+
+.inventory-layout{
+  display:grid;
+  grid-template-columns:minmax(300px,390px) minmax(220px,1fr);
+  gap:16px;
+}
+
+.inventory-grid-panel,
+.inventory-detail{
+  border:1px solid rgba(37,59,102,.12);
+  border-radius:8px;
+  background:rgba(255,253,248,.58);
+}
+
+.inventory-grid-panel{
+  padding:12px;
+}
+
+.inventory-tabs{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  margin-bottom:10px;
+}
+
+.inventory-tab{
+  min-height:32px;
+  border:1px solid rgba(37,59,102,.12);
+  border-radius:6px;
+  background:linear-gradient(180deg,#fffdf8,#eadfc9);
+  color:var(--ink-soft);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:900;
+}
+
+.inventory-tab.active{
+  background:linear-gradient(135deg,var(--navy),#375a8c);
+  color:#fffaf1;
+}
+
+.inventory-count{
+  margin-bottom:10px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(37,59,102,.10);
+  color:var(--ink-soft);
+  text-align:right;
+  font-size:12px;
+  font-weight:900;
+}
+
+.inventory-grid{
+  display:grid;
+  grid-template-columns:repeat(5,56px);
+  justify-content:center;
+  gap:7px;
+  min-height:308px;
+  padding:10px;
+  border:1px solid rgba(37,59,102,.10);
+  border-radius:8px;
+  background:rgba(232,229,222,.68);
+}
+
+.inventory-slot{
+  position:relative;
+  width:56px;
+  height:56px;
+  border:1px solid rgba(37,59,102,.16);
+  border-radius:6px;
+  background:linear-gradient(180deg,#f8f8f5,#dddcd8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.80),0 2px 4px rgba(24,30,44,.10);
+  cursor:pointer;
+}
+
+.inventory-slot:hover,
+.inventory-slot.selected{
+  border-color:rgba(201,154,69,.82);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 0 2px rgba(201,154,69,.22);
+}
+
+.inventory-slot.is-empty{
+  cursor:default;
+  opacity:.66;
+}
+
+.inventory-slot img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
+  image-rendering:pixelated;
+}
+
+.inventory-slot-placeholder{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border-radius:6px;
+  background:rgba(37,59,102,.10);
+  color:var(--navy);
+  font-size:14px;
+  font-weight:900;
+}
+
+.inventory-slot em{
+  position:absolute;
+  right:4px;
+  bottom:2px;
+  color:#fff;
+  font-size:11px;
+  font-style:normal;
+  font-weight:900;
+  text-shadow:0 1px 2px rgba(0,0,0,.70);
+}
+
+.inventory-detail{
+  min-height:100%;
+  padding:16px;
+}
+
+.inventory-detail-empty,
+.inventory-empty{
+  grid-column:1 / -1;
+  align-self:center;
+  justify-self:center;
+  color:var(--ink-soft);
+  font-size:13px;
+  font-weight:900;
+}
+
+.inventory-detail-head{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.inventory-detail-icon{
+  width:56px;
+  height:56px;
+  flex:0 0 56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(37,59,102,.14);
+  border-radius:8px;
+  background:linear-gradient(180deg,#f8f8f5,#dddcd8);
+}
+
+.inventory-detail-icon img{
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  image-rendering:pixelated;
+}
+
+.inventory-detail h3{
+  color:var(--navy);
+  font-size:17px;
+  font-weight:900;
+}
+
+.inventory-detail p{
+  margin-top:4px;
+  color:#8a91a0;
+  font-size:12px;
+  font-weight:800;
+}
+
+.inventory-detail-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-top:1px solid rgba(37,59,102,.10);
+  color:var(--ink-soft);
+  font-size:13px;
+  font-weight:800;
+}
+
+.inventory-detail-row strong{
+  color:var(--navy);
+}
+
+.inventory-detail-desc{
+  min-height:92px;
+  margin:12px 0;
+  padding:12px;
+  border:1px solid rgba(37,59,102,.10);
+  border-radius:8px;
+  background:rgba(255,255,255,.48);
+  color:var(--ink);
+  font-size:13px;
+  font-weight:700;
+  line-height:1.65;
+}
+
+.inventory-use-btn{
+  width:100%;
+  min-height:42px;
+  border-radius:8px;
+  background:linear-gradient(135deg,var(--navy),#375a8c);
+  color:#fffaf1;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.inventory-use-btn:disabled{
+  background:linear-gradient(180deg,#f4efe5,#ddd2bf);
+  color:#8a91a0;
+}
+
 .setting-group{
   margin-top:16px;
   padding:16px;
@@ -1235,13 +1453,23 @@ body.is-admin .mail-write-actions .admin-only{
 
 .submenu{
   display:none;
-  margin:8px 0 0 14px;
-  padding:2px 0 0 18px;
+  position:relative;
+  margin:8px 0 0 8px;
+  padding:6px 0 2px 28px;
   border:0;
-  border-left:1px solid rgba(201,154,69,.72);
   border-radius:0;
   background:transparent;
   box-shadow:none;
+}
+
+.submenu::before{
+  content:"";
+  position:absolute;
+  left:10px;
+  top:0;
+  bottom:11px;
+  width:1px;
+  background:rgba(201,154,69,.72);
 }
 
 .menu-dropdown:hover .submenu{
@@ -1252,7 +1480,8 @@ body.is-admin .mail-write-actions .admin-only{
 
 .submenu button{
   width:100%;
-  padding:10px 8px 10px 18px;
+  position:relative;
+  padding:9px 8px 9px 16px;
   border-radius:0;
   background:transparent;
   color:var(--navy);
@@ -1269,15 +1498,13 @@ body.is-admin .mail-write-actions .admin-only{
 
 .submenu button::before{
   content:"";
-  display:inline-block;
-  width:11px;
-  height:8px;
-  margin-right:8px;
-  border-left:1px solid rgba(201,154,69,.86);
+  position:absolute;
+  left:-18px;
+  top:50%;
+  width:14px;
+  height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
-  border-radius:0 0 0 4px;
-  background:transparent;
-  vertical-align:middle;
+  transform:translateY(-50%);
 }
 
 .supply-item-row{
@@ -1521,6 +1748,19 @@ body.is-admin .mail-write-actions .admin-only{
   .confirm-box{
     padding:24px 20px;
   }
+
+  .inventory-layout{
+    grid-template-columns:1fr;
+  }
+
+  .inventory-grid{
+    grid-template-columns:repeat(5,52px);
+  }
+
+  .inventory-slot{
+    width:52px;
+    height:52px;
+  }
 }
 /* v19-7 simple correction */
 .logo::after{
@@ -1569,19 +1809,29 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .submenu{
-  margin:8px 0 0 14px;
-  padding:2px 0 0 18px;
+  position:relative;
+  margin:8px 0 0 8px;
+  padding:6px 0 2px 28px;
   border:0;
-  border-left:1px solid rgba(201,154,69,.72);
   border-radius:0;
   background:transparent;
   box-shadow:none;
 }
 
+.submenu::before{
+  content:"";
+  position:absolute;
+  left:10px;
+  top:0;
+  bottom:11px;
+  width:1px;
+  background:rgba(201,154,69,.72);
+}
+
 .submenu button{
   position:relative;
   min-height:38px;
-  padding:9px 8px 9px 24px;
+  padding:9px 8px 9px 16px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1592,14 +1842,12 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button::before{
   content:"";
   position:absolute;
-  left:4px;
+  left:-18px;
   top:50%;
-  width:11px;
-  height:8px;
-  border-left:1px solid rgba(201,154,69,.86);
+  width:14px;
+  height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
-  border-radius:0 0 0 4px;
-  transform:translateY(-62%);
+  transform:translateY(-50%);
 }
 
 .submenu button:hover{

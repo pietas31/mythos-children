@@ -22,6 +22,15 @@ let letterPaperStatusCacheAt = 0;
 const LETTER_PAPER_CACHE_TTL = 30000;
 let isMemoLoading = false;
 let isMemoSaving = false;
+let isInventoryLoading = false;
+let currentInventoryAllItems = [];
+let currentInventoryItems = [];
+let currentInventorySelectedIndex = -1;
+let currentInventoryTab = 'all';
+let inventoryCache = null;
+let inventoryCacheAt = 0;
+const INVENTORY_CACHE_TTL = 30000;
+const INVENTORY_SLOT_COUNT = 40;
 let currentMemoTab = 'all';
 let currentMemoPage = 1;
 let currentMemoRenderCache = [];
@@ -2138,6 +2147,204 @@ function closeSettingsModal() {
   const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.style.display = 'none';
+}
+
+function openInventoryModal() {
+  if (!currentPersonalCode) {
+    openAlertModal('확인 불가', '로그인 후 인벤토리를 확인할 수 있습니다.');
+    return;
+  }
+
+  const modal = document.getElementById('inventory-modal');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+  currentInventoryTab = 'all';
+  updateInventoryTabs();
+
+  if (isInventoryCacheFresh()) {
+    renderInventory(inventoryCache);
+  } else {
+    renderInventoryLoading();
+  }
+
+  loadInventoryItems();
+}
+
+function closeInventoryModal() {
+  const modal = document.getElementById('inventory-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+function isInventoryCacheFresh() {
+  return Array.isArray(inventoryCache)
+    && Date.now() - inventoryCacheAt < INVENTORY_CACHE_TTL;
+}
+
+function setInventoryCache(items) {
+  inventoryCache = Array.isArray(items) ? items : [];
+  inventoryCacheAt = Date.now();
+}
+
+function renderInventoryLoading() {
+  const grid = document.getElementById('inventory-grid');
+  const detail = document.getElementById('inventory-detail');
+  const count = document.getElementById('inventory-count');
+
+  currentInventoryItems = [];
+  currentInventoryAllItems = [];
+  currentInventorySelectedIndex = -1;
+
+  if (count) count.textContent = '0 / ' + INVENTORY_SLOT_COUNT;
+  if (grid) grid.innerHTML = '<div class="inventory-empty">인벤토리를 불러오는 중입니다.</div>';
+  if (detail) detail.innerHTML = '<div class="inventory-detail-empty">아이템을 선택해주세요.</div>';
+}
+
+function loadInventoryItems() {
+  if (isInventoryLoading || !currentPersonalCode) return;
+
+  isInventoryLoading = true;
+
+  const url =
+    API_URL
+    + '?action=getInventory'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success || !Array.isArray(data.items)) {
+        renderInventoryError(data.message || '인벤토리를 불러오지 못했습니다.');
+        return;
+      }
+
+      setInventoryCache(data.items);
+      renderInventory(data.items);
+    })
+    .catch(error => {
+      console.error(error);
+      renderInventoryError('인벤토리 조회 중 오류가 발생했습니다.');
+    })
+    .finally(() => {
+      isInventoryLoading = false;
+    });
+}
+
+function renderInventoryError(message) {
+  const grid = document.getElementById('inventory-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="inventory-empty">' + escapeHtml(message) + '</div>';
+}
+
+function renderInventory(items) {
+  const grid = document.getElementById('inventory-grid');
+  const detail = document.getElementById('inventory-detail');
+  const count = document.getElementById('inventory-count');
+  const allItems = Array.isArray(items) ? items.filter(item => Number(item.quantity || 0) > 0) : [];
+  const safeItems = getVisibleInventoryItems(allItems);
+
+  currentInventoryAllItems = allItems;
+  currentInventoryItems = safeItems;
+  currentInventorySelectedIndex = safeItems.length ? 0 : -1;
+
+  if (count) count.textContent = safeItems.length + ' / ' + allItems.length;
+
+  if (grid) {
+    const slots = [];
+
+    for (let i = 0; i < INVENTORY_SLOT_COUNT; i++) {
+      const item = safeItems[i];
+
+      if (!item) {
+        slots.push('<button type="button" class="inventory-slot is-empty" aria-label="빈 슬롯"></button>');
+        continue;
+      }
+
+      const icon = item.fileName ? 'assets/icons/' + item.fileName : '';
+      const selectedClass = i === currentInventorySelectedIndex ? ' selected' : '';
+
+      slots.push(`
+        <button
+          type="button"
+          class="inventory-slot${selectedClass}"
+          title="${escapeForAttribute(item.itemName || item.itemId)}"
+          onclick="selectInventoryItem(${i})"
+          oncontextmenu="selectInventoryItem(${i}); return false;"
+        >
+          ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="">' : '<span class="inventory-slot-placeholder">' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
+          <em>${Number(item.quantity || 0)}</em>
+        </button>
+      `);
+    }
+
+    grid.innerHTML = slots.join('');
+  }
+
+  if (detail) {
+    if (currentInventorySelectedIndex >= 0) {
+      renderInventoryDetail(safeItems[currentInventorySelectedIndex]);
+    } else {
+      detail.innerHTML = '<div class="inventory-detail-empty">보유 중인 아이템이 없습니다.</div>';
+    }
+  }
+}
+
+function selectInventoryTab(tab) {
+  currentInventoryTab = tab || 'all';
+  updateInventoryTabs();
+  renderInventory(isInventoryCacheFresh() ? inventoryCache : currentInventoryAllItems);
+}
+
+function updateInventoryTabs() {
+  ['all', 'investigation', 'food', 'consumable', 'etc'].forEach(tab => {
+    const button = document.getElementById('inventory-tab-' + tab);
+    if (button) button.classList.toggle('active', currentInventoryTab === tab);
+  });
+}
+
+function getVisibleInventoryItems(items) {
+  if (currentInventoryTab === 'all') return items;
+  return items.filter(item => item.category === currentInventoryTab);
+}
+
+function selectInventoryItem(index) {
+  const safeIndex = Number(index);
+  const item = currentInventoryItems[safeIndex];
+
+  if (!item) return;
+
+  currentInventorySelectedIndex = safeIndex;
+
+  document.querySelectorAll('.inventory-slot').forEach((slot, slotIndex) => {
+    slot.classList.toggle('selected', slotIndex === safeIndex);
+  });
+
+  renderInventoryDetail(item);
+}
+
+function renderInventoryDetail(item) {
+  const detail = document.getElementById('inventory-detail');
+  if (!detail || !item) return;
+
+  const icon = item.fileName ? 'assets/icons/' + item.fileName : '';
+  const usableText = item.isUsable ? '사용 가능' : '사용 불가';
+
+  detail.innerHTML = `
+    <div class="inventory-detail-head">
+      <div class="inventory-detail-icon">
+        ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="">' : '<span>' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
+      </div>
+      <div>
+        <h3>${escapeHtml(item.itemName || item.itemId || '아이템')}</h3>
+        <p>${escapeHtml(item.itemId || '-')}</p>
+      </div>
+    </div>
+    <div class="inventory-detail-row"><span>수량</span><strong>${Number(item.quantity || 0)}</strong></div>
+    <div class="inventory-detail-row"><span>사용 여부</span><strong>${usableText}</strong></div>
+    <div class="inventory-detail-desc">${escapeHtml(item.description || '설명이 등록되지 않은 아이템입니다.')}</div>
+    <button type="button" class="inventory-use-btn" ${item.isUsable ? '' : 'disabled'}>사용하기</button>
+  `;
 }
 
 function getLocalMemoStorageKey() {
