@@ -812,6 +812,7 @@ textarea.modal-input{
 
 .mail-keep-mark,
 .mail-select-box{
+  border:0;
   width:24px;
   height:24px;
   flex:0 0 24px;
@@ -821,7 +822,27 @@ textarea.modal-input{
   border-radius:50%;
   background:rgba(37,59,102,.08);
   color:var(--gold);
+  cursor:pointer;
   font-weight:900;
+}
+
+.mail-keep-mark.active{
+  background:var(--gold);
+  color:#fffaf1;
+  box-shadow:0 0 0 2px rgba(201,154,69,.20);
+}
+
+.mail-keep-mark.is-empty{
+  cursor:default;
+  opacity:.45;
+}
+
+.mail-keep-mark:not(.is-empty):hover{
+  background:rgba(201,154,69,.18);
+}
+
+.mail-keep-mark.active:hover{
+  background:#b9872f;
 }
 
 .mail-select-box{
@@ -1494,11 +1515,11 @@ body.is-admin .mail-write-actions .admin-only{
   transform:none;
 }
 
+.memo-title-input,
 .memo-input{
   position:relative;
   z-index:1;
   width:100%;
-  min-height:180px;
   padding:16px;
   border:1px solid rgba(37,59,102,.18);
   border-radius:8px;
@@ -1510,6 +1531,17 @@ body.is-admin .mail-write-actions .admin-only{
   outline:none;
 }
 
+.memo-title-input{
+  min-height:46px;
+  margin-bottom:10px;
+  resize:none;
+}
+
+.memo-input{
+  min-height:180px;
+}
+
+.memo-title-input:focus,
 .memo-input:focus{
   border-color:rgba(201,154,69,.72);
   background:#fffdf8;
@@ -1601,8 +1633,9 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-bookmark-btn.active{
-  background:rgba(201,154,69,.18);
-  color:#a66f20;
+  background:#c99a45;
+  color:#fffaf1;
+  box-shadow:0 0 0 2px rgba(201,154,69,.24);
 }
 
 .memo-delete-btn{
@@ -1619,12 +1652,22 @@ body.is-admin .mail-write-actions .admin-only{
   color:#fffaf1;
 }
 
-.memo-content{
+.memo-title-btn{
+  width:100%;
+  border:0;
+  background:transparent;
   color:#202734;
-  font-size:14px;
-  font-weight:700;
-  line-height:1.7;
-  white-space:pre-wrap;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:900;
+  line-height:1.5;
+  text-align:left;
+}
+
+.memo-title-btn:hover{
+  color:#8d3f52;
+  text-decoration:underline;
+  text-underline-offset:3px;
 }
 
 .memo-place{
@@ -1669,6 +1712,32 @@ body.is-admin .mail-write-actions .admin-only{
   font-size:13px;
   font-weight:900;
   text-align:center;
+}
+
+.memo-detail-box{
+  max-width:720px;
+}
+
+.memo-detail-content{
+  max-height:58vh;
+  padding:16px;
+  border:1px solid rgba(37,59,102,.12);
+  border-radius:8px;
+  background:rgba(255,253,248,.82);
+  color:#202734;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.8;
+  overflow:auto;
+  white-space:pre-wrap;
+}
+
+.memo-detail-meta{
+  margin-top:12px;
+  color:#8a94a6;
+  font-size:12px;
+  font-weight:800;
+  text-align:right;
 }
 
 @media (max-width:980px){

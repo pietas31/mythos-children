@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-memo-page-1">
+<link rel="stylesheet" href="style.css?v=19-7-memo-title-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -159,10 +159,18 @@
       <button class="memo-back-btn" onclick="showMainPage()">메인으로 돌아가기</button>
     </div>
 
+    <input
+      id="memo-title-input"
+      class="memo-title-input"
+      placeholder="메모 제목"
+      maxlength="40"
+    >
+
     <textarea
       id="memo-input"
       class="memo-input"
       placeholder="메모를 입력하세요."
+      maxlength="10000"
     ></textarea>
 
     <button class="memo-save-btn" onclick="saveLocalMemo()">메모 저장</button>
@@ -184,6 +192,17 @@
     </div>
   </section>
 </main>
+
+<div id="memo-detail-modal" class="modal" style="display: none;">
+  <div class="modal-box memo-detail-box">
+    <div class="modal-header">
+      <h2 id="memo-detail-title">메모 제목</h2>
+      <button class="close-btn" onclick="closeMemoDetailModal()">×</button>
+    </div>
+    <div id="memo-detail-content" class="memo-detail-content"></div>
+    <div id="memo-detail-meta" class="memo-detail-meta"></div>
+  </div>
+</div>
 
 <!-- 로그인 모달 -->
 <div id="login-modal" class="modal">
@@ -577,7 +596,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-memo-page-1"></script>
+<script src="script.js?v=19-7-memo-title-1"></script>
 
 </body>
 </html>

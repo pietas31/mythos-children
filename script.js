@@ -221,7 +221,9 @@ function renderMailList(mails) {
         ${
           currentMailSelectionMode
             ? `<span class="mail-select-box">${selected ? '✓' : ''}</span>`
-            : `<span class="mail-keep-mark">${mail.mailType === 'SUPPLY' ? '' : keepMark}</span>`
+            : mail.mailType === 'SUPPLY'
+              ? `<span class="mail-keep-mark is-empty"></span>`
+              : `<button type="button" class="mail-keep-mark ${mail.isKept ? 'active' : ''}" onclick="toggleMailKeepFromList(event, '${escapeForAttribute(mail.mailId)}')">${keepMark}</button>`
         }
         ${iconPath ? `<img class="mail-icon" src="${iconPath}" alt="">` : ''}
         <span class="mail-type-badge">${typeLabel}</span>
@@ -241,6 +243,20 @@ function handleMailItemClick(detailIndex, mailId) {
   }
 
   openMailDetailByIndex(detailIndex);
+}
+
+function toggleMailKeepFromList(event, mailId) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const mail = currentMailCache.find(item => String(item.mailId) === String(mailId));
+  if (!mail) return;
+
+  mail.isKept = !mail.isKept;
+  renderMailList(currentMailCache);
+  toggleMailKeep(mailId, { fromList: true });
 }
 
 function canSelectMailForDelete(mail) {
@@ -1090,7 +1106,7 @@ function updateGoldDisplay(balance) {
   }
 }
 
-function toggleMailKeep(mailId) {
+function toggleMailKeep(mailId, options) {
   if (!currentPersonalCode || !mailId) return;
 
   const url =
@@ -1108,7 +1124,11 @@ function toggleMailKeep(mailId) {
         const mail = currentMailCache.find(item => String(item.mailId) === String(mailId));
         if (mail) {
           mail.isKept = !mail.isKept;
-          renderMailDetail(mail);
+          if (options && options.fromList) {
+            renderMailList(currentMailCache);
+          } else {
+            renderMailDetail(mail);
+          }
         }
 
         return;
@@ -2034,8 +2054,17 @@ function getMemoIdentity(memo) {
     memo.time || memo.createdAt || '',
     memo.placeId || '',
     memo.placeName || '',
+    memo.title || '',
     memo.content || ''
   ].join('|');
+}
+
+function getMemoTitle(memo) {
+  const title = String((memo && memo.title) || '').trim();
+  if (title) return title;
+
+  const content = String((memo && memo.content) || '').trim();
+  return content ? content.slice(0, 40) : '제목 없음';
 }
 
 function isMemoBookmarked(memo) {
@@ -2168,10 +2197,12 @@ function showMemoPage() {
 
   const mainScreen = document.querySelector('.main-screen');
   const memoPage = document.getElementById('memo-page');
+  const memoTitleInput = document.getElementById('memo-title-input');
   const memoInput = document.getElementById('memo-input');
 
   if (mainScreen) mainScreen.style.display = 'none';
   if (memoPage) memoPage.style.display = 'block';
+  if (memoTitleInput) memoTitleInput.value = '';
   if (memoInput) memoInput.value = '';
 
   currentMemoTab = 'all';
@@ -2194,13 +2225,30 @@ function showMainPage() {
 function saveLocalMemo() {
   if (isMemoSaving) return;
 
+  const memoTitleInput = document.getElementById('memo-title-input');
   const memoInput = document.getElementById('memo-input');
   if (!memoInput) return;
 
+  const title = memoTitleInput ? memoTitleInput.value.trim() : '';
   const content = memoInput.value.trim();
+
+  if (!title) {
+    openAlertModal('저장 불가', '메모 제목을 입력해주세요.');
+    return;
+  }
+
+  if (title.length > 40) {
+    openAlertModal('저장 불가', '메모 제목은 40자 이내로 입력해주세요.');
+    return;
+  }
 
   if (!content) {
     openAlertModal('저장 불가', '메모 내용을 입력해주세요.');
+    return;
+  }
+
+  if (content.length > 10000) {
+    openAlertModal('저장 불가', '메모 내용은 10000자 이내로 입력해주세요.');
     return;
   }
 
@@ -2210,6 +2258,7 @@ function saveLocalMemo() {
 
     const player = getCurrentPlayerForMemo();
     const optimisticMemos = [{
+      title: title,
       content: content,
       createdAt: new Date().toISOString(),
       personalCode: currentPersonalCode,
@@ -2222,16 +2271,18 @@ function saveLocalMemo() {
     setCachedServerMemos(optimisticMemos);
     renderLocalMemos(optimisticMemos);
 
-    saveServerMemo(content)
+    saveServerMemo(title, content)
       .then(saved => {
         if (saved) {
+          if (memoTitleInput) memoTitleInput.value = '';
           memoInput.value = '';
           loadPersonalMemos({ silent: true });
           return;
         }
 
-        saveLocalMemoContent(content);
+        saveLocalMemoContent(title, content);
         setCachedServerMemos([]);
+        if (memoTitleInput) memoTitleInput.value = '';
         memoInput.value = '';
         renderLocalMemos();
       })
@@ -2243,16 +2294,18 @@ function saveLocalMemo() {
     return;
   }
 
-  saveLocalMemoContent(content);
+  saveLocalMemoContent(title, content);
+  if (memoTitleInput) memoTitleInput.value = '';
   memoInput.value = '';
   renderLocalMemos();
 }
 
-function saveLocalMemoContent(content) {
+function saveLocalMemoContent(title, content) {
   const memos = getLocalMemos();
   const player = getCurrentPlayerForMemo();
 
   memos.unshift({
+    title: title,
     content: content,
     createdAt: new Date().toISOString(),
     personalCode: currentPersonalCode || '',
@@ -2311,13 +2364,15 @@ function renderLocalMemos(memos) {
   const pageMemos = visibleMemos.slice(startIndex, startIndex + MEMO_PAGE_SIZE);
 
   list.innerHTML = pageMemos.map(memo => {
+    const memoIndex = safeMemos.indexOf(memo);
+    const titleText = getMemoTitle(memo);
     const dateText = memo.time || memo.createdAt
       ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
       : '';
     const placeText = memo.placeName || memo.placeId || '';
     const deleteArg = memo.memoId
       ? "'" + escapeForAttribute(memo.memoId) + "'"
-      : String(safeMemos.indexOf(memo));
+      : String(memoIndex);
     const bookmarkKey = memo.memoId || getMemoIdentity(memo);
     const bookmarkClass = isMemoBookmarked(memo) ? ' active' : '';
     const bookmarkLabel = isMemoBookmarked(memo) ? '책갈피 해제' : '책갈피';
@@ -2326,7 +2381,7 @@ function renderLocalMemos(memos) {
       <div class="memo-item">
         <button class="memo-bookmark-btn${bookmarkClass}" onclick="toggleMemoBookmark('${escapeForAttribute(bookmarkKey)}')" title="${bookmarkLabel}">★</button>
         <button class="memo-delete-btn" onclick="deleteLocalMemo(${deleteArg})">×</button>
-        <div class="memo-content">${escapeHtml(memo.content)}</div>
+        <button type="button" class="memo-title-btn" onclick="openMemoDetailModal(${memoIndex})">${escapeHtml(titleText)}</button>
         ${placeText ? '<div class="memo-place">' + escapeHtml(placeText) + '</div>' : ''}
         <div class="memo-date">${escapeHtml(dateText)}</div>
       </div>
@@ -2355,6 +2410,34 @@ function deleteLocalMemo(memoIdOrIndex) {
   setLocalMemos(memos);
   removeMemoBookmark(currentMemoRenderCache[safeIndex]);
   renderLocalMemos();
+}
+
+function openMemoDetailModal(memoIndex) {
+  const memo = currentMemoRenderCache[Number(memoIndex)];
+  if (!memo) return;
+
+  const modal = document.getElementById('memo-detail-modal');
+  const title = document.getElementById('memo-detail-title');
+  const content = document.getElementById('memo-detail-content');
+  const meta = document.getElementById('memo-detail-meta');
+
+  if (!modal || !title || !content || !meta) return;
+
+  const dateText = memo.time || memo.createdAt
+    ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
+    : '';
+  const placeText = memo.placeName || memo.placeId || '';
+
+  title.textContent = getMemoTitle(memo);
+  content.textContent = memo.content || '';
+  meta.textContent = [placeText, dateText].filter(Boolean).join(' · ');
+  modal.style.display = 'flex';
+}
+
+function closeMemoDetailModal() {
+  const modal = document.getElementById('memo-detail-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
 }
 
 function removeMemoBookmark(memo) {
@@ -2443,7 +2526,7 @@ function loadServerMemos() {
     });
 }
 
-function saveServerMemo(content) {
+function saveServerMemo(title, content) {
   const player = getCurrentPlayerForMemo();
 
   return fetch(API_URL, {
@@ -2454,6 +2537,7 @@ function saveServerMemo(content) {
       characterName: player.characterName || '',
       placeId: player.currentPlaceId || '',
       placeName: '',
+      title: title,
       content: content
     })
   })
