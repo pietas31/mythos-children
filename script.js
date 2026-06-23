@@ -26,8 +26,8 @@ const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
-const MEMO_DETAIL_LEFT_LENGTH = 260;
-const MEMO_DETAIL_RIGHT_LENGTH = 360;
+const MEMO_DETAIL_LEFT_LENGTH = 300;
+const MEMO_DETAIL_RIGHT_LENGTH = 400;
 let currentMemoDetailBaseMeta = '';
 let currentMemoEditIndex = -1;
 let currentMemoEditId = '';
@@ -2271,6 +2271,7 @@ function openMemoEditModal() {
   memoInput.value = memo.content || '';
   memoInput.oninput = updateMemoContentCount;
   updateMemoContentCount();
+  closeMemoDetailModal();
   modal.style.display = 'flex';
 }
 
