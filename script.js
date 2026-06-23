@@ -2428,6 +2428,16 @@ function renderLocalMemos(memos) {
 }
 
 function deleteLocalMemo(memoIdOrIndex) {
+  openConfirmModal(
+    '메모 삭제',
+    '이 메모를 정말 삭제하시겠습니까?\n삭제한 메모는 복구할 수 없습니다.',
+    function () {
+      deleteLocalMemoAfterConfirm(memoIdOrIndex);
+    }
+  );
+}
+
+function deleteLocalMemoAfterConfirm(memoIdOrIndex) {
   if (currentPersonalCode && String(memoIdOrIndex).indexOf('server:') === 0) {
     deleteServerMemo(memoIdOrIndex)
       .then(deleted => {
