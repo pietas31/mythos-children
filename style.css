@@ -1454,8 +1454,8 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu{
   display:none;
   position:relative;
-  margin:8px 0 0 8px;
-  padding:6px 0 2px 28px;
+  margin:4px 0 0 8px;
+  padding:2px 0 2px 28px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1810,8 +1810,8 @@ body.is-admin .mail-write-actions .admin-only{
 
 .submenu{
   position:relative;
-  margin:8px 0 0 8px;
-  padding:6px 0 2px 28px;
+  margin:4px 0 0 8px;
+  padding:2px 0 2px 28px;
   border:0;
   border-radius:0;
   background:transparent;
