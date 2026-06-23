@@ -1488,6 +1488,12 @@ body.is-admin .mail-write-actions .admin-only{
   box-shadow:0 16px 28px rgba(37,59,102,.24);
 }
 
+.memo-save-btn:disabled{
+  cursor:wait;
+  opacity:.72;
+  transform:none;
+}
+
 .memo-input{
   position:relative;
   z-index:1;

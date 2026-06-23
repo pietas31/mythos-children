@@ -17,6 +17,8 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 let currentLetterMode = 'basic';
+let isMemoLoading = false;
+let isMemoSaving = false;
 
 console.log('MYTHOS READY v19-7');
 
@@ -98,7 +100,7 @@ function openMailModal() {
     showMailLoading('우편을 불러오는 중입니다.');
   }
 
-  loadMailList();
+  loadMailList({ keepCurrent: hasLoadedMailOnce && currentMailCache.length });
 }
 
 function closeMailModal() {
@@ -139,11 +141,12 @@ function updateMailTabActive(tab) {
   }
 }
 
-function loadMailList() {
+function loadMailList(options) {
   if (!currentPersonalCode) return;
 
+  const keepCurrent = !!(options && options.keepCurrent);
   const list = document.getElementById('mail-list');
-  if (list) {
+  if (list && !keepCurrent) {
     list.innerHTML = '<div class="mail-empty">우편을 불러오는 중입니다.</div>';
   }
 
@@ -1988,6 +1991,23 @@ function getLocalMemoStorageKey() {
   return 'mythosLocalMemos:' + (currentPersonalCode || 'guest');
 }
 
+function getServerMemoCacheKey() {
+  return 'mythosServerMemoCache:' + (currentPersonalCode || 'guest');
+}
+
+function getCachedServerMemos() {
+  try {
+    return JSON.parse(localStorage.getItem(getServerMemoCacheKey()) || '[]');
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+function setCachedServerMemos(memos) {
+  localStorage.setItem(getServerMemoCacheKey(), JSON.stringify(Array.isArray(memos) ? memos : []));
+}
+
 function getCurrentPlayerForMemo() {
   const savedPlayerData = localStorage.getItem('mythosPlayerData');
 
@@ -2020,6 +2040,23 @@ function setLocalMemos(memos) {
   localStorage.setItem(getLocalMemoStorageKey(), JSON.stringify(memos));
 }
 
+function getInitialMemoList() {
+  if (currentPersonalCode) {
+    const cachedServerMemos = getCachedServerMemos();
+    if (cachedServerMemos.length) return cachedServerMemos;
+  }
+
+  return getLocalMemos();
+}
+
+function setMemoSaveButtonState(isSaving) {
+  const button = document.querySelector('.memo-save-btn');
+  if (!button) return;
+
+  button.disabled = isSaving;
+  button.textContent = isSaving ? '저장 중...' : '메모 저장';
+}
+
 function closeModalIfExists(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -2042,7 +2079,11 @@ function showMemoPage() {
   if (memoPage) memoPage.style.display = 'block';
   if (memoInput) memoInput.value = '';
 
-  loadPersonalMemos();
+  renderLocalMemos(getInitialMemoList());
+
+  requestAnimationFrame(function () {
+    loadPersonalMemos({ silent: true });
+  });
 }
 
 function showMainPage() {
@@ -2054,6 +2095,8 @@ function showMainPage() {
 }
 
 function saveLocalMemo() {
+  if (isMemoSaving) return;
+
   const memoInput = document.getElementById('memo-input');
   if (!memoInput) return;
 
@@ -2065,17 +2108,38 @@ function saveLocalMemo() {
   }
 
   if (currentPersonalCode) {
+    isMemoSaving = true;
+    setMemoSaveButtonState(true);
+
+    const player = getCurrentPlayerForMemo();
+    const optimisticMemos = [{
+      content: content,
+      createdAt: new Date().toISOString(),
+      personalCode: currentPersonalCode,
+      characterName: player.characterName || '',
+      placeId: player.currentPlaceId || '',
+      placeName: ''
+    }].concat(getInitialMemoList());
+
+    setCachedServerMemos(optimisticMemos);
+    renderLocalMemos(optimisticMemos);
+
     saveServerMemo(content)
       .then(saved => {
         if (saved) {
           memoInput.value = '';
-          loadPersonalMemos();
+          loadPersonalMemos({ silent: true });
           return;
         }
 
         saveLocalMemoContent(content);
+        setCachedServerMemos([]);
         memoInput.value = '';
         renderLocalMemos();
+      })
+      .finally(() => {
+        isMemoSaving = false;
+        setMemoSaveButtonState(false);
       });
 
     return;
@@ -2103,14 +2167,21 @@ function saveLocalMemoContent(content) {
 }
 
 function loadPersonalMemos() {
+  if (isMemoLoading) return;
+
   if (!currentPersonalCode) {
     renderLocalMemos();
     return;
   }
 
+  isMemoLoading = true;
+
   loadServerMemos()
     .then(loaded => {
       if (!loaded) renderLocalMemos();
+    })
+    .finally(() => {
+      isMemoLoading = false;
     });
 }
 
@@ -2180,6 +2251,7 @@ function loadServerMemos() {
         return false;
       }
 
+      setCachedServerMemos(data.memos);
       renderLocalMemos(data.memos);
       return true;
     })
