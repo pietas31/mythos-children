@@ -1988,6 +1988,25 @@ function getLocalMemoStorageKey() {
   return 'mythosLocalMemos:' + (currentPersonalCode || 'guest');
 }
 
+function getCurrentPlayerForMemo() {
+  const savedPlayerData = localStorage.getItem('mythosPlayerData');
+
+  if (savedPlayerData) {
+    try {
+      return JSON.parse(savedPlayerData);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return {
+    characterName: document.getElementById('character-name')
+      ? document.getElementById('character-name').textContent
+      : '',
+    currentPlaceId: ''
+  };
+}
+
 function getLocalMemos() {
   try {
     return JSON.parse(localStorage.getItem(getLocalMemoStorageKey()) || '[]');
@@ -2023,7 +2042,7 @@ function showMemoPage() {
   if (memoPage) memoPage.style.display = 'block';
   if (memoInput) memoInput.value = '';
 
-  renderLocalMemos();
+  loadPersonalMemos();
 }
 
 function showMainPage() {
@@ -2045,53 +2064,176 @@ function saveLocalMemo() {
     return;
   }
 
-  const memos = getLocalMemos();
+  if (currentPersonalCode) {
+    saveServerMemo(content)
+      .then(saved => {
+        if (saved) {
+          memoInput.value = '';
+          loadPersonalMemos();
+          return;
+        }
 
-  memos.unshift({
-    content: content,
-    createdAt: new Date().toISOString()
-  });
+        saveLocalMemoContent(content);
+        memoInput.value = '';
+        renderLocalMemos();
+      });
 
-  setLocalMemos(memos);
+    return;
+  }
+
+  saveLocalMemoContent(content);
   memoInput.value = '';
   renderLocalMemos();
 }
 
-function renderLocalMemos() {
+function saveLocalMemoContent(content) {
+  const memos = getLocalMemos();
+  const player = getCurrentPlayerForMemo();
+
+  memos.unshift({
+    content: content,
+    createdAt: new Date().toISOString(),
+    personalCode: currentPersonalCode || '',
+    characterName: player.characterName || '',
+    placeId: player.currentPlaceId || '',
+    placeName: ''
+  });
+
+  setLocalMemos(memos);
+}
+
+function loadPersonalMemos() {
+  if (!currentPersonalCode) {
+    renderLocalMemos();
+    return;
+  }
+
+  loadServerMemos()
+    .then(loaded => {
+      if (!loaded) renderLocalMemos();
+    });
+}
+
+function renderLocalMemos(memos) {
   const list = document.getElementById('memo-list');
   if (!list) return;
 
-  const memos = getLocalMemos();
+  const safeMemos = Array.isArray(memos) ? memos : getLocalMemos();
 
-  if (!memos.length) {
+  if (!safeMemos.length) {
     list.innerHTML = '<div class="memo-empty">저장된 메모가 없습니다.</div>';
     return;
   }
 
-  list.innerHTML = memos.map((memo, index) => {
-    const dateText = memo.createdAt
-      ? String(memo.createdAt).replace('T', ' ').slice(0, 16)
+  list.innerHTML = safeMemos.map((memo, index) => {
+    const dateText = memo.time || memo.createdAt
+      ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
       : '';
+    const placeText = memo.placeName || memo.placeId || '';
+    const deleteArg = memo.memoId
+      ? "'" + escapeForAttribute(memo.memoId) + "'"
+      : String(index);
 
     return `
       <div class="memo-item">
-        <button class="memo-delete-btn" onclick="deleteLocalMemo(${index})">×</button>
+        <button class="memo-delete-btn" onclick="deleteLocalMemo(${deleteArg})">×</button>
         <div class="memo-content">${escapeHtml(memo.content)}</div>
+        ${placeText ? '<div class="memo-place">' + escapeHtml(placeText) + '</div>' : ''}
         <div class="memo-date">${escapeHtml(dateText)}</div>
       </div>
     `;
   }).join('');
 }
 
-function deleteLocalMemo(index) {
+function deleteLocalMemo(memoIdOrIndex) {
+  if (currentPersonalCode && String(memoIdOrIndex).indexOf('server:') === 0) {
+    deleteServerMemo(memoIdOrIndex)
+      .then(deleted => {
+        if (deleted) {
+          loadPersonalMemos();
+        }
+      });
+
+    return;
+  }
+
   const memos = getLocalMemos();
-  const safeIndex = Number(index);
+  const safeIndex = Number(memoIdOrIndex);
 
   if (Number.isNaN(safeIndex) || safeIndex < 0 || safeIndex >= memos.length) return;
 
   memos.splice(safeIndex, 1);
   setLocalMemos(memos);
   renderLocalMemos();
+}
+
+function loadServerMemos() {
+  const url =
+    API_URL
+    + '?action=getPersonalMemos'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  return fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success || !Array.isArray(data.memos)) {
+        return false;
+      }
+
+      renderLocalMemos(data.memos);
+      return true;
+    })
+    .catch(error => {
+      console.warn('개인 메모 서버 조회 실패, localStorage로 대체합니다.', error);
+      return false;
+    });
+}
+
+function saveServerMemo(content) {
+  const player = getCurrentPlayerForMemo();
+
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'savePersonalMemo',
+      personalCode: currentPersonalCode,
+      characterName: player.characterName || '',
+      placeId: player.currentPlaceId || '',
+      placeName: '',
+      content: content
+    })
+  })
+    .then(response => response.json())
+    .then(data => !!data.success)
+    .catch(error => {
+      console.warn('개인 메모 서버 저장 실패, localStorage로 대체합니다.', error);
+      return false;
+    });
+}
+
+function deleteServerMemo(memoId) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'deletePersonalMemo',
+      personalCode: currentPersonalCode,
+      memoId: memoId
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        openAlertModal('삭제 실패', data.message || '메모를 삭제하지 못했습니다.');
+        return false;
+      }
+
+      return true;
+    })
+    .catch(error => {
+      console.error(error);
+      openAlertModal('삭제 오류', '메모 삭제 중 오류가 발생했습니다.');
+      return false;
+    });
 }
 
 function openRegisterModal() {

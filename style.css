@@ -1576,6 +1576,13 @@ body.is-admin .mail-write-actions .admin-only{
   white-space:pre-wrap;
 }
 
+.memo-place{
+  margin-top:10px;
+  color:#8d3f52;
+  font-size:12px;
+  font-weight:900;
+}
+
 .memo-date{
   margin-top:10px;
   color:#8a94a6;
