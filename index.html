@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-perf-1">
+<link rel="stylesheet" href="style.css?v=19-7-memo-page-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -167,9 +167,20 @@
 
     <button class="memo-save-btn" onclick="saveLocalMemo()">메모 저장</button>
 
-    <div class="memo-list-title">기존 메모 목록</div>
+    <div class="memo-tabs">
+      <button id="memo-tab-all" class="memo-tab active" onclick="selectMemoTab('all')">전체</button>
+      <button id="memo-tab-bookmark" class="memo-tab" onclick="selectMemoTab('bookmark')">책갈피</button>
+    </div>
+
+    <div class="memo-list-title" id="memo-list-title">기존 메모 목록</div>
     <div id="memo-list" class="memo-list">
       <div class="memo-empty">저장된 메모가 없습니다.</div>
+    </div>
+
+    <div class="memo-page-controls" id="memo-page-controls">
+      <button onclick="goPrevMemoPage()">이전</button>
+      <span id="memo-page-text">1 / 1</span>
+      <button onclick="goNextMemoPage()">다음</button>
     </div>
   </section>
 </main>
@@ -566,7 +577,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-perf-1"></script>
+<script src="script.js?v=19-7-memo-page-1"></script>
 
 </body>
 </html>

@@ -19,6 +19,10 @@ let selectedMailIndexes = [];
 let currentLetterMode = 'basic';
 let isMemoLoading = false;
 let isMemoSaving = false;
+let currentMemoTab = 'all';
+let currentMemoPage = 1;
+let currentMemoRenderCache = [];
+const MEMO_PAGE_SIZE = 5;
 
 console.log('MYTHOS READY v19-7');
 
@@ -1995,6 +1999,10 @@ function getServerMemoCacheKey() {
   return 'mythosServerMemoCache:' + (currentPersonalCode || 'guest');
 }
 
+function getMemoBookmarkStorageKey() {
+  return 'mythosMemoBookmarks:' + (currentPersonalCode || 'guest');
+}
+
 function getCachedServerMemos() {
   try {
     return JSON.parse(localStorage.getItem(getServerMemoCacheKey()) || '[]');
@@ -2006,6 +2014,36 @@ function getCachedServerMemos() {
 
 function setCachedServerMemos(memos) {
   localStorage.setItem(getServerMemoCacheKey(), JSON.stringify(Array.isArray(memos) ? memos : []));
+}
+
+function getMemoBookmarks() {
+  try {
+    return JSON.parse(localStorage.getItem(getMemoBookmarkStorageKey()) || '[]');
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+function setMemoBookmarks(bookmarks) {
+  localStorage.setItem(getMemoBookmarkStorageKey(), JSON.stringify(Array.isArray(bookmarks) ? bookmarks : []));
+}
+
+function getMemoIdentity(memo) {
+  return [
+    memo.time || memo.createdAt || '',
+    memo.placeId || '',
+    memo.placeName || '',
+    memo.content || ''
+  ].join('|');
+}
+
+function isMemoBookmarked(memo) {
+  if (memo && (memo.isBookmarked === true || String(memo.isBookmarked).toUpperCase() === 'TRUE')) {
+    return true;
+  }
+
+  return getMemoBookmarks().includes(getMemoIdentity(memo));
 }
 
 function getCurrentPlayerForMemo() {
@@ -2057,6 +2095,63 @@ function setMemoSaveButtonState(isSaving) {
   button.textContent = isSaving ? '저장 중...' : '메모 저장';
 }
 
+function updateMemoTabActive() {
+  const allTab = document.getElementById('memo-tab-all');
+  const bookmarkTab = document.getElementById('memo-tab-bookmark');
+  const title = document.getElementById('memo-list-title');
+
+  if (allTab) allTab.classList.toggle('active', currentMemoTab === 'all');
+  if (bookmarkTab) bookmarkTab.classList.toggle('active', currentMemoTab === 'bookmark');
+  if (title) title.textContent = currentMemoTab === 'bookmark' ? '책갈피 메모' : '기존 메모 목록';
+}
+
+function selectMemoTab(tab) {
+  currentMemoTab = tab === 'bookmark' ? 'bookmark' : 'all';
+  currentMemoPage = 1;
+  renderLocalMemos(currentMemoRenderCache);
+}
+
+function updateMemoPageControls(totalPages) {
+  const controls = document.getElementById('memo-page-controls');
+  const pageText = document.getElementById('memo-page-text');
+
+  if (!controls || !pageText) return;
+
+  if (totalPages <= 1) {
+    controls.style.display = 'none';
+    return;
+  }
+
+  controls.style.display = 'flex';
+  pageText.textContent = currentMemoPage + ' / ' + totalPages;
+}
+
+function goPrevMemoPage() {
+  if (currentMemoPage <= 1) return;
+  currentMemoPage--;
+  renderLocalMemos(currentMemoRenderCache);
+}
+
+function goNextMemoPage() {
+  const visibleMemos = getVisibleMemos(currentMemoRenderCache);
+  const totalPages = Math.max(1, Math.ceil(visibleMemos.length / MEMO_PAGE_SIZE));
+
+  if (currentMemoPage >= totalPages) return;
+
+  currentMemoPage++;
+  renderLocalMemos(currentMemoRenderCache);
+}
+
+function getVisibleMemos(memos) {
+  const safeMemos = Array.isArray(memos) ? memos : [];
+
+  if (currentMemoTab !== 'bookmark') {
+    return safeMemos;
+  }
+
+  return safeMemos.filter(memo => isMemoBookmarked(memo));
+}
+
 function closeModalIfExists(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -2079,6 +2174,8 @@ function showMemoPage() {
   if (memoPage) memoPage.style.display = 'block';
   if (memoInput) memoInput.value = '';
 
+  currentMemoTab = 'all';
+  currentMemoPage = 1;
   renderLocalMemos(getInitialMemoList());
 
   requestAnimationFrame(function () {
@@ -2118,7 +2215,8 @@ function saveLocalMemo() {
       personalCode: currentPersonalCode,
       characterName: player.characterName || '',
       placeId: player.currentPlaceId || '',
-      placeName: ''
+      placeName: '',
+      isBookmarked: false
     }].concat(getInitialMemoList());
 
     setCachedServerMemos(optimisticMemos);
@@ -2160,7 +2258,8 @@ function saveLocalMemoContent(content) {
     personalCode: currentPersonalCode || '',
     characterName: player.characterName || '',
     placeId: player.currentPlaceId || '',
-    placeName: ''
+    placeName: '',
+    isBookmarked: false
   });
 
   setLocalMemos(memos);
@@ -2190,23 +2289,42 @@ function renderLocalMemos(memos) {
   if (!list) return;
 
   const safeMemos = Array.isArray(memos) ? memos : getLocalMemos();
+  currentMemoRenderCache = safeMemos;
+  updateMemoTabActive();
 
-  if (!safeMemos.length) {
-    list.innerHTML = '<div class="memo-empty">저장된 메모가 없습니다.</div>';
+  const visibleMemos = getVisibleMemos(safeMemos);
+  const totalPages = Math.max(1, Math.ceil(visibleMemos.length / MEMO_PAGE_SIZE));
+
+  if (currentMemoPage > totalPages) currentMemoPage = totalPages;
+  if (currentMemoPage < 1) currentMemoPage = 1;
+
+  updateMemoPageControls(totalPages);
+
+  if (!visibleMemos.length) {
+    list.innerHTML = currentMemoTab === 'bookmark'
+      ? '<div class="memo-empty">책갈피한 메모가 없습니다.</div>'
+      : '<div class="memo-empty">저장된 메모가 없습니다.</div>';
     return;
   }
 
-  list.innerHTML = safeMemos.map((memo, index) => {
+  const startIndex = (currentMemoPage - 1) * MEMO_PAGE_SIZE;
+  const pageMemos = visibleMemos.slice(startIndex, startIndex + MEMO_PAGE_SIZE);
+
+  list.innerHTML = pageMemos.map(memo => {
     const dateText = memo.time || memo.createdAt
       ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
       : '';
     const placeText = memo.placeName || memo.placeId || '';
     const deleteArg = memo.memoId
       ? "'" + escapeForAttribute(memo.memoId) + "'"
-      : String(index);
+      : String(safeMemos.indexOf(memo));
+    const bookmarkKey = memo.memoId || getMemoIdentity(memo);
+    const bookmarkClass = isMemoBookmarked(memo) ? ' active' : '';
+    const bookmarkLabel = isMemoBookmarked(memo) ? '책갈피 해제' : '책갈피';
 
     return `
       <div class="memo-item">
+        <button class="memo-bookmark-btn${bookmarkClass}" onclick="toggleMemoBookmark('${escapeForAttribute(bookmarkKey)}')" title="${bookmarkLabel}">★</button>
         <button class="memo-delete-btn" onclick="deleteLocalMemo(${deleteArg})">×</button>
         <div class="memo-content">${escapeHtml(memo.content)}</div>
         ${placeText ? '<div class="memo-place">' + escapeHtml(placeText) + '</div>' : ''}
@@ -2235,7 +2353,71 @@ function deleteLocalMemo(memoIdOrIndex) {
 
   memos.splice(safeIndex, 1);
   setLocalMemos(memos);
+  removeMemoBookmark(currentMemoRenderCache[safeIndex]);
   renderLocalMemos();
+}
+
+function removeMemoBookmark(memo) {
+  if (!memo) return;
+
+  const bookmarkKey = getMemoIdentity(memo);
+  const bookmarks = getMemoBookmarks().filter(key => key !== bookmarkKey);
+  setMemoBookmarks(bookmarks);
+}
+
+function toggleMemoBookmark(bookmarkKey) {
+  if (currentPersonalCode && String(bookmarkKey).indexOf('server:') === 0) {
+    toggleServerMemoBookmark(bookmarkKey);
+    return;
+  }
+
+  const bookmarks = getMemoBookmarks();
+  const index = bookmarks.indexOf(bookmarkKey);
+
+  if (index >= 0) {
+    bookmarks.splice(index, 1);
+  } else {
+    bookmarks.unshift(bookmarkKey);
+  }
+
+  setMemoBookmarks(bookmarks);
+  renderLocalMemos(currentMemoRenderCache);
+}
+
+function toggleServerMemoBookmark(memoId) {
+  const targetMemo = currentMemoRenderCache.find(memo => memo.memoId === memoId);
+  if (!targetMemo) return;
+
+  const nextValue = !isMemoBookmarked(targetMemo);
+  targetMemo.isBookmarked = nextValue;
+  setCachedServerMemos(currentMemoRenderCache);
+  renderLocalMemos(currentMemoRenderCache);
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'togglePersonalMemoBookmark',
+      personalCode: currentPersonalCode,
+      memoId: memoId,
+      isBookmarked: nextValue
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        targetMemo.isBookmarked = !nextValue;
+        setCachedServerMemos(currentMemoRenderCache);
+        renderLocalMemos(currentMemoRenderCache);
+        openAlertModal('책갈피 실패', data.message || '책갈피 상태를 변경하지 못했습니다.');
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      targetMemo.isBookmarked = !nextValue;
+      setCachedServerMemos(currentMemoRenderCache);
+      renderLocalMemos(currentMemoRenderCache);
+      openAlertModal('책갈피 오류', '책갈피 변경 중 오류가 발생했습니다.');
+    });
 }
 
 function loadServerMemos() {
