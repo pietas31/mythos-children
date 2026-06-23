@@ -1709,10 +1709,10 @@ function sendGmLetterAfterConfirm(isAllSend, receiverName, title, content, gmBtn
 
 function getMailTypeLabel(type) {
   if (type === 'SUPPLY') return '보급';
-  if (type === 'PREMIUM') return '고급 서신';
+  if (type === 'PREMIUM') return '서신';
   if (type === 'GM') return 'GM';
-  if (type === 'ANON') return '일반 서신';
-  return '일반 서신';
+  if (type === 'ANON') return '서신';
+  return '서신';
 }
 
 function getMailTypeClass(type) {

@@ -18,6 +18,7 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
+  min-width:0;
 }
 
 html{
@@ -34,6 +35,41 @@ body{
     linear-gradient(135deg,#172035 0%,#243757 42%,#68516a 100%);
   font-family:"Noto Sans KR",sans-serif;
   color:var(--ink);
+}
+
+img,
+video,
+canvas,
+svg{
+  max-width:100%;
+}
+
+body,
+.modal,
+.confirm-modal,
+.modal-box,
+.confirm-box,
+.panel,
+.mail-box,
+.mail-list,
+.mail-detail,
+.memo-page,
+.memo-list,
+.memo-book-modal,
+.memo-book-shell{
+  overflow-x:hidden;
+}
+
+.modal-box,
+.confirm-box,
+.panel,
+.mail-list,
+.mail-detail,
+.memo-item,
+.memo-book-page,
+.supply-attachment-list{
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 body::before{
@@ -603,12 +639,16 @@ button:disabled{
   font-size:14px;
   outline:none;
   overflow-x:hidden;
+  text-overflow:ellipsis;
   transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
 }
 
 .modal-box textarea,
 textarea.modal-input{
   padding:14px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 .modal-box input:focus,
@@ -702,6 +742,7 @@ textarea.modal-input{
 
 .mail-box{
   width:min(620px,100%);
+  min-width:0;
   text-align:left;
 }
 
@@ -738,6 +779,7 @@ textarea.modal-input{
 .mail-list,
 .mail-detail{
   min-height:268px;
+  height:auto;
   padding:14px;
   border:1px solid rgba(37,59,102,.12);
   border-radius:8px;
@@ -750,6 +792,7 @@ textarea.modal-input{
   gap:10px;
   align-items:stretch;
   justify-content:flex-start;
+  overflow:visible;
 }
 
 .mail-empty,
@@ -764,6 +807,7 @@ textarea.modal-input{
 .mail-item{
   position:relative;
   width:100%;
+  min-width:0;
   min-height:54px;
   padding:12px 13px;
   border:1px solid rgba(37,59,102,.10);
@@ -1030,6 +1074,9 @@ textarea.modal-input{
   color:var(--ink-soft);
   font-size:12px;
   font-weight:700;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 #mail-write-content.mail-write-textarea,
@@ -1222,12 +1269,14 @@ body.is-admin .mail-write-actions .admin-only{
 
 .supply-item-row{
   display:grid;
-  grid-template-columns:1fr 110px;
+  grid-template-columns:minmax(0,1fr) minmax(88px,110px);
   gap:10px;
+  min-width:0;
 }
 
 #supply-item-search,
 #supply-item-quantity{
+  min-width:0;
   margin-bottom:0;
 }
 
@@ -1237,8 +1286,16 @@ body.is-admin .mail-write-actions .admin-only{
 
 #supply-receiver-candidates,
 #supply-item-candidates{
+  max-width:100%;
   margin-top:4px;
   margin-bottom:14px;
+}
+
+#supply-write-modal .modal-box,
+#supply-write-modal .modal-input,
+#supply-write-modal .mail-receiver-candidates{
+  max-width:100%;
+  overflow-x:hidden;
 }
 
 .supply-add-item-btn{
@@ -1263,6 +1320,8 @@ body.is-admin .mail-write-actions .admin-only{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
+  width:100%;
+  min-width:0;
   min-height:34px;
   margin:0 0 14px;
   padding:10px;
@@ -1281,6 +1340,7 @@ body.is-admin .mail-write-actions .admin-only{
   display:inline-flex;
   align-items:center;
   gap:7px;
+  min-width:0;
   max-width:100%;
   padding:7px 8px 7px 10px;
   border:1px solid rgba(201,154,69,.28);
@@ -1292,7 +1352,9 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .supply-attachment-chip span{
+  min-width:0;
   overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 .supply-attachment-chip button{
