@@ -3,7 +3,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxk5qnVCIQSm1W4DtNz1q4
 let isRegistering = false;
 let issuedPersonalCode = '';
 let currentPersonalCode = '';
-let CURRENT_VERSION = 'v19-7';
+let CURRENT_VERSION = 'v20';
 
 let currentMailTab = 'all';
 let currentMailPage = 1;
@@ -20,6 +20,8 @@ let currentLetterMode = 'basic';
 let letterPaperStatusCache = null;
 let letterPaperStatusCacheAt = 0;
 const LETTER_PAPER_CACHE_TTL = 30000;
+let userSettingsCache = null;
+let isSavingUserSettings = false;
 let isMemoLoading = false;
 let isMemoSaving = false;
 let isInventoryLoading = false;
@@ -51,7 +53,7 @@ const MYTHOS_ERA_YEAR_BY_STAGE = {
   3: 1424
 };
 
-console.log('MYTHOS READY v19-7');
+console.log('MYTHOS READY v20');
 
 function goHome() {
   location.reload();
@@ -1204,6 +1206,9 @@ function openMailWriteModal(mode) {
   document.getElementById('mail-write-title').value = '';
   document.getElementById('mail-write-content').value = '';
 
+  const anonymousInput = document.getElementById('mail-write-anonymous');
+  if (anonymousInput) anonymousInput.checked = false;
+
   selectedMailReceiverName = '';
 
   const candidates = document.getElementById('mail-receiver-candidates');
@@ -1474,6 +1479,8 @@ function sendUserLetter() {
   const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
   const title = document.getElementById('mail-write-title').value.trim();
   const content = document.getElementById('mail-write-content').value.trim();
+  const anonymousInput = document.getElementById('mail-write-anonymous');
+  const isAnonymous = !!(anonymousInput && anonymousInput.checked);
   const sendBtn = document.getElementById('mail-write-send-btn');
 
   if (!receiverName) {
@@ -1500,12 +1507,12 @@ function sendUserLetter() {
     '일반 서신 발송',
     receiverName + '님에게 일반 서신을 발송하시겠습니까?\n일반 편지지 1개가 소모됩니다.',
     function () {
-      sendUserLetterAfterConfirm(receiverName, title, content, sendBtn);
+      sendUserLetterAfterConfirm(receiverName, title, content, isAnonymous, sendBtn);
     }
   );
 }
 
-function sendUserLetterAfterConfirm(receiverName, title, content, sendBtn) {
+function sendUserLetterAfterConfirm(receiverName, title, content, isAnonymous, sendBtn) {
   if (sendBtn) {
     sendBtn.textContent = '발송 중...';
     sendBtn.disabled = true;
@@ -1518,7 +1525,8 @@ function sendUserLetterAfterConfirm(receiverName, title, content, sendBtn) {
       senderCode: currentPersonalCode,
       receiverName: receiverName,
       title: title,
-      content: content
+      content: content,
+      isAnonymous: isAnonymous
     })
   })
     .then(response => response.json())
@@ -1560,6 +1568,8 @@ function sendPremiumLetter() {
   const receiverName = document.getElementById('mail-write-receiver-name').value.trim();
   const title = document.getElementById('mail-write-title').value.trim();
   const content = document.getElementById('mail-write-content').value.trim();
+  const anonymousInput = document.getElementById('mail-write-anonymous');
+  const isAnonymous = !!(anonymousInput && anonymousInput.checked);
   const premiumBtn = document.getElementById('mail-write-send-btn');
 
   if (!receiverName) {
@@ -1586,12 +1596,12 @@ function sendPremiumLetter() {
     '고급 서신 발송',
     receiverName + '님에게 고급 서신을 발송하시겠습니까?\n고급 편지지 1개가 소모됩니다.',
     function () {
-      sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn);
+      sendPremiumLetterAfterConfirm(receiverName, title, content, isAnonymous, premiumBtn);
     }
   );
 }
 
-function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn) {
+function sendPremiumLetterAfterConfirm(receiverName, title, content, isAnonymous, premiumBtn) {
   if (premiumBtn) {
     premiumBtn.textContent = '발송 중...';
     premiumBtn.disabled = true;
@@ -1604,7 +1614,8 @@ function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn)
       senderCode: currentPersonalCode,
       receiverName: receiverName,
       title: title,
-      content: content
+      content: content,
+      isAnonymous: isAnonymous
     })
   })
     .then(response => response.json())
@@ -2149,12 +2160,85 @@ function openSettingsModal() {
   const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.style.display = 'flex';
+  loadUserSettings();
 }
 
 function closeSettingsModal() {
   const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.style.display = 'none';
+}
+
+function applyUserSettings(settings) {
+  const anonymousInput = document.getElementById('setting-anonymous-receive');
+  const safeSettings = settings || {};
+
+  userSettingsCache = {
+    anonymousReceive: safeSettings.anonymousReceive !== false
+  };
+
+  if (anonymousInput) anonymousInput.checked = userSettingsCache.anonymousReceive;
+}
+
+function loadUserSettings() {
+  if (!currentPersonalCode) {
+    applyUserSettings({ anonymousReceive: true });
+    return;
+  }
+
+  const url =
+    API_URL
+    + '?action=getUserSettings'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        applyUserSettings(data.settings);
+        return;
+      }
+
+      applyUserSettings({ anonymousReceive: true });
+    })
+    .catch(error => {
+      console.error(error);
+      applyUserSettings({ anonymousReceive: true });
+    });
+}
+
+function saveUserSettings() {
+  if (!currentPersonalCode || isSavingUserSettings) return;
+
+  const anonymousInput = document.getElementById('setting-anonymous-receive');
+  const anonymousReceive = anonymousInput ? anonymousInput.checked : true;
+
+  isSavingUserSettings = true;
+  userSettingsCache = { anonymousReceive: anonymousReceive };
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'saveUserSettings',
+      personalCode: currentPersonalCode,
+      anonymousReceive: anonymousReceive
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        openAlertModal('설정 저장 실패', data.message || '설정을 저장하지 못했습니다.');
+        loadUserSettings();
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      openAlertModal('설정 저장 오류', '설정 저장 중 오류가 발생했습니다.');
+      loadUserSettings();
+    })
+    .finally(() => {
+      isSavingUserSettings = false;
+    });
 }
 
 function openInventoryModal() {

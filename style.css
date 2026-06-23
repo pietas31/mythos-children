@@ -1089,11 +1089,30 @@ textarea.modal-input{
 
 .mail-write-count{
   margin-top:4px;
-  margin-bottom:14px;
+  margin-bottom:8px;
   color:var(--ink-soft);
   font-size:12px;
   font-weight:800;
   text-align:right;
+}
+
+.mail-anonymous-option{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  max-width:100%;
+  margin:0 0 14px auto;
+  color:var(--ink-soft);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:900;
+}
+
+.mail-anonymous-option input{
+  width:16px;
+  height:16px;
+  accent-color:var(--wine);
 }
 
 .mail-write-actions{
@@ -1373,6 +1392,51 @@ body.is-admin .mail-write-actions .admin-only{
   color:var(--navy);
 }
 
+.setting-switch{
+  position:relative;
+  display:inline-flex;
+  width:48px;
+  height:26px;
+  cursor:pointer;
+}
+
+.setting-switch input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.setting-switch span{
+  position:absolute;
+  inset:0;
+  border:1px solid rgba(37,59,102,.14);
+  border-radius:999px;
+  background:#d8d2c4;
+  box-shadow:inset 0 1px 2px rgba(24,30,44,.12);
+  transition:.18s ease;
+}
+
+.setting-switch span::before{
+  content:"";
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#fffdf8;
+  box-shadow:0 2px 6px rgba(24,30,44,.20);
+  transition:.18s ease;
+}
+
+.setting-switch input:checked + span{
+  background:linear-gradient(135deg,var(--navy),#375a8c);
+}
+
+.setting-switch input:checked + span::before{
+  transform:translateX(22px);
+}
+
 .confirm-modal{
   display:none;
   z-index:9999;
@@ -1459,7 +1523,7 @@ body.is-admin .mail-write-actions .admin-only{
   display:none;
   position:relative;
   margin:2px 0 0 8px;
-  padding:4px 0 8px 28px;
+  padding:4px 0 8px 22px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1486,8 +1550,8 @@ body.is-admin .mail-write-actions .admin-only{
   width:100%;
   position:relative;
   min-height:42px;
-  padding:10px 8px 10px 16px;
-  border-radius:0;
+  padding:10px 12px 10px 20px;
+  border-radius:8px;
   background:transparent;
   color:var(--navy);
   cursor:pointer;
@@ -1504,9 +1568,9 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button::before{
   content:"";
   position:absolute;
-  left:-18px;
+  left:-16px;
   top:50%;
-  width:16px;
+  width:14px;
   height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
   transform:translateY(-50%);
@@ -1816,7 +1880,7 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu{
   position:relative;
   margin:2px 0 0 8px;
-  padding:4px 0 8px 28px;
+  padding:4px 0 8px 22px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1836,9 +1900,9 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button{
   position:relative;
   min-height:42px;
-  padding:10px 8px 10px 16px;
+  padding:10px 12px 10px 20px;
   border:0;
-  border-radius:0;
+  border-radius:8px;
   background:transparent;
   color:#192235;
   box-shadow:none;
@@ -1847,9 +1911,9 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button::before{
   content:"";
   position:absolute;
-  left:-18px;
+  left:-16px;
   top:50%;
-  width:16px;
+  width:14px;
   height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
   transform:translateY(-50%);

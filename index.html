@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-inventory-return-1">
+<link rel="stylesheet" href="style.css?v=20-settings-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -491,6 +491,11 @@
   <span id="mail-write-count-current">0</span> / <span id="mail-write-count-max">300</span>
 </div>
 
+    <label class="mail-anonymous-option">
+      <input type="checkbox" id="mail-write-anonymous">
+      <span>익명으로 보내기</span>
+    </label>
+
     <div class="mail-write-actions">
   <button class="modal-btn secondary" onclick="closeMailWriteModal()">취소</button>
   <button class="modal-btn admin-only" id="mail-write-gm-btn" onclick="sendGmLetter()">GM 발송</button>
@@ -634,7 +639,10 @@
 
       <div class="setting-item">
         <span>익명 우편 수신</span>
-        <strong>ON</strong>
+        <label class="setting-switch">
+          <input type="checkbox" id="setting-anonymous-receive" onchange="saveUserSettings()">
+          <span></span>
+        </label>
       </div>
     </div>
 
@@ -668,7 +676,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-inventory-return-1"></script>
+<script src="script.js?v=20-settings-1"></script>
 
 </body>
 </html>
