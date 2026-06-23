@@ -23,6 +23,7 @@ let currentMemoTab = 'all';
 let currentMemoPage = 1;
 let currentMemoRenderCache = [];
 const MEMO_PAGE_SIZE = 5;
+const SERVER_MEMO_CACHE_TTL = 30000;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
@@ -397,7 +398,6 @@ function deleteSelectedMailsAfterConfirm() {
       selectedMailIndexes = [];
 
       loadMailList();
-      refreshUnreadMailCount();
 
       if (failed.length) {
         openAlertModal('일부 삭제 실패', '일부 우편을 삭제하지 못했습니다.');
@@ -464,7 +464,6 @@ function receiveSelectedMailsAfterConfirm() {
       }
 
       loadMailList();
-      refreshUnreadMailCount();
 
       openAlertModal('수령 완료', makeReceiveResultMessage(data));
     })
@@ -598,7 +597,6 @@ function markMailRead(mailId) {
     .then(response => response.json())
     .then(() => {
       loadMailList();
-      refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
 }
@@ -627,8 +625,6 @@ function markMailReadSilently(mailId) {
       if (mail) {
         mail.isRead = true;
       }
-
-      refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
 }
@@ -1167,7 +1163,6 @@ function deleteMail(mailId) {
       }
 
       loadMailList();
-      refreshUnreadMailCount();
     })
     .catch(error => console.error(error));
 }
@@ -2028,6 +2023,10 @@ function getServerMemoCacheKey() {
   return 'mythosServerMemoCache:' + (currentPersonalCode || 'guest');
 }
 
+function getServerMemoCacheTimeKey() {
+  return 'mythosServerMemoCacheTime:' + (currentPersonalCode || 'guest');
+}
+
 function getMemoBookmarkStorageKey() {
   return 'mythosMemoBookmarks:' + (currentPersonalCode || 'guest');
 }
@@ -2043,6 +2042,14 @@ function getCachedServerMemos() {
 
 function setCachedServerMemos(memos) {
   localStorage.setItem(getServerMemoCacheKey(), JSON.stringify(Array.isArray(memos) ? memos : []));
+  localStorage.setItem(getServerMemoCacheTimeKey(), String(Date.now()));
+}
+
+function isServerMemoCacheFresh() {
+  const cachedMemos = getCachedServerMemos();
+  const cachedAt = Number(localStorage.getItem(getServerMemoCacheTimeKey()) || 0);
+
+  return cachedMemos.length > 0 && cachedAt > 0 && Date.now() - cachedAt < SERVER_MEMO_CACHE_TTL;
 }
 
 function getMemoBookmarks() {
@@ -2426,7 +2433,7 @@ function saveLocalMemo() {
           if (memoTitleInput) memoTitleInput.value = '';
           memoInput.value = '';
           closeMemoWriteModal();
-          loadPersonalMemos({ silent: true });
+          loadPersonalMemos({ silent: true, force: true });
           return;
         }
 
@@ -2489,7 +2496,7 @@ function updateLocalMemo(title, content) {
     updateServerMemo(currentMemoEditId, title, content)
       .then(updated => {
         if (!updated) {
-          loadPersonalMemos({ silent: true });
+          loadPersonalMemos({ silent: true, force: true });
           return;
         }
 
@@ -2522,11 +2529,17 @@ function updateLocalMemo(title, content) {
   openMemoDetailModal(updatedIndex);
 }
 
-function loadPersonalMemos() {
+function loadPersonalMemos(options) {
   if (isMemoLoading) return;
 
   if (!currentPersonalCode) {
     renderLocalMemos();
+    return;
+  }
+
+  const force = !!(options && options.force);
+
+  if (!force && isServerMemoCacheFresh()) {
     return;
   }
 
@@ -2608,7 +2621,7 @@ function deleteLocalMemoAfterConfirm(memoIdOrIndex) {
     deleteServerMemo(memoIdOrIndex)
       .then(deleted => {
         if (deleted) {
-          loadPersonalMemos();
+          loadPersonalMemos({ force: true });
         }
       });
 
