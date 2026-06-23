@@ -26,11 +26,16 @@ const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
-const MEMO_DETAIL_LEFT_LENGTH = 270;
-const MEMO_DETAIL_RIGHT_LENGTH = 380;
+const MEMO_DETAIL_LEFT_LENGTH = 293;
+const MEMO_DETAIL_RIGHT_LENGTH = 390;
 let currentMemoDetailBaseMeta = '';
 let currentMemoEditIndex = -1;
 let currentMemoEditId = '';
+const MYTHOS_ERA_YEAR_BY_STAGE = {
+  1: 1412,
+  2: 1418,
+  3: 1424
+};
 
 console.log('MYTHOS READY v19-7');
 
@@ -758,11 +763,7 @@ function deleteCurrentMail() {
 }
 
 function formatMailDateForView(value) {
-  if (!value) return '';
-
-  return String(value)
-    .replaceAll('-', '.')
-    .slice(0, 16);
+  return formatMythosDateTime(value);
 }
 
 function setMailBottomButtons(mode, mail) {
@@ -2075,6 +2076,79 @@ function getMemoTitle(memo) {
   return content ? content.slice(0, 40) : '제목 없음';
 }
 
+function getCurrentGrowthStage() {
+  const savedPlayerData = localStorage.getItem('mythosPlayerData');
+
+  if (savedPlayerData) {
+    try {
+      const player = JSON.parse(savedPlayerData);
+      const stage = Number(player.currentGrowthStage || player.growthStage || 1);
+
+      if (stage >= 1 && stage <= 3) return stage;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return 1;
+}
+
+function getMythosEraYear() {
+  const stage = getCurrentGrowthStage();
+  return MYTHOS_ERA_YEAR_BY_STAGE[stage] || MYTHOS_ERA_YEAR_BY_STAGE[1];
+}
+
+function parseDateParts(value) {
+  if (!value) return '';
+
+  const text = String(value).replace('T', ' ').trim();
+  const match = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\s+(\d{1,2}):(\d{2})/);
+
+  if (match) {
+    return {
+      month: match[2].padStart(2, '0'),
+      day: match[3].padStart(2, '0'),
+      hour: match[4].padStart(2, '0'),
+      minute: match[5]
+    };
+  }
+
+  const fallback = new Date(value);
+
+  if (!Number.isNaN(fallback.getTime())) {
+    return {
+      month: String(fallback.getMonth() + 1).padStart(2, '0'),
+      day: String(fallback.getDate()).padStart(2, '0'),
+      hour: String(fallback.getHours()).padStart(2, '0'),
+      minute: String(fallback.getMinutes()).padStart(2, '0')
+    };
+  }
+
+  return null;
+}
+
+function formatMythosDateTime(value) {
+  const parts = parseDateParts(value);
+
+  if (!parts) return '';
+
+  return '신력 ' + getMythosEraYear() + '년 '
+    + parts.month + '/' + parts.day + ' '
+    + parts.hour + ':' + parts.minute;
+}
+
+function formatMemoDateShort(value) {
+  return formatMythosDateTime(value);
+}
+
+function getMemoPlaceLabel(memo) {
+  const player = getCurrentPlayerForMemo();
+  const region = player.origin || '';
+  const place = memo && (memo.placeName || memo.placeId) ? (memo.placeName || memo.placeId) : '';
+
+  return [region, place].filter(Boolean).join(' · ');
+}
+
 function isMemoBookmarked(memo) {
   if (memo && (memo.isBookmarked === true || String(memo.isBookmarked).toUpperCase() === 'TRUE')) {
     return true;
@@ -2497,7 +2571,7 @@ function renderLocalMemos(memos) {
     const memoIndex = safeMemos.indexOf(memo);
     const titleText = getMemoTitle(memo);
     const dateText = memo.time || memo.createdAt
-      ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
+      ? formatMemoDateShort(memo.time || memo.createdAt)
       : '';
     const placeText = memo.placeName || memo.placeId || '';
     const deleteArg = memo.memoId
@@ -2565,15 +2639,15 @@ function openMemoDetailModal(memoIndex) {
   if (!modal || !title || !date || !meta) return;
 
   const dateText = memo.time || memo.createdAt
-    ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
+    ? formatMemoDateShort(memo.time || memo.createdAt)
     : '';
-  const placeText = memo.placeName || memo.placeId || '';
+  const placeText = getMemoPlaceLabel(memo);
 
   title.textContent = getMemoTitle(memo);
-  date.textContent = dateText || '-';
+  date.textContent = [placeText, dateText].filter(Boolean).join(' · ') || '-';
   currentMemoDetailPages = splitMemoDetailPages(memo.content || '');
   currentMemoDetailPage = 1;
-  currentMemoDetailBaseMeta = placeText || '';
+  currentMemoDetailBaseMeta = '';
   renderMemoDetailPage();
   updateMemoItemTabs();
   modal.style.display = 'flex';

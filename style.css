@@ -1717,8 +1717,8 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-write-box{
-  width:min(640px,calc(100vw - 44px));
-  max-width:640px;
+  width:min(590px,calc(100vw - 44px));
+  max-width:590px;
 }
 
 .memo-write-count{
