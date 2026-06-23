@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-perf-1">
+<link rel="stylesheet" href="style.css?v=19-7-mail-ux-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -560,7 +560,17 @@
 
 </div>
 
+<button
+  type="button"
+  class="supply-add-item-btn"
+  onclick="addSupplyItemAttachment()"
+>
+  첨부 추가
+</button>
+
 <div id="supply-item-candidates" class="mail-receiver-candidates"></div>
+
+<div id="supply-attachment-list" class="supply-attachment-list"></div>
 
 <input
   id="supply-item"
@@ -570,6 +580,7 @@
 >
 
     <button
+      id="supply-send-btn"
       class="modal-btn"
       onclick="sendSupplyMail()"
     >
@@ -627,7 +638,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-perf-1"></script>
+<script src="script.js?v=19-7-mail-ux-1"></script>
 
 </body>
 </html>

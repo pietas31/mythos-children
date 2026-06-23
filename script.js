@@ -17,6 +17,9 @@ let hasLoadedMailOnce = false;
 let currentMailSelectionMode = '';
 let selectedMailIndexes = [];
 let currentLetterMode = 'basic';
+let letterPaperStatusCache = null;
+let letterPaperStatusCacheAt = 0;
+const LETTER_PAPER_CACHE_TTL = 30000;
 let isMemoLoading = false;
 let isMemoSaving = false;
 let currentMemoTab = 'all';
@@ -1172,6 +1175,8 @@ let mailReceiverSearchSeq = 0;
 let mailReceiverSearchTimer = null;
 
 let selectedSupplyItemId = '';
+let selectedSupplyItemName = '';
+let selectedSupplyItems = [];
 let supplyItemSearchSeq = 0;
 let supplyItemSearchTimer = null;
 
@@ -1206,6 +1211,12 @@ function openLetterPaperSelectModal() {
     return;
   }
 
+  const cachedStatus = getCachedLetterPaperStatus();
+  if (cachedStatus) {
+    handleLetterPaperStatus(cachedStatus);
+    return;
+  }
+
   const url =
     API_URL
     + '?action=getLetterPaperStatus'
@@ -1219,30 +1230,71 @@ function openLetterPaperSelectModal() {
         return;
       }
 
-      const basicCount = Number(data.basicCount || 0);
-      const premiumCount = Number(data.premiumCount || 0);
-
-      if (basicCount <= 0 && premiumCount <= 0) {
-        openAlertModal('작성 불가', '보유한 편지지가 없어 서신을 작성할 수 없습니다.');
-        return;
-      }
-
-      if (basicCount > 0 && premiumCount <= 0) {
-        openMailWriteModal('basic');
-        return;
-      }
-
-      if (basicCount <= 0 && premiumCount > 0) {
-        openMailWriteModal('premium');
-        return;
-      }
-
-      openLetterPaperModal(basicCount, premiumCount);
+      setCachedLetterPaperStatus(data);
+      handleLetterPaperStatus(data);
     })
     .catch(error => {
       console.error(error);
       openAlertModal('확인 오류', '편지지 보유량 확인 중 오류가 발생했습니다.');
     });
+}
+
+function getCachedLetterPaperStatus() {
+  if (!letterPaperStatusCache) return null;
+  if (Date.now() - letterPaperStatusCacheAt > LETTER_PAPER_CACHE_TTL) return null;
+
+  return letterPaperStatusCache;
+}
+
+function setCachedLetterPaperStatus(data) {
+  letterPaperStatusCache = {
+    basicCount: Number(data.basicCount || 0),
+    premiumCount: Number(data.premiumCount || 0)
+  };
+  letterPaperStatusCacheAt = Date.now();
+}
+
+function invalidateLetterPaperStatusCache() {
+  letterPaperStatusCache = null;
+  letterPaperStatusCacheAt = 0;
+}
+
+function prefetchLetterPaperStatus() {
+  if (!currentPersonalCode || getCachedLetterPaperStatus()) return;
+
+  const url =
+    API_URL
+    + '?action=getLetterPaperStatus'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode);
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) setCachedLetterPaperStatus(data);
+    })
+    .catch(error => console.warn('편지지 보유량 사전 확인 실패:', error));
+}
+
+function handleLetterPaperStatus(data) {
+  const basicCount = Number(data.basicCount || 0);
+  const premiumCount = Number(data.premiumCount || 0);
+
+  if (basicCount <= 0 && premiumCount <= 0) {
+    openAlertModal('작성 불가', '보유한 편지지가 없어 서신을 작성할 수 없습니다.');
+    return;
+  }
+
+  if (basicCount > 0 && premiumCount <= 0) {
+    openMailWriteModal('basic');
+    return;
+  }
+
+  if (basicCount <= 0 && premiumCount > 0) {
+    openMailWriteModal('premium');
+    return;
+  }
+
+  openLetterPaperModal(basicCount, premiumCount);
 }
 
 function openLetterPaperModal(basicCount, premiumCount) {
@@ -1467,6 +1519,8 @@ function sendUserLetterAfterConfirm(receiverName, title, content, sendBtn) {
       }
 
       closeMailWriteModal();
+      invalidateLetterPaperStatusCache();
+      prefetchLetterPaperStatus();
       openAlertModal('발송 완료', '일반 서신을 발송했습니다.');
     })
     .catch(error => {
@@ -1550,6 +1604,8 @@ function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn)
       }
 
       closeMailWriteModal();
+      invalidateLetterPaperStatusCache();
+      prefetchLetterPaperStatus();
       openAlertModal('발송 완료', '고급 서신을 발송했습니다.');
     })
     .catch(error => {
@@ -1653,10 +1709,10 @@ function sendGmLetterAfterConfirm(isAllSend, receiverName, title, content, gmBtn
 
 function getMailTypeLabel(type) {
   if (type === 'SUPPLY') return '보급';
-  if (type === 'PREMIUM') return '고급';
+  if (type === 'PREMIUM') return '고급 서신';
   if (type === 'GM') return 'GM';
-  if (type === 'ANON') return '일반';
-  return '서신';
+  if (type === 'ANON') return '일반 서신';
+  return '일반 서신';
 }
 
 function getMailTypeClass(type) {
@@ -1692,9 +1748,12 @@ if (itemQuantity) itemQuantity.value = '';
   const itemCandidates = document.getElementById('supply-item-candidates');
 
   selectedSupplyItemId = '';
+  selectedSupplyItemName = '';
+  selectedSupplyItems = [];
 
   if (itemSearch) itemSearch.value = '';
   if (itemCandidates) itemCandidates.innerHTML = '';
+  renderSupplyAttachmentList();
 
   const receiverCandidates = document.getElementById('supply-receiver-candidates');
 
@@ -1804,6 +1863,7 @@ function searchSupplyItemCandidates() {
 
   const keyword = input.value.trim();
   selectedSupplyItemId = '';
+  selectedSupplyItemName = '';
 
   supplyItemSearchSeq++;
 
@@ -1874,6 +1934,7 @@ function selectSupplyItem(itemId, itemName) {
   const candidates = document.getElementById('supply-item-candidates');
 
   selectedSupplyItemId = itemId;
+  selectedSupplyItemName = itemName;
 
   if (searchInput) searchInput.value = itemName;
   if (itemInput) itemInput.value = itemId;
@@ -1887,6 +1948,72 @@ function selectSupplyItem(itemId, itemName) {
   }
 }
 
+function addSupplyItemAttachment() {
+  const quantityInput = document.getElementById('supply-item-quantity');
+  const searchInput = document.getElementById('supply-item-search');
+  const itemInput = document.getElementById('supply-item');
+  const candidates = document.getElementById('supply-item-candidates');
+  const quantity = Math.max(1, Number(quantityInput ? quantityInput.value || 1 : 1));
+
+  if (!selectedSupplyItemId) {
+    openAlertModal('첨부 불가', '첨부할 아이템을 먼저 선택해주세요.');
+    return;
+  }
+
+  const existing = selectedSupplyItems.find(item => item.itemId === selectedSupplyItemId);
+
+  if (existing) {
+    existing.quantity += quantity;
+  } else {
+    selectedSupplyItems.push({
+      itemId: selectedSupplyItemId,
+      itemName: selectedSupplyItemName || selectedSupplyItemId,
+      quantity: quantity
+    });
+  }
+
+  selectedSupplyItemId = '';
+  selectedSupplyItemName = '';
+
+  if (searchInput) searchInput.value = '';
+  if (itemInput) itemInput.value = '';
+  if (quantityInput) quantityInput.value = '';
+  if (candidates) candidates.innerHTML = '';
+
+  renderSupplyAttachmentList();
+}
+
+function removeSupplyItemAttachment(index) {
+  selectedSupplyItems.splice(index, 1);
+  renderSupplyAttachmentList();
+}
+
+function renderSupplyAttachmentList() {
+  const list = document.getElementById('supply-attachment-list');
+  if (!list) return;
+
+  if (!selectedSupplyItems.length) {
+    list.innerHTML = '<div class="supply-attachment-empty">첨부된 아이템이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = selectedSupplyItems.map((item, index) => {
+    return `
+      <div class="supply-attachment-chip">
+        <span>${escapeHtml(item.itemName)} x${Number(item.quantity || 1)}</span>
+        <button type="button" onclick="removeSupplyItemAttachment(${index})">×</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function getSupplyItemDataForSend() {
+  return selectedSupplyItems
+    .filter(item => item.itemId && Number(item.quantity || 0) > 0)
+    .map(item => item.itemId + ':' + Math.max(1, Number(item.quantity || 1)))
+    .join(',');
+}
+
 function sendSupplyMail() {
   if (!currentPersonalCode) {
     openAlertModal('발송 불가', '로그인 후 보급 우편을 보낼 수 있습니다.');
@@ -1897,9 +2024,7 @@ function sendSupplyMail() {
   const title = document.getElementById('supply-title').value.trim();
   const content = document.getElementById('supply-content').value.trim();
   const goldAmount = Number(document.getElementById('supply-gold').value || 0);
-  const itemId = document.getElementById('supply-item').value.trim();
-const itemQuantity = Number(document.getElementById('supply-item-quantity').value || 1);
-const itemData = itemId ? itemId + ':' + Math.max(1, itemQuantity) : '';
+  const itemData = getSupplyItemDataForSend();
   const sendBtn = document.getElementById('supply-send-btn');
 
   const isAllSend = receiverName === '전원';
@@ -3074,6 +3199,7 @@ function loginPlayer() {
 
         setSystemStatus('접속 완료');
         refreshUnreadMailCount();
+        prefetchLetterPaperStatus();
 
         document.getElementById('login-modal').style.display = 'none';
       } else {

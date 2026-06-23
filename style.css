@@ -92,7 +92,7 @@ button:disabled{
   justify-content:space-between;
   align-items:center;
   gap:22px;
-  padding:20px clamp(20px,5vw,56px);
+  padding:22px clamp(20px,5vw,56px) 18px;
   background:rgba(251,247,237,.90);
   border-bottom:1px solid rgba(250,229,185,.42);
   box-shadow:0 14px 34px rgba(18,25,40,.18);
@@ -101,6 +101,7 @@ button:disabled{
 
 .logo{
   position:relative;
+  top:3px;
   color:var(--navy);
   cursor:pointer;
   font-family:"Black Han Sans",sans-serif;
@@ -540,6 +541,7 @@ button:disabled{
   max-width:100%;
   max-height:90vh;
   overflow-y:auto;
+  overflow-x:hidden;
   padding:30px;
   border:1px solid rgba(250,229,185,.46);
   border-radius:10px;
@@ -600,6 +602,7 @@ button:disabled{
   color:var(--ink);
   font-size:14px;
   outline:none;
+  overflow-x:hidden;
   transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
 }
 
@@ -794,9 +797,11 @@ textarea.modal-input{
 }
 
 .mail-item.type-supply{
-  border-left-color:var(--moss);
+  border-left-color:var(--gold);
+  background:linear-gradient(90deg,rgba(255,247,222,.94),rgba(255,253,248,.78));
 }
 
+.mail-item.type-letter,
 .mail-item.type-premium{
   border-left-color:var(--wine);
 }
@@ -868,12 +873,14 @@ textarea.modal-input{
 
 .mail-type-badge{
   flex:0 0 auto;
-  padding:4px 8px;
+  padding:4px 9px;
   border-radius:999px;
   background:rgba(37,59,102,.08);
   color:var(--navy);
   font-size:11px;
   font-weight:900;
+  line-height:1;
+  white-space:nowrap;
 }
 
 .mail-page{
@@ -991,6 +998,7 @@ textarea.modal-input{
   margin-bottom:10px;
   max-height:140px;
   overflow-y:auto;
+  overflow-x:hidden;
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -998,6 +1006,7 @@ textarea.modal-input{
 
 .mail-receiver-candidate{
   width:100%;
+  max-width:100%;
   padding:9px 11px;
   border:1px solid rgba(37,59,102,.14);
   border-radius:8px;
@@ -1005,6 +1014,8 @@ textarea.modal-input{
   color:var(--ink);
   cursor:pointer;
   text-align:left;
+  white-space:normal;
+  overflow-wrap:anywhere;
   transition:.16s ease;
 }
 
@@ -1221,13 +1232,78 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 #supply-item{
-  margin-top:10px;
+  display:none;
 }
 
 #supply-receiver-candidates,
 #supply-item-candidates{
   margin-top:4px;
   margin-bottom:14px;
+}
+
+.supply-add-item-btn{
+  width:100%;
+  min-height:38px;
+  margin:10px 0 8px;
+  border:1px solid rgba(201,154,69,.34);
+  border-radius:8px;
+  background:linear-gradient(180deg,#fff8e4,#ead8a9);
+  color:var(--navy);
+  cursor:pointer;
+  font-size:13px;
+  font-weight:900;
+  box-shadow:0 8px 18px rgba(24,30,44,.08);
+}
+
+.supply-add-item-btn:hover{
+  background:linear-gradient(180deg,#fffdf2,#e5ca82);
+}
+
+.supply-attachment-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  min-height:34px;
+  margin:0 0 14px;
+  padding:10px;
+  border:1px solid rgba(37,59,102,.10);
+  border-radius:8px;
+  background:rgba(255,253,248,.58);
+}
+
+.supply-attachment-empty{
+  color:#8a91a0;
+  font-size:12px;
+  font-weight:800;
+}
+
+.supply-attachment-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  max-width:100%;
+  padding:7px 8px 7px 10px;
+  border:1px solid rgba(201,154,69,.28);
+  border-radius:999px;
+  background:#fff8e4;
+  color:var(--ink);
+  font-size:12px;
+  font-weight:900;
+}
+
+.supply-attachment-chip span{
+  overflow-wrap:anywhere;
+}
+
+.supply-attachment-chip button{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(141,63,82,.14);
+  color:var(--wine);
+  cursor:pointer;
+  font-size:13px;
+  font-weight:900;
 }
 
 .premium-letter-btn{
