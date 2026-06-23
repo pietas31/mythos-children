@@ -25,7 +25,7 @@ let currentMemoRenderCache = [];
 const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
-const MEMO_DETAIL_PAGE_LENGTH = 900;
+const MEMO_DETAIL_PAGE_LENGTH = 620;
 
 console.log('MYTHOS READY v19-7');
 
@@ -2454,9 +2454,10 @@ function openMemoDetailModal(memoIndex) {
 
   const modal = document.getElementById('memo-detail-modal');
   const title = document.getElementById('memo-detail-title');
+  const date = document.getElementById('memo-detail-date');
   const meta = document.getElementById('memo-detail-meta');
 
-  if (!modal || !title || !meta) return;
+  if (!modal || !title || !date || !meta) return;
 
   const dateText = memo.time || memo.createdAt
     ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
@@ -2464,9 +2465,10 @@ function openMemoDetailModal(memoIndex) {
   const placeText = memo.placeName || memo.placeId || '';
 
   title.textContent = getMemoTitle(memo);
+  date.textContent = dateText || '-';
   currentMemoDetailPages = splitMemoDetailPages(memo.content || '');
   currentMemoDetailPage = 1;
-  meta.dataset.originalMeta = [placeText, dateText].filter(Boolean).join(' · ');
+  meta.dataset.originalMeta = placeText || '';
   renderMemoDetailPage();
   modal.style.display = 'flex';
 }
@@ -2489,39 +2491,43 @@ function splitMemoDetailPages(content) {
 }
 
 function renderMemoDetailPage(direction) {
-  const content = document.getElementById('memo-detail-content');
+  const left = document.getElementById('memo-detail-left');
+  const right = document.getElementById('memo-detail-right');
   const meta = document.getElementById('memo-detail-meta');
+  const book = document.querySelector('.memo-book');
 
-  if (!content) return;
+  if (!left || !right) return;
 
-  content.classList.remove('turn-next', 'turn-prev');
+  if (book) book.classList.remove('turn-next', 'turn-prev');
 
   if (direction) {
-    void content.offsetWidth;
-    content.classList.add(direction === 'prev' ? 'turn-prev' : 'turn-next');
+    void (book ? book.offsetWidth : left.offsetWidth);
+    if (book) book.classList.add(direction === 'prev' ? 'turn-prev' : 'turn-next');
   }
 
-  content.textContent = currentMemoDetailPages[currentMemoDetailPage - 1] || '';
+  left.textContent = currentMemoDetailPages[currentMemoDetailPage - 1] || '';
+  right.textContent = currentMemoDetailPages[currentMemoDetailPage] || '';
 
   if (meta) {
     const originalMeta = meta.dataset.originalMeta || meta.textContent || '';
     if (!meta.dataset.originalMeta) meta.dataset.originalMeta = originalMeta;
+    const endPage = Math.min(currentMemoDetailPage + 1, currentMemoDetailPages.length);
     const pageText = currentMemoDetailPages.length > 1
-      ? ' · ' + currentMemoDetailPage + ' / ' + currentMemoDetailPages.length
+      ? currentMemoDetailPage + '-' + endPage + ' / ' + currentMemoDetailPages.length
       : '';
-    meta.textContent = originalMeta + pageText;
+    meta.textContent = [originalMeta, pageText].filter(Boolean).join(' · ');
   }
 }
 
 function goPrevMemoDetailPage() {
   if (currentMemoDetailPage <= 1) return;
-  currentMemoDetailPage--;
+  currentMemoDetailPage = Math.max(1, currentMemoDetailPage - 2);
   renderMemoDetailPage('prev');
 }
 
 function goNextMemoDetailPage() {
-  if (currentMemoDetailPage >= currentMemoDetailPages.length) return;
-  currentMemoDetailPage++;
+  if (currentMemoDetailPage + 1 >= currentMemoDetailPages.length) return;
+  currentMemoDetailPage = Math.min(currentMemoDetailPages.length, currentMemoDetailPage + 2);
   renderMemoDetailPage('next');
 }
 

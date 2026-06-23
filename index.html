@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-memo-note-1">
+<link rel="stylesheet" href="style.css?v=19-7-memo-book-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -208,15 +208,29 @@
 
 <div id="memo-detail-modal" class="modal" style="display: none;">
   <div class="modal-box memo-detail-box">
-    <div class="modal-header">
-      <h2 id="memo-detail-title">메모 제목</h2>
-      <button class="close-btn" onclick="closeMemoDetailModal()">×</button>
+    <button class="memo-book-close-tab" onclick="closeMemoDetailModal()">나가기</button>
+    <div class="memo-book-tabs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
+
     <div class="memo-book">
-      <button class="memo-book-nav" onclick="goPrevMemoDetailPage()">‹</button>
-      <div id="memo-detail-content" class="memo-detail-content"></div>
-      <button class="memo-book-nav" onclick="goNextMemoDetailPage()">›</button>
+      <section class="memo-book-page memo-book-page-left" onclick="goPrevMemoDetailPage()">
+        <div class="memo-book-heading">
+          <h2 id="memo-detail-title">메모 제목</h2>
+          <div id="memo-detail-date" class="memo-detail-date">-</div>
+        </div>
+        <div id="memo-detail-left" class="memo-detail-text"></div>
+      </section>
+
+      <div class="memo-book-spine" aria-hidden="true"></div>
+
+      <section class="memo-book-page memo-book-page-right" onclick="goNextMemoDetailPage()">
+        <div id="memo-detail-right" class="memo-detail-text memo-detail-text-right"></div>
+      </section>
     </div>
+
     <div id="memo-detail-meta" class="memo-detail-meta"></div>
   </div>
 </div>
@@ -613,7 +627,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-memo-note-1"></script>
+<script src="script.js?v=19-7-memo-book-1"></script>
 
 </body>
 </html>
