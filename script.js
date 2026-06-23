@@ -25,7 +25,8 @@ let currentMemoRenderCache = [];
 const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
-const MEMO_DETAIL_PAGE_LENGTH = 620;
+let currentMemoDetailMemoIndex = -1;
+const MEMO_DETAIL_PAGE_LENGTH = 430;
 
 console.log('MYTHOS READY v19-7');
 
@@ -2449,7 +2450,8 @@ function deleteLocalMemo(memoIdOrIndex) {
 }
 
 function openMemoDetailModal(memoIndex) {
-  const memo = currentMemoRenderCache[Number(memoIndex)];
+  currentMemoDetailMemoIndex = Number(memoIndex);
+  const memo = currentMemoRenderCache[currentMemoDetailMemoIndex];
   if (!memo) return;
 
   const modal = document.getElementById('memo-detail-modal');
@@ -2470,6 +2472,7 @@ function openMemoDetailModal(memoIndex) {
   currentMemoDetailPage = 1;
   meta.dataset.originalMeta = placeText || '';
   renderMemoDetailPage();
+  updateMemoItemTabs();
   modal.style.display = 'flex';
 }
 
@@ -2477,6 +2480,40 @@ function closeMemoDetailModal() {
   const modal = document.getElementById('memo-detail-modal');
   if (!modal) return;
   modal.style.display = 'none';
+}
+
+function getMemoDetailVisibleIndexes() {
+  return getVisibleMemos(currentMemoRenderCache)
+    .map(memo => currentMemoRenderCache.indexOf(memo))
+    .filter(index => index >= 0);
+}
+
+function updateMemoItemTabs() {
+  const prevBtn = document.querySelector('.memo-book-tab-prev');
+  const nextBtn = document.querySelector('.memo-book-tab-next');
+  const indexes = getMemoDetailVisibleIndexes();
+  const position = indexes.indexOf(currentMemoDetailMemoIndex);
+
+  if (prevBtn) prevBtn.disabled = position <= 0;
+  if (nextBtn) nextBtn.disabled = position < 0 || position >= indexes.length - 1;
+}
+
+function goPrevMemoItem() {
+  const indexes = getMemoDetailVisibleIndexes();
+  const position = indexes.indexOf(currentMemoDetailMemoIndex);
+
+  if (position <= 0) return;
+
+  openMemoDetailModal(indexes[position - 1]);
+}
+
+function goNextMemoItem() {
+  const indexes = getMemoDetailVisibleIndexes();
+  const position = indexes.indexOf(currentMemoDetailMemoIndex);
+
+  if (position < 0 || position >= indexes.length - 1) return;
+
+  openMemoDetailModal(indexes[position + 1]);
 }
 
 function splitMemoDetailPages(content) {
