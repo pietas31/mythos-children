@@ -1717,8 +1717,8 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-write-box{
-  width:min(720px,calc(100vw - 44px));
-  max-width:720px;
+  width:min(640px,calc(100vw - 44px));
+  max-width:640px;
 }
 
 .memo-write-count{
@@ -1836,9 +1836,7 @@ body.is-admin .mail-write-actions .admin-only{
   height:100%;
   padding:24px 32px 22px;
   border:1px solid rgba(37,59,102,.10);
-  background:
-    repeating-linear-gradient(180deg,transparent 0,transparent 30px,rgba(37,59,102,.10) 31px),
-    linear-gradient(180deg,#fffdf6 0%,#f7eedb 100%);
+  background:linear-gradient(180deg,#fffdf6 0%,#f7eedb 100%);
   color:#202734;
   cursor:pointer;
   overflow:hidden;
