@@ -27,6 +27,7 @@ let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
 const MEMO_DETAIL_PAGE_LENGTH = 430;
+let currentMemoDetailBaseMeta = '';
 
 console.log('MYTHOS READY v19-7');
 
@@ -2470,7 +2471,7 @@ function openMemoDetailModal(memoIndex) {
   date.textContent = dateText || '-';
   currentMemoDetailPages = splitMemoDetailPages(memo.content || '');
   currentMemoDetailPage = 1;
-  meta.dataset.originalMeta = placeText || '';
+  currentMemoDetailBaseMeta = placeText || '';
   renderMemoDetailPage();
   updateMemoItemTabs();
   modal.style.display = 'flex';
@@ -2546,13 +2547,11 @@ function renderMemoDetailPage(direction) {
   right.textContent = currentMemoDetailPages[currentMemoDetailPage] || '';
 
   if (meta) {
-    const originalMeta = meta.dataset.originalMeta || meta.textContent || '';
-    if (!meta.dataset.originalMeta) meta.dataset.originalMeta = originalMeta;
     const endPage = Math.min(currentMemoDetailPage + 1, currentMemoDetailPages.length);
     const pageText = currentMemoDetailPages.length > 1
       ? currentMemoDetailPage + '-' + endPage + ' / ' + currentMemoDetailPages.length
       : '';
-    meta.textContent = [originalMeta, pageText].filter(Boolean).join(' · ');
+    meta.textContent = [currentMemoDetailBaseMeta, pageText].filter(Boolean).join(' · ');
   }
 }
 
