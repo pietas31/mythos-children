@@ -2133,7 +2133,7 @@ function formatMythosDateTime(value) {
   if (!parts) return '';
 
   return '신력 ' + getMythosEraYear() + '년 '
-    + parts.month + '/' + parts.day + ' '
+    + Number(parts.month) + '월 ' + Number(parts.day) + '일 '
     + parts.hour + ':' + parts.minute;
 }
 
