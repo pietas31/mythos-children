@@ -27,6 +27,7 @@ let currentInventoryAllItems = [];
 let currentInventoryItems = [];
 let currentInventorySelectedIndex = -1;
 let currentInventoryTab = 'all';
+let shouldReturnToInventoryAfterMailWrite = false;
 let inventoryCache = null;
 let inventoryCacheAt = 0;
 const INVENTORY_CACHE_TTL = 30000;
@@ -1363,6 +1364,11 @@ function closeMailWriteModal() {
   if (!modal) return;
 
   modal.style.display = 'none';
+
+  if (shouldReturnToInventoryAfterMailWrite) {
+    shouldReturnToInventoryAfterMailWrite = false;
+    openInventoryModal();
+  }
 }
 
 function searchMailReceiverCandidates() {
@@ -1527,6 +1533,7 @@ function sendUserLetterAfterConfirm(receiverName, title, content, sendBtn) {
         return;
       }
 
+      shouldReturnToInventoryAfterMailWrite = false;
       closeMailWriteModal();
       invalidateLetterPaperStatusCache();
       prefetchLetterPaperStatus();
@@ -1612,6 +1619,7 @@ function sendPremiumLetterAfterConfirm(receiverName, title, content, premiumBtn)
         return;
       }
 
+      shouldReturnToInventoryAfterMailWrite = false;
       closeMailWriteModal();
       invalidateLetterPaperStatusCache();
       prefetchLetterPaperStatus();
@@ -2353,6 +2361,7 @@ function useSelectedInventoryItem() {
   const itemId = String(item.itemId || '').toUpperCase();
 
   if (itemId.indexOf('LETTER') !== -1) {
+    shouldReturnToInventoryAfterMailWrite = true;
     closeInventoryModal();
 
     if (itemId.indexOf('002') !== -1 || itemId.indexOf('PREMIUM') !== -1) {
