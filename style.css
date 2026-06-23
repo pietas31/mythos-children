@@ -621,7 +621,7 @@ button:disabled{
 .close-btn:hover{
   background:var(--wine);
   color:#fffaf1;
-  transform:rotate(90deg);
+  transform:none;
 }
 
 .modal-box input,
@@ -1522,8 +1522,8 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu{
   display:none;
   position:relative;
-  margin:2px 0 0 8px;
-  padding:4px 0 8px 22px;
+  margin:4px 0 0 0;
+  padding:6px 0 8px 28px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1533,7 +1533,7 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu::before{
   content:"";
   position:absolute;
-  left:10px;
+  left:14px;
   top:6px;
   bottom:8px;
   width:1px;
@@ -1550,7 +1550,7 @@ body.is-admin .mail-write-actions .admin-only{
   width:100%;
   position:relative;
   min-height:42px;
-  padding:10px 12px 10px 20px;
+  padding:10px 12px 10px 22px;
   border-radius:8px;
   background:transparent;
   color:var(--navy);
@@ -1563,14 +1563,15 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button:hover{
   background:rgba(255,253,248,.48);
   color:var(--wine);
+  transform:none;
 }
 
 .submenu button::before{
   content:"";
   position:absolute;
-  left:-16px;
+  left:-14px;
   top:50%;
-  width:14px;
+  width:12px;
   height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
   transform:translateY(-50%);
@@ -1884,8 +1885,8 @@ body.is-admin .mail-write-actions .admin-only{
 
 .submenu{
   position:relative;
-  margin:2px 0 0 8px;
-  padding:4px 0 8px 22px;
+  margin:4px 0 0 0;
+  padding:6px 0 8px 28px;
   border:0;
   border-radius:0;
   background:transparent;
@@ -1895,7 +1896,7 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu::before{
   content:"";
   position:absolute;
-  left:10px;
+  left:14px;
   top:6px;
   bottom:8px;
   width:1px;
@@ -1905,7 +1906,7 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button{
   position:relative;
   min-height:42px;
-  padding:10px 12px 10px 20px;
+  padding:10px 12px 10px 22px;
   border:0;
   border-radius:8px;
   background:transparent;
@@ -1916,9 +1917,9 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button::before{
   content:"";
   position:absolute;
-  left:-16px;
+  left:-14px;
   top:50%;
-  width:14px;
+  width:12px;
   height:1px;
   border-bottom:1px solid rgba(201,154,69,.86);
   transform:translateY(-50%);
@@ -1927,7 +1928,7 @@ body.is-admin .mail-write-actions .admin-only{
 .submenu button:hover{
   background:rgba(255,253,248,.48);
   color:var(--wine);
-  transform:translateX(4px);
+  transform:none;
 }
 
 .memo-page{
