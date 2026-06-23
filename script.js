@@ -26,7 +26,7 @@ const MEMO_PAGE_SIZE = 5;
 let currentMemoDetailPages = [];
 let currentMemoDetailPage = 1;
 let currentMemoDetailMemoIndex = -1;
-const MEMO_DETAIL_PAGE_LENGTH = 430;
+const MEMO_DETAIL_PAGE_LENGTH = 320;
 let currentMemoDetailBaseMeta = '';
 
 console.log('MYTHOS READY v19-7');
