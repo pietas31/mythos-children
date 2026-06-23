@@ -1212,10 +1212,12 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .inventory-slot img{
-  width:38px;
-  height:38px;
-  object-fit:contain;
-  image-rendering:pixelated;
+  width:auto;
+  height:auto;
+  max-width:none;
+  max-height:none;
+  object-fit:initial;
+  image-rendering:auto;
 }
 
 .inventory-slot-placeholder{
@@ -1235,11 +1237,11 @@ body.is-admin .mail-write-actions .admin-only{
   position:absolute;
   right:4px;
   bottom:2px;
-  color:#fff;
+  color:var(--navy);
   font-size:11px;
   font-style:normal;
   font-weight:900;
-  text-shadow:0 1px 2px rgba(0,0,0,.70);
+  text-shadow:0 1px 0 rgba(255,255,255,.80);
 }
 
 .inventory-detail{
@@ -1277,10 +1279,12 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .inventory-detail-icon img{
-  width:42px;
-  height:42px;
-  object-fit:contain;
-  image-rendering:pixelated;
+  width:auto;
+  height:auto;
+  max-width:none;
+  max-height:none;
+  object-fit:initial;
+  image-rendering:auto;
 }
 
 .inventory-detail h3{

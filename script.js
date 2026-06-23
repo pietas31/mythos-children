@@ -2337,7 +2337,6 @@ function renderInventoryDetail(item) {
       </div>
       <div>
         <h3>${escapeHtml(item.itemName || item.itemId || '아이템')}</h3>
-        <p>${escapeHtml(item.itemId || '-')}</p>
       </div>
     </div>
     <div class="inventory-detail-row"><span>수량</span><strong>${Number(item.quantity || 0)}</strong></div>
