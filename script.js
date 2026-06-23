@@ -23,6 +23,9 @@ let currentMemoTab = 'all';
 let currentMemoPage = 1;
 let currentMemoRenderCache = [];
 const MEMO_PAGE_SIZE = 5;
+let currentMemoDetailPages = [];
+let currentMemoDetailPage = 1;
+const MEMO_DETAIL_PAGE_LENGTH = 900;
 
 console.log('MYTHOS READY v19-7');
 
@@ -2194,16 +2197,14 @@ function showMemoPage() {
   closeModalIfExists('supply-write-modal');
   closeModalIfExists('settings-modal');
   closeModalIfExists('confirm-modal');
+  closeModalIfExists('memo-write-modal');
+  closeModalIfExists('memo-detail-modal');
 
   const mainScreen = document.querySelector('.main-screen');
   const memoPage = document.getElementById('memo-page');
-  const memoTitleInput = document.getElementById('memo-title-input');
-  const memoInput = document.getElementById('memo-input');
 
   if (mainScreen) mainScreen.style.display = 'none';
   if (memoPage) memoPage.style.display = 'block';
-  if (memoTitleInput) memoTitleInput.value = '';
-  if (memoInput) memoInput.value = '';
 
   currentMemoTab = 'all';
   currentMemoPage = 1;
@@ -2220,6 +2221,38 @@ function showMainPage() {
 
   if (memoPage) memoPage.style.display = 'none';
   if (mainScreen) mainScreen.style.display = 'grid';
+}
+
+function openMemoWriteModal() {
+  const modal = document.getElementById('memo-write-modal');
+  const memoTitleInput = document.getElementById('memo-title-input');
+  const memoInput = document.getElementById('memo-input');
+
+  if (!modal) return;
+
+  if (memoTitleInput) memoTitleInput.value = '';
+  if (memoInput) {
+    memoInput.value = '';
+    memoInput.oninput = updateMemoContentCount;
+  }
+
+  updateMemoContentCount();
+  modal.style.display = 'flex';
+}
+
+function closeMemoWriteModal() {
+  const modal = document.getElementById('memo-write-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+function updateMemoContentCount() {
+  const memoInput = document.getElementById('memo-input');
+  const count = document.getElementById('memo-content-count');
+
+  if (!memoInput || !count) return;
+
+  count.textContent = String(memoInput.value.length);
 }
 
 function saveLocalMemo() {
@@ -2276,6 +2309,7 @@ function saveLocalMemo() {
         if (saved) {
           if (memoTitleInput) memoTitleInput.value = '';
           memoInput.value = '';
+          closeMemoWriteModal();
           loadPersonalMemos({ silent: true });
           return;
         }
@@ -2284,6 +2318,7 @@ function saveLocalMemo() {
         setCachedServerMemos([]);
         if (memoTitleInput) memoTitleInput.value = '';
         memoInput.value = '';
+        closeMemoWriteModal();
         renderLocalMemos();
       })
       .finally(() => {
@@ -2297,6 +2332,7 @@ function saveLocalMemo() {
   saveLocalMemoContent(title, content);
   if (memoTitleInput) memoTitleInput.value = '';
   memoInput.value = '';
+  closeMemoWriteModal();
   renderLocalMemos();
 }
 
@@ -2418,10 +2454,9 @@ function openMemoDetailModal(memoIndex) {
 
   const modal = document.getElementById('memo-detail-modal');
   const title = document.getElementById('memo-detail-title');
-  const content = document.getElementById('memo-detail-content');
   const meta = document.getElementById('memo-detail-meta');
 
-  if (!modal || !title || !content || !meta) return;
+  if (!modal || !title || !meta) return;
 
   const dateText = memo.time || memo.createdAt
     ? String(memo.time || memo.createdAt).replace('T', ' ').slice(0, 16)
@@ -2429,8 +2464,10 @@ function openMemoDetailModal(memoIndex) {
   const placeText = memo.placeName || memo.placeId || '';
 
   title.textContent = getMemoTitle(memo);
-  content.textContent = memo.content || '';
-  meta.textContent = [placeText, dateText].filter(Boolean).join(' · ');
+  currentMemoDetailPages = splitMemoDetailPages(memo.content || '');
+  currentMemoDetailPage = 1;
+  meta.dataset.originalMeta = [placeText, dateText].filter(Boolean).join(' · ');
+  renderMemoDetailPage();
   modal.style.display = 'flex';
 }
 
@@ -2438,6 +2475,54 @@ function closeMemoDetailModal() {
   const modal = document.getElementById('memo-detail-modal');
   if (!modal) return;
   modal.style.display = 'none';
+}
+
+function splitMemoDetailPages(content) {
+  const text = String(content || '');
+  const pages = [];
+
+  for (let i = 0; i < text.length; i += MEMO_DETAIL_PAGE_LENGTH) {
+    pages.push(text.slice(i, i + MEMO_DETAIL_PAGE_LENGTH));
+  }
+
+  return pages.length ? pages : [''];
+}
+
+function renderMemoDetailPage(direction) {
+  const content = document.getElementById('memo-detail-content');
+  const meta = document.getElementById('memo-detail-meta');
+
+  if (!content) return;
+
+  content.classList.remove('turn-next', 'turn-prev');
+
+  if (direction) {
+    void content.offsetWidth;
+    content.classList.add(direction === 'prev' ? 'turn-prev' : 'turn-next');
+  }
+
+  content.textContent = currentMemoDetailPages[currentMemoDetailPage - 1] || '';
+
+  if (meta) {
+    const originalMeta = meta.dataset.originalMeta || meta.textContent || '';
+    if (!meta.dataset.originalMeta) meta.dataset.originalMeta = originalMeta;
+    const pageText = currentMemoDetailPages.length > 1
+      ? ' · ' + currentMemoDetailPage + ' / ' + currentMemoDetailPages.length
+      : '';
+    meta.textContent = originalMeta + pageText;
+  }
+}
+
+function goPrevMemoDetailPage() {
+  if (currentMemoDetailPage <= 1) return;
+  currentMemoDetailPage--;
+  renderMemoDetailPage('prev');
+}
+
+function goNextMemoDetailPage() {
+  if (currentMemoDetailPage >= currentMemoDetailPages.length) return;
+  currentMemoDetailPage++;
+  renderMemoDetailPage('next');
 }
 
 function removeMemoBookmark(memo) {

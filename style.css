@@ -1438,7 +1438,7 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-page{
-  width:min(760px,calc(100% - 44px));
+  width:min(980px,calc(100% - 44px));
   margin:0 auto;
   padding:50px 0 72px;
 }
@@ -1477,7 +1477,7 @@ body.is-admin .mail-write-actions .admin-only{
   font-weight:900;
 }
 
-.memo-back-btn,
+.memo-write-open-btn,
 .memo-save-btn{
   border:1px solid rgba(37,59,102,.16);
   border-radius:8px;
@@ -1489,7 +1489,7 @@ body.is-admin .mail-write-actions .admin-only{
   transition:transform .18s ease,box-shadow .18s ease;
 }
 
-.memo-back-btn{
+.memo-write-open-btn{
   min-height:40px;
   padding:10px 15px;
   background:linear-gradient(180deg,#fffdf8,#eadfc9);
@@ -1503,7 +1503,7 @@ body.is-admin .mail-write-actions .admin-only{
   padding:13px 16px;
 }
 
-.memo-back-btn:hover,
+.memo-write-open-btn:hover,
 .memo-save-btn:hover{
   transform:translateY(-2px);
   box-shadow:0 16px 28px rgba(37,59,102,.24);
@@ -1538,7 +1538,7 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .memo-input{
-  min-height:180px;
+  min-height:260px;
 }
 
 .memo-title-input:focus,
@@ -1714,22 +1714,69 @@ body.is-admin .mail-write-actions .admin-only{
   text-align:center;
 }
 
+.memo-write-box{
+  max-width:760px;
+}
+
+.memo-write-count{
+  margin-top:8px;
+  color:#8a94a6;
+  font-size:12px;
+  font-weight:800;
+  text-align:right;
+}
+
 .memo-detail-box{
-  max-width:720px;
+  width:min(980px,calc(100vw - 44px));
+  max-width:980px;
+}
+
+.memo-book{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 42px;
+  align-items:stretch;
+  gap:12px;
+}
+
+.memo-book-nav{
+  border:1px solid rgba(37,59,102,.12);
+  border-radius:8px;
+  background:rgba(255,253,248,.78);
+  color:#253b66;
+  cursor:pointer;
+  font-size:32px;
+  font-weight:900;
+}
+
+.memo-book-nav:hover{
+  background:#253b66;
+  color:#fffaf1;
 }
 
 .memo-detail-content{
-  max-height:58vh;
-  padding:16px;
+  min-height:440px;
+  max-height:62vh;
+  padding:28px 34px;
   border:1px solid rgba(37,59,102,.12);
   border-radius:8px;
-  background:rgba(255,253,248,.82);
+  background:
+    linear-gradient(90deg,rgba(201,154,69,.16),transparent 8%,transparent 92%,rgba(37,59,102,.08)),
+    linear-gradient(180deg,#fffdf8,#f4ecdD);
   color:#202734;
   font-size:14px;
   font-weight:700;
   line-height:1.8;
   overflow:auto;
   white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.64);
+}
+
+.memo-detail-content.turn-next{
+  animation:memoTurnNext .24s ease;
+}
+
+.memo-detail-content.turn-prev{
+  animation:memoTurnPrev .24s ease;
 }
 
 .memo-detail-meta{
@@ -1738,6 +1785,28 @@ body.is-admin .mail-write-actions .admin-only{
   font-size:12px;
   font-weight:800;
   text-align:right;
+}
+
+@keyframes memoTurnNext{
+  from{
+    opacity:.35;
+    transform:translateX(18px) rotateY(-8deg);
+  }
+  to{
+    opacity:1;
+    transform:translateX(0) rotateY(0);
+  }
+}
+
+@keyframes memoTurnPrev{
+  from{
+    opacity:.35;
+    transform:translateX(-18px) rotateY(8deg);
+  }
+  to{
+    opacity:1;
+    transform:translateX(0) rotateY(0);
+  }
 }
 
 @media (max-width:980px){

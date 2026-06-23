@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=19-7-memo-title-1">
+<link rel="stylesheet" href="style.css?v=19-7-memo-note-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -156,24 +156,8 @@
   <section class="memo-panel">
     <div class="memo-header">
       <h2>개인 메모</h2>
-      <button class="memo-back-btn" onclick="showMainPage()">메인으로 돌아가기</button>
+      <button class="memo-write-open-btn" onclick="openMemoWriteModal()">작성하기</button>
     </div>
-
-    <input
-      id="memo-title-input"
-      class="memo-title-input"
-      placeholder="메모 제목"
-      maxlength="40"
-    >
-
-    <textarea
-      id="memo-input"
-      class="memo-input"
-      placeholder="메모를 입력하세요."
-      maxlength="10000"
-    ></textarea>
-
-    <button class="memo-save-btn" onclick="saveLocalMemo()">메모 저장</button>
 
     <div class="memo-tabs">
       <button id="memo-tab-all" class="memo-tab active" onclick="selectMemoTab('all')">전체</button>
@@ -193,13 +177,46 @@
   </section>
 </main>
 
+<div id="memo-write-modal" class="modal" style="display: none;">
+  <div class="modal-box memo-write-box">
+    <div class="modal-header">
+      <h2>메모 작성</h2>
+      <button class="close-btn" onclick="closeMemoWriteModal()">×</button>
+    </div>
+
+    <input
+      id="memo-title-input"
+      class="memo-title-input"
+      placeholder="메모 제목"
+      maxlength="40"
+    >
+
+    <textarea
+      id="memo-input"
+      class="memo-input"
+      placeholder="메모를 입력하세요."
+      maxlength="10000"
+    ></textarea>
+
+    <div class="memo-write-count">
+      <span id="memo-content-count">0</span> / 10000
+    </div>
+
+    <button class="memo-save-btn" onclick="saveLocalMemo()">메모 저장</button>
+  </div>
+</div>
+
 <div id="memo-detail-modal" class="modal" style="display: none;">
   <div class="modal-box memo-detail-box">
     <div class="modal-header">
       <h2 id="memo-detail-title">메모 제목</h2>
       <button class="close-btn" onclick="closeMemoDetailModal()">×</button>
     </div>
-    <div id="memo-detail-content" class="memo-detail-content"></div>
+    <div class="memo-book">
+      <button class="memo-book-nav" onclick="goPrevMemoDetailPage()">‹</button>
+      <div id="memo-detail-content" class="memo-detail-content"></div>
+      <button class="memo-book-nav" onclick="goNextMemoDetailPage()">›</button>
+    </div>
     <div id="memo-detail-meta" class="memo-detail-meta"></div>
   </div>
 </div>
@@ -596,7 +613,7 @@
   </div>
 </div>
 
-<script src="script.js?v=19-7-memo-title-1"></script>
+<script src="script.js?v=19-7-memo-note-1"></script>
 
 </body>
 </html>
