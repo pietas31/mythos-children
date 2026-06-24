@@ -1210,7 +1210,7 @@ function openMailWriteModal(mode, options) {
 
   const anonymousInput = document.getElementById('mail-write-anonymous');
   const anonymousOption = document.querySelector('.mail-anonymous-option');
-  const canUseAnonymous = currentLetterMode === 'basic' && currentAnonymousLetterForced;
+  const canUseAnonymous = currentLetterMode === 'basic';
 
   if (anonymousInput) {
     anonymousInput.checked = currentAnonymousLetterForced;
@@ -1307,28 +1307,23 @@ function handleLetterPaperStatus(data) {
   const basicCount = Number(data.basicCount || 0);
   const premiumCount = Number(data.premiumCount || 0);
   const anonymousCount = Number(data.anonymousCount || 0);
+  const canWriteBasic = basicCount > 0 || anonymousCount > 0;
   const availableTypeCount =
-    (basicCount > 0 ? 1 : 0)
-    + (premiumCount > 0 ? 1 : 0)
-    + (anonymousCount > 0 ? 1 : 0);
+    (canWriteBasic ? 1 : 0)
+    + (premiumCount > 0 ? 1 : 0);
 
   if (availableTypeCount <= 0) {
     openAlertModal('작성 불가', '보유한 편지지가 없어 서신을 작성할 수 없습니다.');
     return;
   }
 
-  if (availableTypeCount === 1 && basicCount > 0) {
-    openMailWriteModal('basic');
+  if (availableTypeCount === 1 && canWriteBasic) {
+    openMailWriteModal('basic', { forceAnonymous: basicCount <= 0 && anonymousCount > 0 });
     return;
   }
 
   if (availableTypeCount === 1 && premiumCount > 0) {
     openMailWriteModal('premium');
-    return;
-  }
-
-  if (availableTypeCount === 1 && anonymousCount > 0) {
-    openMailWriteModal('basic', { forceAnonymous: true });
     return;
   }
 
@@ -1339,19 +1334,19 @@ function openLetterPaperModal(basicCount, premiumCount, anonymousCount) {
   const modal = document.getElementById('letter-paper-modal');
   const basicText = document.getElementById('basic-paper-count');
   const premiumText = document.getElementById('premium-paper-count');
-  const anonymousText = document.getElementById('anonymous-paper-count');
   const basicBtn = document.getElementById('basic-paper-btn');
   const premiumBtn = document.getElementById('premium-paper-btn');
-  const anonymousBtn = document.getElementById('anonymous-paper-btn');
 
   if (!modal) return;
 
-  if (basicText) basicText.textContent = '보유 ' + Number(basicCount || 0) + '개';
+  if (basicText) {
+    basicText.textContent =
+      '보유 ' + Number(basicCount || 0) + '개'
+      + (Number(anonymousCount || 0) > 0 ? ' · 익명 ' + Number(anonymousCount || 0) + '개' : '');
+  }
   if (premiumText) premiumText.textContent = '보유 ' + Number(premiumCount || 0) + '개';
-  if (anonymousText) anonymousText.textContent = '보유 ' + Number(anonymousCount || 0) + '개';
-  if (basicBtn) basicBtn.style.display = Number(basicCount || 0) > 0 ? 'block' : 'none';
+  if (basicBtn) basicBtn.style.display = (Number(basicCount || 0) > 0 || Number(anonymousCount || 0) > 0) ? 'block' : 'none';
   if (premiumBtn) premiumBtn.style.display = Number(premiumCount || 0) > 0 ? 'block' : 'none';
-  if (anonymousBtn) anonymousBtn.style.display = Number(anonymousCount || 0) > 0 ? 'block' : 'none';
 
   modal.style.display = 'flex';
 }
@@ -1365,8 +1360,11 @@ function closeLetterPaperModal() {
 
 function chooseLetterPaper(mode) {
   closeLetterPaperModal();
-  if (mode === 'anonymous') {
-    openMailWriteModal('basic', { forceAnonymous: true });
+  if (mode === 'basic') {
+    const cachedStatus = getCachedLetterPaperStatus();
+    const basicCount = cachedStatus ? Number(cachedStatus.basicCount || 0) : 0;
+    const anonymousCount = cachedStatus ? Number(cachedStatus.anonymousCount || 0) : 0;
+    openMailWriteModal('basic', { forceAnonymous: basicCount <= 0 && anonymousCount > 0 });
     return;
   }
 
@@ -1539,9 +1537,26 @@ function sendUserLetter() {
     return;
   }
 
+  const cachedStatus = getCachedLetterPaperStatus();
+  const anonymousCount = cachedStatus ? Number(cachedStatus.anonymousCount || 0) : 0;
+
+  if (isAnonymous && !currentAnonymousLetterForced && anonymousCount <= 0) {
+    openConfirmModal(
+      '익명 편지지 없음',
+      '익명 편지지가 없습니다.\n일반 편지지로 일반 서신을 발송하시겠습니까?',
+      function () {
+        sendUserLetterAfterConfirm(receiverName, title, content, false, sendBtn);
+      }
+    );
+    return;
+  }
+
   openConfirmModal(
-    '일반 서신 발송',
-    receiverName + '님에게 일반 서신을 발송하시겠습니까?\n일반 편지지 1개가 소모됩니다.',
+    isAnonymous ? '익명 서신 발송' : '일반 서신 발송',
+    receiverName
+      + (isAnonymous
+        ? '님에게 익명 서신을 발송하시겠습니까?\n익명 편지지 1개가 소모됩니다.'
+        : '님에게 일반 서신을 발송하시겠습니까?\n일반 편지지 1개가 소모됩니다.'),
     function () {
       sendUserLetterAfterConfirm(receiverName, title, content, isAnonymous, sendBtn);
     }
@@ -1581,7 +1596,7 @@ function sendUserLetterAfterConfirm(receiverName, title, content, isAnonymous, s
       closeMailWriteModal();
       invalidateLetterPaperStatusCache();
       prefetchLetterPaperStatus();
-      openAlertModal('발송 완료', '일반 서신을 발송했습니다.');
+      openAlertModal('발송 완료', isAnonymous ? '익명 서신을 발송했습니다.' : '일반 서신을 발송했습니다.');
     })
     .catch(error => {
       console.error(error);
@@ -2204,6 +2219,7 @@ function closeSettingsModal() {
 
 function applyUserSettings(settings) {
   const anonymousInput = document.getElementById('setting-anonymous-receive');
+  const anonymousState = document.getElementById('setting-anonymous-receive-state');
   const safeSettings = settings || {};
 
   userSettingsCache = {
@@ -2211,6 +2227,7 @@ function applyUserSettings(settings) {
   };
 
   if (anonymousInput) anonymousInput.checked = userSettingsCache.anonymousReceive;
+  if (anonymousState) anonymousState.textContent = userSettingsCache.anonymousReceive ? 'ON' : 'OFF';
 }
 
 function loadUserSettings() {
@@ -2244,10 +2261,12 @@ function saveUserSettings() {
   if (!currentPersonalCode || isSavingUserSettings) return;
 
   const anonymousInput = document.getElementById('setting-anonymous-receive');
+  const anonymousState = document.getElementById('setting-anonymous-receive-state');
   const anonymousReceive = anonymousInput ? anonymousInput.checked : true;
 
   isSavingUserSettings = true;
   userSettingsCache = { anonymousReceive: anonymousReceive };
+  if (anonymousState) anonymousState.textContent = anonymousReceive ? 'ON' : 'OFF';
 
   fetch(API_URL, {
     method: 'POST',

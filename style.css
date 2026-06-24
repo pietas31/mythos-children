@@ -1392,6 +1392,20 @@ body.is-admin .mail-write-actions .admin-only{
   color:var(--navy);
 }
 
+.setting-switch-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
+
+.setting-switch-state{
+  color:var(--navy);
+  font-size:11px;
+  font-weight:900;
+  line-height:1;
+}
+
 .setting-switch{
   position:relative;
   display:inline-flex;
@@ -1747,11 +1761,6 @@ body.is-admin .mail-write-actions .admin-only{
 
 .letter-paper-card.premium{
   background:linear-gradient(135deg,rgba(141,63,82,.12),rgba(255,253,248,.78));
-  color:var(--wine);
-}
-
-.letter-paper-card.anonymous{
-  background:linear-gradient(135deg,rgba(141,63,82,.16),rgba(255,253,248,.82));
   color:var(--wine);
 }
 
