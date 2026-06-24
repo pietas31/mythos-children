@@ -23,6 +23,8 @@ let letterPaperStatusCacheAt = 0;
 const LETTER_PAPER_CACHE_TTL = 30000;
 let userSettingsCache = null;
 let isSavingUserSettings = false;
+let userSettingsSaveTimer = null;
+let userSettingsSaveSeq = 0;
 let isMemoLoading = false;
 let isMemoSaving = false;
 let isInventoryLoading = false;
@@ -2258,39 +2260,53 @@ function loadUserSettings() {
 }
 
 function saveUserSettings() {
-  if (!currentPersonalCode || isSavingUserSettings) return;
+  if (!currentPersonalCode) return;
 
   const anonymousInput = document.getElementById('setting-anonymous-receive');
   const anonymousState = document.getElementById('setting-anonymous-receive-state');
   const anonymousReceive = anonymousInput ? anonymousInput.checked : true;
+  const saveSeq = ++userSettingsSaveSeq;
 
-  isSavingUserSettings = true;
   userSettingsCache = { anonymousReceive: anonymousReceive };
   if (anonymousState) anonymousState.textContent = anonymousReceive ? 'ON' : 'OFF';
 
-  fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify({
-      action: 'saveUserSettings',
-      personalCode: currentPersonalCode,
-      anonymousReceive: anonymousReceive
+  if (userSettingsSaveTimer) {
+    clearTimeout(userSettingsSaveTimer);
+  }
+
+  userSettingsSaveTimer = setTimeout(function () {
+    isSavingUserSettings = true;
+
+    fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'saveUserSettings',
+        personalCode: currentPersonalCode,
+        anonymousReceive: anonymousReceive
+      })
     })
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        openAlertModal('설정 저장 실패', data.message || '설정을 저장하지 못했습니다.');
+      .then(response => response.json())
+      .then(data => {
+        if (saveSeq !== userSettingsSaveSeq) return;
+
+        if (!data.success) {
+          openAlertModal('설정 저장 실패', data.message || '설정을 저장하지 못했습니다.');
+          loadUserSettings();
+        }
+      })
+      .catch(error => {
+        if (saveSeq !== userSettingsSaveSeq) return;
+
+        console.error(error);
+        openAlertModal('설정 저장 오류', '설정 저장 중 오류가 발생했습니다.');
         loadUserSettings();
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      openAlertModal('설정 저장 오류', '설정 저장 중 오류가 발생했습니다.');
-      loadUserSettings();
-    })
-    .finally(() => {
-      isSavingUserSettings = false;
-    });
+      })
+      .finally(() => {
+        if (saveSeq === userSettingsSaveSeq) {
+          isSavingUserSettings = false;
+        }
+      });
+  }, 250);
 }
 
 function openInventoryModal() {

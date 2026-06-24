@@ -1112,6 +1112,11 @@ textarea.modal-input{
 .mail-anonymous-option input{
   width:16px;
   height:16px;
+  min-height:auto;
+  margin:0;
+  padding:0;
+  flex:0 0 16px;
+  border-radius:3px;
   accent-color:var(--wine);
 }
 
