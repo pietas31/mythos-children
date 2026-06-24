@@ -30,8 +30,11 @@ let isMemoSaving = false;
 let isInventoryLoading = false;
 let currentInventoryAllItems = [];
 let currentInventoryItems = [];
+let currentInventorySlotItems = [];
 let currentInventorySelectedIndex = -1;
 let currentInventoryTab = 'all';
+let currentInventoryPage = 1;
+let draggedInventorySlotIndex = -1;
 let shouldReturnToInventoryAfterMailWrite = false;
 let inventoryCache = null;
 let inventoryCacheAt = 0;
@@ -2347,6 +2350,71 @@ function setInventoryCache(items) {
   inventoryCacheAt = Date.now();
 }
 
+function getInventoryOrderStorageKey(tab) {
+  return 'mythosInventoryOrder:' + (currentPersonalCode || 'guest') + ':' + (tab || currentInventoryTab || 'all');
+}
+
+function getInventoryItemKey(item) {
+  return String((item && item.itemId) || '').trim();
+}
+
+function loadInventoryOrder(tab) {
+  try {
+    const raw = localStorage.getItem(getInventoryOrderStorageKey(tab));
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+function saveInventoryOrder(tab, slotItems) {
+  const order = (slotItems || []).map(item => item ? getInventoryItemKey(item) : '');
+  localStorage.setItem(getInventoryOrderStorageKey(tab), JSON.stringify(order));
+}
+
+function arrangeInventorySlots(items) {
+  const sourceItems = Array.isArray(items) ? items : [];
+  const itemMap = {};
+
+  sourceItems.forEach(item => {
+    const key = getInventoryItemKey(item);
+    if (key) itemMap[key] = item;
+  });
+
+  const usedKeys = {};
+  const savedOrder = loadInventoryOrder(currentInventoryTab);
+  const minimumSlots = Math.max(INVENTORY_SLOT_COUNT, Math.ceil(sourceItems.length / INVENTORY_SLOT_COUNT) * INVENTORY_SLOT_COUNT);
+  const slots = new Array(Math.max(minimumSlots, savedOrder.length)).fill(null);
+
+  savedOrder.forEach((key, index) => {
+    if (!key || !itemMap[key] || usedKeys[key]) return;
+    slots[index] = itemMap[key];
+    usedKeys[key] = true;
+  });
+
+  sourceItems.forEach(item => {
+    const key = getInventoryItemKey(item);
+    if (!key || usedKeys[key]) return;
+
+    let emptyIndex = slots.findIndex(slot => !slot);
+    if (emptyIndex < 0) {
+      emptyIndex = slots.length;
+      slots.push(null);
+    }
+
+    slots[emptyIndex] = item;
+    usedKeys[key] = true;
+  });
+
+  while (slots.length % INVENTORY_SLOT_COUNT !== 0) {
+    slots.push(null);
+  }
+
+  return slots;
+}
+
 function renderInventoryLoading() {
   const grid = document.getElementById('inventory-grid');
   const detail = document.getElementById('inventory-detail');
@@ -2354,7 +2422,9 @@ function renderInventoryLoading() {
 
   currentInventoryItems = [];
   currentInventoryAllItems = [];
+  currentInventorySlotItems = [];
   currentInventorySelectedIndex = -1;
+  currentInventoryPage = 1;
 
   if (count) count.textContent = '0 / ' + INVENTORY_SLOT_COUNT;
   if (grid) grid.innerHTML = '<div class="inventory-empty">인벤토리를 불러오는 중입니다.</div>';
@@ -2402,22 +2472,45 @@ function renderInventory(items) {
   const detail = document.getElementById('inventory-detail');
   const count = document.getElementById('inventory-count');
   const allItems = Array.isArray(items) ? items.filter(item => Number(item.quantity || 0) > 0) : [];
-  const safeItems = getVisibleInventoryItems(allItems);
+  const visibleItems = getVisibleInventoryItems(allItems);
+  const slotItems = arrangeInventorySlots(visibleItems);
+  const totalPages = Math.max(1, Math.ceil(slotItems.length / INVENTORY_SLOT_COUNT));
+
+  if (currentInventoryPage > totalPages) currentInventoryPage = totalPages;
+  if (currentInventoryPage < 1) currentInventoryPage = 1;
+
+  const startIndex = (currentInventoryPage - 1) * INVENTORY_SLOT_COUNT;
+  const pageItems = slotItems.slice(startIndex, startIndex + INVENTORY_SLOT_COUNT);
+  const firstFilledIndex = pageItems.findIndex(Boolean);
 
   currentInventoryAllItems = allItems;
-  currentInventoryItems = safeItems;
-  currentInventorySelectedIndex = safeItems.length ? 0 : -1;
+  currentInventorySlotItems = slotItems;
+  currentInventoryItems = pageItems;
+  currentInventorySelectedIndex = firstFilledIndex >= 0 ? firstFilledIndex : -1;
 
-  if (count) count.textContent = safeItems.length + ' / ' + allItems.length;
+  if (count) {
+    count.innerHTML =
+      '<span>' + visibleItems.length + ' / ' + allItems.length + '</span>'
+      + '<span>' + currentInventoryPage + ' / ' + totalPages + '</span>';
+  }
 
   if (grid) {
     const slots = [];
 
     for (let i = 0; i < INVENTORY_SLOT_COUNT; i++) {
-      const item = safeItems[i];
+      const item = pageItems[i];
+      const absoluteIndex = startIndex + i;
 
       if (!item) {
-        slots.push('<button type="button" class="inventory-slot is-empty" aria-label="빈 슬롯"></button>');
+        slots.push(`
+          <button
+            type="button"
+            class="inventory-slot is-empty"
+            aria-label="빈 슬롯"
+            ondragover="handleInventoryDragOver(event)"
+            ondrop="dropInventorySlot(${absoluteIndex})"
+          ></button>
+        `);
         continue;
       }
 
@@ -2429,10 +2522,14 @@ function renderInventory(items) {
           type="button"
           class="inventory-slot${selectedClass}"
           title="${escapeForAttribute(item.itemName || item.itemId)}"
+          draggable="true"
           onclick="selectInventoryItem(${i})"
           oncontextmenu="selectInventoryItem(${i}); return false;"
+          ondragstart="dragInventorySlot(event, ${absoluteIndex})"
+          ondragover="handleInventoryDragOver(event)"
+          ondrop="dropInventorySlot(${absoluteIndex})"
         >
-          ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="">' : '<span class="inventory-slot-placeholder">' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
+          ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="" draggable="false" oncontextmenu="return false;">' : '<span class="inventory-slot-placeholder">' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
           <em>${Number(item.quantity || 0)}</em>
         </button>
       `);
@@ -2443,15 +2540,83 @@ function renderInventory(items) {
 
   if (detail) {
     if (currentInventorySelectedIndex >= 0) {
-      renderInventoryDetail(safeItems[currentInventorySelectedIndex]);
+      renderInventoryDetail(pageItems[currentInventorySelectedIndex]);
     } else {
       detail.innerHTML = '<div class="inventory-detail-empty">보유 중인 아이템이 없습니다.</div>';
     }
   }
+
+  renderInventoryPageControls(totalPages);
+}
+
+function renderInventoryPageControls(totalPages) {
+  const controls = document.getElementById('inventory-page-controls');
+  const pageText = document.getElementById('inventory-page-text');
+  const prevBtn = document.getElementById('inventory-prev-btn');
+  const nextBtn = document.getElementById('inventory-next-btn');
+
+  if (!controls || !pageText || !prevBtn || !nextBtn) return;
+
+  controls.style.display = totalPages > 1 ? 'flex' : 'none';
+  pageText.textContent = currentInventoryPage + ' / ' + totalPages;
+  prevBtn.disabled = currentInventoryPage <= 1;
+  nextBtn.disabled = currentInventoryPage >= totalPages;
+}
+
+function goPrevInventoryPage() {
+  if (currentInventoryPage <= 1) return;
+  currentInventoryPage--;
+  renderInventory(isInventoryCacheFresh() ? inventoryCache : currentInventoryAllItems);
+}
+
+function goNextInventoryPage() {
+  const totalPages = Math.max(1, Math.ceil(currentInventorySlotItems.length / INVENTORY_SLOT_COUNT));
+  if (currentInventoryPage >= totalPages) return;
+  currentInventoryPage++;
+  renderInventory(isInventoryCacheFresh() ? inventoryCache : currentInventoryAllItems);
+}
+
+function dragInventorySlot(event, absoluteIndex) {
+  draggedInventorySlotIndex = Number(absoluteIndex);
+
+  if (event && event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(draggedInventorySlotIndex));
+  }
+}
+
+function handleInventoryDragOver(event) {
+  if (!event) return;
+  event.preventDefault();
+
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+}
+
+function dropInventorySlot(absoluteIndex) {
+  const fromIndex = Number(draggedInventorySlotIndex);
+  const toIndex = Number(absoluteIndex);
+
+  if (!Number.isFinite(fromIndex) || !Number.isFinite(toIndex)) return;
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+  if (!currentInventorySlotItems[fromIndex]) return;
+
+  const nextSlots = currentInventorySlotItems.slice();
+  const movedItem = nextSlots[fromIndex];
+
+  nextSlots[fromIndex] = nextSlots[toIndex] || null;
+  nextSlots[toIndex] = movedItem;
+  currentInventorySlotItems = nextSlots;
+  draggedInventorySlotIndex = -1;
+
+  saveInventoryOrder(currentInventoryTab, currentInventorySlotItems);
+  renderInventory(currentInventoryAllItems);
 }
 
 function selectInventoryTab(tab) {
   currentInventoryTab = tab || 'all';
+  currentInventoryPage = 1;
   updateInventoryTabs();
   renderInventory(isInventoryCacheFresh() ? inventoryCache : currentInventoryAllItems);
 }
@@ -2493,7 +2658,7 @@ function renderInventoryDetail(item) {
   detail.innerHTML = `
     <div class="inventory-detail-head">
       <div class="inventory-detail-icon">
-        ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="">' : '<span>' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
+        ${icon ? '<img src="' + escapeForAttribute(icon) + '" alt="" draggable="false" oncontextmenu="return false;">' : '<span>' + escapeHtml(String(item.itemName || '?').slice(0, 1)) + '</span>'}
       </div>
       <div>
         <h3>${escapeHtml(item.itemName || item.itemId || '아이템')}</h3>
@@ -2512,12 +2677,13 @@ function useSelectedInventoryItem() {
 
   const itemId = String(item.itemId || '').toUpperCase();
   const fileName = String(item.fileName || '').toLowerCase();
+  const isAnonymousLetter = fileName.indexOf('letter-anonymous') !== -1 || itemId.indexOf('ANONYMOUS') !== -1;
 
-  if (itemId.indexOf('LETTER') !== -1) {
+  if (isAnonymousLetter || itemId.indexOf('LETTER') !== -1) {
     shouldReturnToInventoryAfterMailWrite = true;
     closeInventoryModal();
 
-    if (fileName.indexOf('letter-anonymous') !== -1 || itemId.indexOf('ANONYMOUS') !== -1) {
+    if (isAnonymousLetter) {
       openMailWriteModal('basic', { forceAnonymous: true });
       return;
     }
