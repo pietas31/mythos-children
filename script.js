@@ -2972,7 +2972,8 @@ const INVESTIGATION_DEFAULT_STATE = {
   notes: 0,
   noteSources: {},
   items: {},
-  flags: {}
+  flags: {},
+  visitedPlaces: {}
 };
 
 const INVESTIGATION_NODES = {
@@ -4216,6 +4217,7 @@ function getInvestigationState() {
       investigationState.items = investigationState.items || {};
       investigationState.flags = investigationState.flags || {};
       investigationState.noteSources = investigationState.noteSources || {};
+      investigationState.visitedPlaces = investigationState.visitedPlaces || {};
       investigationState.notes = Object.keys(investigationState.noteSources).length;
       return investigationState;
     } catch (error) {
@@ -4244,6 +4246,36 @@ function getInvestigationFlag(flagName) {
 
 function getInvestigationItem(itemId) {
   return !!(getInvestigationState().items || {})[itemId];
+}
+
+function getInvestigationPlaceByNode(nodeId) {
+  const placeMap = {
+    library: 'library',
+    'old-building': 'oldBuilding',
+    storage: 'storage',
+    garden: 'garden',
+    statue: 'statue'
+  };
+
+  return placeMap[nodeId] || '';
+}
+
+function markInvestigationPlaceVisited(nodeId) {
+  const place = getInvestigationPlaceByNode(nodeId);
+  if (!place) return;
+
+  const state = getInvestigationState();
+  state.visitedPlaces = state.visitedPlaces || {};
+  if (state.visitedPlaces[place]) return;
+
+  state.visitedPlaces[place] = true;
+  saveInvestigationState();
+}
+
+function isInfoCategoryUnlocked(category) {
+  if (!category || !category.parent) return true;
+  const state = getInvestigationState();
+  return !!(state.visitedPlaces && state.visitedPlaces[category.id]);
 }
 
 function applyInvestigationGain(gain) {
@@ -4335,6 +4367,8 @@ function renderInvestigationNode() {
   const path = document.getElementById('investigation-path');
   const text = document.getElementById('investigation-text');
   const options = document.getElementById('investigation-options');
+
+  markInvestigationPlaceVisited(currentInvestigationNodeId);
 
   if (node.onEnter) {
     applyInvestigationGain(node.onEnter);
@@ -4499,6 +4533,8 @@ function renderInfoPanel() {
 
   const categories = getInfoCategories();
   const currentCategory = categories.find(category => category.id === currentInfoPlace) || categories[0];
+  const academyExpanded = currentCategory.id === 'academy' || currentCategory.parent === 'academy';
+  const visibleCategories = categories.filter(category => !category.parent || (academyExpanded && isInfoCategoryUnlocked(category)));
   const officialItems = getOfficialInfoItems();
   const foundItems = getFoundInfoItems();
   const items = currentCategory.id === 'official'
@@ -4508,15 +4544,20 @@ function renderInfoPanel() {
       : foundItems.filter(item => item.place === currentCategory.id);
 
   if (nav) {
-    nav.innerHTML = categories.map(category => {
+    nav.innerHTML = visibleCategories.map(category => {
       const count = category.id === 'official'
         ? officialItems.length
         : category.id === 'academy'
           ? foundItems.length
           : foundItems.filter(item => item.place === category.id).length;
+      const extraClass = [
+        category.id === currentCategory.id ? 'active' : '',
+        category.parent ? 'child' : '',
+        category.id === 'academy' && academyExpanded ? 'expanded' : ''
+      ].filter(Boolean).join(' ');
 
       return (
-        '<button type="button" class="info-panel-nav-btn ' + (category.id === currentCategory.id ? 'active' : '') + '" onclick="selectInfoPlace(\'' + escapeForAttribute(category.id) + '\')">' +
+        '<button type="button" class="info-panel-nav-btn ' + extraClass + '" onclick="selectInfoPlace(\'' + escapeForAttribute(category.id) + '\')">' +
           '<span>' + escapeHtml(category.label) + '</span>' +
           '<em>' + count + '</em>' +
         '</button>'
@@ -4545,11 +4586,11 @@ function getInfoCategories() {
   return [
     { id: 'official', label: '안내사항' },
     { id: 'academy', label: '아르카디움 피에타스' },
-    { id: 'library', label: '도서관' },
-    { id: 'oldBuilding', label: '폐건물' },
-    { id: 'storage', label: '창고' },
-    { id: 'garden', label: '정원' },
-    { id: 'statue', label: '동상' }
+    { id: 'library', label: '도서관', parent: 'academy' },
+    { id: 'oldBuilding', label: '폐건물', parent: 'academy' },
+    { id: 'storage', label: '창고', parent: 'academy' },
+    { id: 'garden', label: '정원', parent: 'academy' },
+    { id: 'statue', label: '동상', parent: 'academy' }
   ];
 }
 
