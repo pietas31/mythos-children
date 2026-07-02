@@ -56,6 +56,7 @@ let currentMemoEditId = '';
 let currentInvestigationNodeId = 'trial-start';
 let investigationHistory = [];
 let investigationState = null;
+let currentInfoPlace = 'official';
 const MYTHOS_ERA_YEAR_BY_STAGE = {
   1: 1412,
   2: 1418,
@@ -4230,6 +4231,11 @@ function saveInvestigationState() {
   const state = getInvestigationState();
   state.notes = Object.keys(state.noteSources || {}).length;
   localStorage.setItem(getInvestigationStorageKey(), JSON.stringify(state));
+
+  const infoModal = document.getElementById('info-panel-modal');
+  if (infoModal && infoModal.style.display !== 'none') {
+    renderInfoPanel();
+  }
 }
 
 function getInvestigationFlag(flagName) {
@@ -4450,6 +4456,196 @@ function showInvestigationNotice(message) {
   }
 
   alert(message);
+}
+
+function openInvestigationChatNotice() {
+  openAlertModal('팀 채팅', '팀 채팅은 DB 연동 단계에서 추가할 예정입니다.');
+}
+
+function openTeamChatModal() {
+  const modal = document.getElementById('team-chat-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+}
+
+function closeTeamChatModal() {
+  closeModalIfExists('team-chat-modal');
+}
+
+function openInfoPanel() {
+  const modal = document.getElementById('info-panel-modal');
+  if (!modal) return;
+
+  currentInfoPlace = 'official';
+  modal.style.display = 'flex';
+  renderInfoPanel();
+}
+
+function closeInfoPanel() {
+  closeModalIfExists('info-panel-modal');
+}
+
+function selectInfoPlace(place) {
+  currentInfoPlace = place || 'official';
+  renderInfoPanel();
+}
+
+function renderInfoPanel() {
+  const nav = document.getElementById('info-panel-nav');
+  const title = document.getElementById('info-panel-note-title');
+  const list = document.getElementById('info-panel-list');
+
+  if (!list) return;
+
+  const categories = getInfoCategories();
+  const currentCategory = categories.find(category => category.id === currentInfoPlace) || categories[0];
+  const officialItems = getOfficialInfoItems();
+  const foundItems = getFoundInfoItems();
+  const items = currentCategory.id === 'official'
+    ? officialItems
+    : currentCategory.id === 'academy'
+      ? foundItems
+      : foundItems.filter(item => item.place === currentCategory.id);
+
+  if (nav) {
+    nav.innerHTML = categories.map(category => {
+      const count = category.id === 'official'
+        ? officialItems.length
+        : category.id === 'academy'
+          ? foundItems.length
+          : foundItems.filter(item => item.place === category.id).length;
+
+      return (
+        '<button type="button" class="info-panel-nav-btn ' + (category.id === currentCategory.id ? 'active' : '') + '" onclick="selectInfoPlace(\'' + escapeForAttribute(category.id) + '\')">' +
+          '<span>' + escapeHtml(category.label) + '</span>' +
+          '<em>' + count + '</em>' +
+        '</button>'
+      );
+    }).join('');
+  }
+
+  if (title) {
+    title.textContent = currentCategory.label;
+  }
+
+  if (!items.length) {
+    list.innerHTML = '<div class="info-panel-empty">아직 확인한 정보가 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(item => (
+    '<article class="info-panel-item">' +
+      '<strong>' + escapeHtml(item.title) + '</strong>' +
+      '<p>' + escapeHtml(item.content) + '</p>' +
+    '</article>'
+  )).join('');
+}
+
+function getInfoCategories() {
+  return [
+    { id: 'official', label: '안내사항' },
+    { id: 'academy', label: '아르카디움 피에타스' },
+    { id: 'library', label: '도서관' },
+    { id: 'oldBuilding', label: '폐건물' },
+    { id: 'storage', label: '창고' },
+    { id: 'garden', label: '정원' },
+    { id: 'statue', label: '동상' }
+  ];
+}
+
+function getAllInfoItems() {
+  return getOfficialInfoItems().concat(getFoundInfoItems());
+}
+
+function getOfficialInfoItems() {
+  return [
+    {
+      place: 'official',
+      title: '담력시험',
+      content: '아르카디움 피에타스에서 진행되는 2일차 이벤트. 팀 단위로 학교 내부를 조사한다.'
+    },
+    {
+      place: 'official',
+      title: '진행 방식',
+      content: '장소를 선택하고, 조사 대상을 살펴보며, 필요한 경우 아이템이나 팀 스탯 합산 조건을 사용한다.'
+    },
+    {
+      place: 'official',
+      title: '팀 스탯',
+      content: '팀조사에서는 특정 개인의 최고 수치가 아니라 팀원들의 스탯 합산을 기준으로 판정한다.'
+    }
+  ];
+}
+
+function getFoundInfoItems() {
+  const state = getInvestigationState();
+  const items = [];
+
+  if (state.notes > 0) {
+    items.push({
+      place: 'all',
+      title: '붉은 얼룩이 묻은 쪽지',
+      content: '현재 ' + state.notes + '장을 확인했다. 쪽지의 끄트머리에는 비슷한 붉은 얼룩이 남아 있다.'
+    });
+  }
+
+  if (getInvestigationFlag('notesCombined')) {
+    items.push({
+      place: 'statue',
+      title: '쪽지 조합',
+      content: '흩어진 쪽지를 맞춰보자 산양을 본뜬 작은 문양이 드러났다.'
+    });
+  }
+
+  if (getInvestigationItem('returnBoxKey')) {
+    items.push({
+      place: 'library',
+      title: '반납함 열쇠',
+      content: '도서관 스터디룸 화분의 흙 속에서 발견한 열쇠. 반납함을 여는 데 사용할 수 있을 것 같다.'
+    });
+  }
+
+  if (getInvestigationItem('gearKey')) {
+    items.push({
+      place: 'oldBuilding',
+      title: '액체가 묻은 열쇠',
+      content: '붉은 액체 속에서 꺼낸 열쇠. 닦아보면 톱니바퀴 모양이 각인되어 있다.'
+    });
+  }
+
+  if (getInvestigationFlag('machineRoomOpen')) {
+    items.push({
+      place: 'oldBuilding',
+      title: '잠긴 방',
+      content: '톱니바퀴 열쇠로 알 수 없는 방을 열었다. 열쇠는 잠금장치에 엉겨 붙어 다시 챙기지 못했다.'
+    });
+  }
+
+  if (getInvestigationItem('metalBadge')) {
+    items.push({
+      place: 'storage',
+      title: '붉은 금속 배지',
+      content: '창고의 갑옷 틈새에서 발견한 작은 금속 배지. 어디에 쓰이는지는 아직 알 수 없다.'
+    });
+  }
+
+  if (getInvestigationFlag('badgeInserted')) {
+    items.push({
+      place: 'statue',
+      title: '산양 동상 목의 장식',
+      content: '붉은 금속 배지를 목의 장식 홈에 끼우자 이상할 정도로 꼭 맞았다.'
+    });
+  }
+
+  if (getInvestigationFlag('pumpOn')) {
+    items.push({
+      place: 'oldBuilding',
+      title: '수동 압축 펌프',
+      content: '여럿이 힘을 모아 작동시키자 냉각제가 이동했고, 황동 냉각 탱크 표면에 서리가 피어올랐다.'
+    });
+  }
+
+  return items;
 }
 
 function renderInvestigationState() {

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=21-trial-investigation-1">
+<link rel="stylesheet" href="style.css?v=21-info-book-2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
   <section class="panel">
     <div class="panel-title">PLAY MENU</div>
     <button class="menu-btn" onclick="showInvestigationPage()">조사하러 가기</button>
-    <button class="menu-btn">조사일지</button>
+    <button class="menu-btn" onclick="openInfoPanel()">정보창</button>
     <button class="menu-btn" onclick="showMemoPage()">개인 메모</button>
     <button class="menu-btn" onclick="openInventoryModal()">인벤토리</button>
     <div class="menu-dropdown admin-only">
@@ -154,32 +154,31 @@
 
 <main id="investigation-page" class="investigation-page" style="display: none;">
   <section class="investigation-shell">
-    <div class="investigation-header">
-      <div>
-        <span class="investigation-kicker">2일차 담력시험</span>
-        <h2>아르카디움 피에타스</h2>
-      </div>
-      <div class="investigation-header-actions">
-        <button class="investigation-soft-btn" onclick="resetInvestigationState()">진행 초기화</button>
-        <button class="investigation-soft-btn" onclick="goHome()">메인으로</button>
-      </div>
+    <div class="investigation-bg" aria-hidden="true"></div>
+
+    <div class="investigation-top-actions">
+      <button class="investigation-icon-btn" onclick="openInventoryModal()" title="가방" aria-label="가방">가방</button>
+      <button class="investigation-icon-btn" onclick="openTeamChatModal()" title="팀 채팅" aria-label="팀 채팅">채팅</button>
+      <button class="investigation-icon-btn" onclick="openInfoPanel()" title="정보창" aria-label="정보창">정보</button>
+      <button class="investigation-icon-btn" onclick="goHome()" title="나가기" aria-label="나가기">×</button>
     </div>
 
-    <div class="investigation-grid-layout">
-      <section class="investigation-main-card">
-        <div id="investigation-path" class="investigation-path">탈리스 · 아르카디움 피에타스</div>
-        <h3 id="investigation-title">담력시험</h3>
-        <div id="investigation-text" class="investigation-text"></div>
-        <div id="investigation-options" class="investigation-options"></div>
-      </section>
+    <div class="investigation-scene-label">
+      <span class="investigation-kicker">2일차 담력시험</span>
+      <strong id="investigation-path">탈리스 · 아르카디움 피에타스</strong>
+    </div>
 
-      <aside class="investigation-side-card">
-        <div class="investigation-side-title">진행 상태</div>
-        <div id="investigation-state-list" class="investigation-state-list"></div>
+    <section class="investigation-dialogue">
+      <h2 id="investigation-title">담력시험</h2>
+      <div id="investigation-text" class="investigation-text"></div>
+      <div id="investigation-options" class="investigation-options"></div>
+    </section>
 
-        <div class="investigation-side-title">팀 스탯 임시 판정</div>
+    <details class="investigation-debug-panel">
+      <summary>팀 스탯 테스트</summary>
+      <div class="investigation-debug-inner">
         <div class="investigation-stat-help">
-          팀 DB 연결 전까지 테스트용으로 사용합니다.
+          DB 연결 전 임시 테스트용입니다. 운영 화면에서는 숨겨질 예정입니다.
         </div>
         <label class="investigation-stat-input">
           <span>근력 합산 필요값</span>
@@ -190,10 +189,54 @@
           <input id="investigation-strength-total" type="number" min="0" placeholder="임시값" oninput="saveInvestigationStatDraft()">
         </label>
         <div id="investigation-stat-summary" class="investigation-stat-summary"></div>
-      </aside>
-    </div>
+        <button class="investigation-soft-btn" onclick="resetInvestigationState()">진행 초기화</button>
+        <div id="investigation-state-list" class="investigation-state-list"></div>
+      </div>
+    </details>
   </section>
 </main>
+
+<div id="info-panel-modal" class="modal" style="display: none;">
+  <div class="modal-box info-panel-box">
+    <div class="modal-header">
+      <h2>정보창</h2>
+      <button class="close-btn" onclick="closeInfoPanel()">×</button>
+    </div>
+
+    <div class="info-panel-layout">
+      <nav id="info-panel-nav" class="info-panel-nav" aria-label="정보 분류"></nav>
+      <section class="info-panel-note">
+        <div id="info-panel-note-title" class="info-panel-note-title">전체 정보</div>
+        <div id="info-panel-list" class="info-panel-list"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="team-chat-modal" class="modal" style="display: none;">
+  <div class="modal-box team-chat-box">
+    <div class="modal-header">
+      <h2>팀 채팅</h2>
+      <button class="close-btn" onclick="closeTeamChatModal()">×</button>
+    </div>
+
+    <div class="team-chat-log" id="team-chat-log">
+      <div class="team-chat-message system">
+        <strong>SYSTEM</strong>
+        <p>팀 채팅은 DB 연동 단계에서 활성화됩니다.</p>
+      </div>
+      <div class="team-chat-message">
+        <strong>안내</strong>
+        <p>조사 중 팀원끼리 짧게 의논하는 용도로 사용할 예정입니다.</p>
+      </div>
+    </div>
+
+    <div class="team-chat-input-row">
+      <input id="team-chat-input" placeholder="팀 채팅 준비 중" disabled>
+      <button disabled>전송</button>
+    </div>
+  </div>
+</div>
 
 <main id="memo-page" class="memo-page" style="display: none;">
   <section class="memo-panel">
@@ -728,7 +771,7 @@
   </div>
 </div>
 
-<script src="script.js?v=21-trial-investigation-1"></script>
+<script src="script.js?v=21-info-book-2"></script>
 
 </body>
 </html>
