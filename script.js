@@ -4400,6 +4400,8 @@ function renderInvestigationNode() {
 
 function renderInvestigationOption(option, index) {
   const lockedReason = getInvestigationOptionLockedReason(option);
+  if (lockedReason) return '';
+
   const className = lockedReason ? ' investigation-option-locked' : '';
   const subText = getInvestigationOptionSubText(option, lockedReason);
 

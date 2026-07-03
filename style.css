@@ -1769,12 +1769,15 @@ body.is-admin .mail-write-actions .admin-only{
 
 .investigation-scene-label{
   position:absolute;
-  left:42px;
-  top:30px;
+  left:50%;
+  top:34px;
   z-index:3;
   display:grid;
   gap:8px;
+  width:min(780px,calc(100% - 220px));
+  transform:translateX(-50%);
   color:#fffaf1;
+  text-align:center;
   text-shadow:0 2px 14px rgba(0,0,0,.45);
 }
 
@@ -1795,16 +1798,15 @@ body.is-admin .mail-write-actions .admin-only{
 .investigation-dialogue{
   position:absolute;
   left:50%;
-  top:22%;
+  top:18%;
   z-index:2;
-  width:min(820px,calc(100% - 420px));
-  min-height:310px;
+  width:min(760px,calc(100% - 420px));
+  min-height:290px;
   transform:translateX(-50%);
-  padding:32px 40px 34px;
-  border:1px solid rgba(116,75,39,.38);
-  border-radius:14px 9px 14px 9px;
+  padding:34px 42px 36px;
+  border:1px solid rgba(250,229,185,.48);
+  border-radius:8px;
   background:
-    linear-gradient(90deg,rgba(112,72,34,.15),transparent 8%,transparent 92%,rgba(112,72,34,.12)),
     linear-gradient(180deg,#fffaf0,#eadcc3);
   box-shadow:
     0 26px 70px rgba(8,13,24,.34),
@@ -1814,14 +1816,7 @@ body.is-admin .mail-write-actions .admin-only{
 
 .investigation-dialogue::before,
 .investigation-dialogue::after{
-  content:"";
-  position:absolute;
-  top:18px;
-  bottom:18px;
-  width:18px;
-  border-radius:999px;
-  background:linear-gradient(180deg,#d8bd87,#fff1c8 42%,#b07442);
-  box-shadow:inset 0 0 0 1px rgba(91,58,28,.28),0 8px 20px rgba(8,13,24,.18);
+  display:none;
 }
 
 .investigation-dialogue::before{
@@ -1833,16 +1828,17 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 .investigation-dialogue h2{
-  display:inline-flex;
-  margin:-10px 0 16px;
-  padding:8px 20px 9px;
-  border:1px solid rgba(116,75,39,.22);
-  border-radius:999px;
-  background:#fff6e4;
+  display:block;
+  margin:0 0 20px;
+  padding:0 0 16px;
+  border:0;
+  border-bottom:1px solid rgba(37,59,102,.12);
+  background:transparent;
   color:var(--navy);
-  font-size:24px;
+  font-size:28px;
   font-weight:900;
   line-height:1.25;
+  text-align:center;
 }
 
 .investigation-text{
@@ -1865,22 +1861,22 @@ body.is-admin .mail-write-actions .admin-only{
 .investigation-options{
   position:absolute;
   left:50%;
-  top:auto;
-  bottom:7%;
+  top:calc(18% + 340px);
+  bottom:auto;
   z-index:3;
   display:grid;
-  grid-template-columns:repeat(2,minmax(220px,1fr));
-  gap:10px 12px;
-  width:min(760px,calc(100% - 460px));
+  grid-template-columns:1fr;
+  gap:10px;
+  width:min(560px,calc(100% - 460px));
   margin:0;
   transform:translateX(-50%);
 }
 
 .investigation-option{
-  min-height:48px;
-  padding:11px 18px;
+  min-height:46px;
+  padding:12px 18px;
   border:1px solid rgba(250,229,185,.54);
-  border-radius:4px;
+  border-radius:7px;
   background:rgba(255,250,241,.92);
   color:var(--navy);
   cursor:pointer;
@@ -1928,7 +1924,7 @@ body.is-admin .mail-write-actions .admin-only{
   padding:12px 6px;
   border:1px solid rgba(250,229,185,.52);
   border-left:0;
-  border-radius:0 12px 12px 0;
+  border-radius:0 8px 8px 0;
   background:linear-gradient(180deg,#9d3f52,#72304a);
   color:#fffaf1;
   cursor:pointer;
@@ -1945,32 +1941,16 @@ body.is-admin .mail-write-actions .admin-only{
   grid-template-rows:auto 1fr auto;
   width:264px;
   padding:16px 14px;
-  border:1px solid rgba(116,75,39,.34);
-  border-radius:12px;
+  border:1px solid rgba(250,229,185,.42);
+  border-radius:8px;
   background:
-    linear-gradient(90deg,rgba(112,72,34,.13),transparent 12%,transparent 88%,rgba(112,72,34,.10)),
-    linear-gradient(180deg,#fff8e8,#ead9bb);
+    linear-gradient(180deg,#fffaf0,#eadcc3);
   box-shadow:0 24px 60px rgba(8,13,24,.30),inset 0 0 0 1px rgba(255,255,255,.50);
 }
 
 .team-scroll-paper::before,
 .team-scroll-paper::after{
-  content:"";
-  position:absolute;
-  left:18px;
-  right:18px;
-  height:18px;
-  border-radius:999px;
-  background:linear-gradient(90deg,#bd8250,#fff1c2 50%,#a76739);
-  box-shadow:inset 0 0 0 1px rgba(91,58,28,.28);
-}
-
-.team-scroll-paper::before{
-  top:-9px;
-}
-
-.team-scroll-paper::after{
-  bottom:-9px;
+  display:none;
 }
 
 .team-scroll-head{
@@ -2061,11 +2041,11 @@ body.is-admin .mail-write-actions .admin-only{
 
 @media (max-width:1100px){
   .investigation-dialogue{
-    width:min(760px,calc(100% - 110px));
+    width:min(720px,calc(100% - 110px));
   }
 
   .investigation-options{
-    width:min(720px,calc(100% - 110px));
+    width:min(540px,calc(100% - 110px));
   }
 
   .investigation-team-scroll{
@@ -2782,7 +2762,8 @@ body.is-admin .mail-write-actions .admin-only{
     grid-template-columns:1fr;
     left:50%;
     right:auto;
-    bottom:26px;
+    top:410px;
+    bottom:auto;
     width:min(420px,calc(100% - 36px));
   }
 
