@@ -4497,13 +4497,17 @@ function openInvestigationChatNotice() {
 }
 
 function openTeamChatModal() {
-  const modal = document.getElementById('team-chat-modal');
-  if (!modal) return;
-  modal.style.display = 'flex';
+  toggleInvestigationChat();
 }
 
 function closeTeamChatModal() {
   closeModalIfExists('team-chat-modal');
+}
+
+function toggleInvestigationChat() {
+  const scroll = document.getElementById('investigation-team-scroll');
+  if (!scroll) return;
+  scroll.classList.toggle('open');
 }
 
 function openInfoPanel() {

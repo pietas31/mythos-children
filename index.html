@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>뮈토스의 아이들</title>
-<link rel="stylesheet" href="style.css?v=21-info-book-5">
+<link rel="stylesheet" href="style.css?v=21-investigation-scroll-1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -167,6 +167,32 @@
       <span class="investigation-kicker">2일차 담력시험</span>
       <strong id="investigation-path">탈리스 · 아르카디움 피에타스</strong>
     </div>
+
+    <aside id="investigation-team-scroll" class="investigation-team-scroll" aria-label="팀 두루마리">
+      <button type="button" class="team-scroll-ribbon" onclick="toggleInvestigationChat()" aria-label="팀 두루마리 접기 또는 펼치기">
+        <span>팀 두루마리</span>
+      </button>
+      <div class="team-scroll-paper">
+        <div class="team-scroll-head">
+          <strong>팀 두루마리</strong>
+          <em>DB 연결 전 임시 화면</em>
+        </div>
+        <div class="team-scroll-log">
+          <div class="team-scroll-message">
+            <b>안내</b>
+            <p>팀조사 중 대화를 남기는 공유 두루마리입니다.</p>
+          </div>
+          <div class="team-scroll-message mine">
+            <b>나</b>
+            <p>조사 선택지는 두루마리를 펼친 상태에서도 누를 수 있습니다.</p>
+          </div>
+        </div>
+        <div class="team-scroll-input">
+          <input placeholder="팀 두루마리 준비 중" disabled>
+          <button disabled>기록</button>
+        </div>
+      </div>
+    </aside>
 
     <section class="investigation-dialogue">
       <h2 id="investigation-title">담력시험</h2>
@@ -772,7 +798,7 @@
   </div>
 </div>
 
-<script src="script.js?v=21-info-book-5"></script>
+<script src="script.js?v=21-investigation-scroll-1"></script>
 
 </body>
 </html>

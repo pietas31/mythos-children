@@ -1706,8 +1706,10 @@ body.is-admin .mail-write-actions .admin-only{
   border:0;
   border-radius:0;
   background:
-    linear-gradient(180deg,rgba(9,15,27,.18),rgba(9,15,27,.58)),
-    linear-gradient(135deg,#23334d 0%,#4a5369 46%,#1f2638 100%);
+    radial-gradient(circle at 16% 18%,rgba(201,154,69,.18),transparent 22%),
+    radial-gradient(circle at 84% 12%,rgba(141,63,82,.18),transparent 24%),
+    linear-gradient(180deg,rgba(13,19,33,.18),rgba(13,19,33,.56)),
+    linear-gradient(135deg,#1f3049 0%,#3b465f 48%,#1c2334 100%);
   box-shadow:none;
 }
 
@@ -1721,23 +1723,19 @@ body.is-admin .mail-write-actions .admin-only{
   background:
     linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
     linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),
-    radial-gradient(circle at 20% 12%,rgba(201,154,69,.22),transparent 22%),
-    radial-gradient(circle at 82% 20%,rgba(141,63,82,.22),transparent 24%);
-  background-size:58px 58px,58px 58px,auto,auto;
-  opacity:.8;
+    repeating-linear-gradient(135deg,rgba(255,250,241,.035) 0 2px,transparent 2px 22px);
+  background-size:58px 58px,58px 58px,auto;
+  opacity:.74;
 }
 
 .investigation-bg::after{
   content:"";
   position:absolute;
-  left:7%;
-  right:7%;
-  top:18%;
-  height:42%;
-  border:1px solid rgba(255,250,241,.10);
-  border-radius:10px;
-  background:linear-gradient(180deg,rgba(255,250,241,.10),rgba(255,250,241,.02));
-  box-shadow:inset 0 0 80px rgba(255,250,241,.05);
+  inset:0;
+  background:
+    radial-gradient(circle at 10% 80%,rgba(0,0,0,.22),transparent 24%),
+    radial-gradient(circle at 82% 70%,rgba(0,0,0,.18),transparent 26%);
+  pointer-events:none;
 }
 
 .investigation-top-actions{
@@ -1797,21 +1795,52 @@ body.is-admin .mail-write-actions .admin-only{
 .investigation-dialogue{
   position:absolute;
   left:50%;
-  bottom:34px;
+  top:22%;
   z-index:2;
-  width:min(1120px,calc(100% - 72px));
+  width:min(820px,calc(100% - 420px));
+  min-height:310px;
   transform:translateX(-50%);
-  padding:24px 28px 28px;
-  border:1px solid rgba(250,229,185,.58);
-  border-radius:9px;
-  background:linear-gradient(180deg,rgba(255,250,241,.96),rgba(239,228,209,.94));
-  box-shadow:0 24px 70px rgba(8,13,24,.36);
+  padding:32px 40px 34px;
+  border:1px solid rgba(116,75,39,.38);
+  border-radius:14px 9px 14px 9px;
+  background:
+    linear-gradient(90deg,rgba(112,72,34,.15),transparent 8%,transparent 92%,rgba(112,72,34,.12)),
+    linear-gradient(180deg,#fffaf0,#eadcc3);
+  box-shadow:
+    0 26px 70px rgba(8,13,24,.34),
+    inset 0 0 0 1px rgba(255,255,255,.48),
+    inset 0 -10px 24px rgba(116,75,39,.08);
+}
+
+.investigation-dialogue::before,
+.investigation-dialogue::after{
+  content:"";
+  position:absolute;
+  top:18px;
+  bottom:18px;
+  width:18px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#d8bd87,#fff1c8 42%,#b07442);
+  box-shadow:inset 0 0 0 1px rgba(91,58,28,.28),0 8px 20px rgba(8,13,24,.18);
+}
+
+.investigation-dialogue::before{
+  left:-10px;
+}
+
+.investigation-dialogue::after{
+  right:-10px;
 }
 
 .investigation-dialogue h2{
-  margin:0 0 14px;
+  display:inline-flex;
+  margin:-10px 0 16px;
+  padding:8px 20px 9px;
+  border:1px solid rgba(116,75,39,.22);
+  border-radius:999px;
+  background:#fff6e4;
   color:var(--navy);
-  font-size:25px;
+  font-size:24px;
   font-weight:900;
   line-height:1.25;
 }
@@ -1830,31 +1859,32 @@ body.is-admin .mail-write-actions .admin-only{
   color:#202734;
   font-size:16px;
   font-weight:750;
-  line-height:1.78;
+  line-height:1.86;
 }
 
 .investigation-options{
   position:absolute;
   left:50%;
-  top:29%;
+  top:auto;
+  bottom:7%;
   z-index:3;
   display:grid;
-  grid-template-columns:minmax(260px,440px);
-  gap:12px;
-  width:min(440px,calc(100% - 64px));
+  grid-template-columns:repeat(2,minmax(220px,1fr));
+  gap:10px 12px;
+  width:min(760px,calc(100% - 460px));
   margin:0;
   transform:translateX(-50%);
 }
 
 .investigation-option{
-  min-height:54px;
-  padding:12px 18px;
-  border:1px solid rgba(250,229,185,.35);
-  border-radius:7px;
-  background:rgba(255,250,241,.90);
+  min-height:48px;
+  padding:11px 18px;
+  border:1px solid rgba(250,229,185,.54);
+  border-radius:4px;
+  background:rgba(255,250,241,.92);
   color:var(--navy);
   cursor:pointer;
-  text-align:center;
+  text-align:left;
   box-shadow:0 14px 34px rgba(8,13,24,.20);
   transition:background .18s ease,color .18s ease,border-color .18s ease;
 }
@@ -1872,6 +1902,175 @@ body.is-admin .mail-write-actions .admin-only{
 
 .investigation-option em{
   color:#8e9ab0;
+}
+
+.investigation-team-scroll{
+  position:absolute;
+  left:24px;
+  top:118px;
+  z-index:4;
+  display:flex;
+  align-items:stretch;
+  width:304px;
+  height:min(560px,calc(100vh - 180px));
+  transform:translateX(-264px);
+  transition:transform .22s ease;
+}
+
+.investigation-team-scroll.open{
+  transform:translateX(0);
+}
+
+.team-scroll-ribbon{
+  order:2;
+  width:42px;
+  margin:128px 0 auto -1px;
+  padding:12px 6px;
+  border:1px solid rgba(250,229,185,.52);
+  border-left:0;
+  border-radius:0 12px 12px 0;
+  background:linear-gradient(180deg,#9d3f52,#72304a);
+  color:#fffaf1;
+  cursor:pointer;
+  box-shadow:0 12px 28px rgba(8,13,24,.24);
+  writing-mode:vertical-rl;
+  text-orientation:mixed;
+  font-size:13px;
+  font-weight:900;
+}
+
+.team-scroll-paper{
+  position:relative;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  width:264px;
+  padding:16px 14px;
+  border:1px solid rgba(116,75,39,.34);
+  border-radius:12px;
+  background:
+    linear-gradient(90deg,rgba(112,72,34,.13),transparent 12%,transparent 88%,rgba(112,72,34,.10)),
+    linear-gradient(180deg,#fff8e8,#ead9bb);
+  box-shadow:0 24px 60px rgba(8,13,24,.30),inset 0 0 0 1px rgba(255,255,255,.50);
+}
+
+.team-scroll-paper::before,
+.team-scroll-paper::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  height:18px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#bd8250,#fff1c2 50%,#a76739);
+  box-shadow:inset 0 0 0 1px rgba(91,58,28,.28);
+}
+
+.team-scroll-paper::before{
+  top:-9px;
+}
+
+.team-scroll-paper::after{
+  bottom:-9px;
+}
+
+.team-scroll-head{
+  position:relative;
+  z-index:1;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(116,75,39,.16);
+}
+
+.team-scroll-head strong{
+  display:block;
+  color:var(--navy);
+  font-size:17px;
+  font-weight:900;
+}
+
+.team-scroll-head em{
+  display:block;
+  margin-top:4px;
+  color:#8b6f4b;
+  font-size:11px;
+  font-style:normal;
+  font-weight:800;
+}
+
+.team-scroll-log{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height:0;
+  overflow-y:auto;
+  padding:12px 2px;
+}
+
+.team-scroll-message{
+  max-width:92%;
+  padding:9px 10px;
+  border:1px solid rgba(116,75,39,.13);
+  border-radius:8px;
+  background:rgba(255,253,248,.62);
+}
+
+.team-scroll-message.mine{
+  align-self:flex-end;
+  background:rgba(37,59,102,.08);
+}
+
+.team-scroll-message b{
+  display:block;
+  margin-bottom:4px;
+  color:var(--wine);
+  font-size:11px;
+}
+
+.team-scroll-message p{
+  color:#2d3443;
+  font-size:12px;
+  font-weight:750;
+  line-height:1.55;
+}
+
+.team-scroll-input{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:1fr 54px;
+  gap:6px;
+  padding-top:10px;
+  border-top:1px solid rgba(116,75,39,.16);
+}
+
+.team-scroll-input input{
+  min-height:36px;
+  margin:0;
+  padding:8px 10px;
+  font-size:12px;
+}
+
+.team-scroll-input button{
+  border-radius:8px;
+  background:var(--navy);
+  color:#fffaf1;
+  font-size:12px;
+  font-weight:900;
+}
+
+@media (max-width:1100px){
+  .investigation-dialogue{
+    width:min(760px,calc(100% - 110px));
+  }
+
+  .investigation-options{
+    width:min(720px,calc(100% - 110px));
+  }
+
+  .investigation-team-scroll{
+    top:116px;
+  }
 }
 
 .investigation-option-locked{
@@ -2581,8 +2780,35 @@ body.is-admin .mail-write-actions .admin-only{
 
   .investigation-options{
     grid-template-columns:1fr;
-    top:26%;
+    left:50%;
+    right:auto;
+    bottom:26px;
     width:min(420px,calc(100% - 36px));
+  }
+
+  .investigation-dialogue{
+    top:118px;
+    bottom:auto;
+    width:calc(100% - 36px);
+    min-height:260px;
+    padding:26px 24px 30px;
+  }
+
+  .investigation-team-scroll{
+    left:12px;
+    top:96px;
+    height:min(460px,calc(100vh - 160px));
+  }
+
+  .investigation-top-actions{
+    right:14px;
+    top:16px;
+    gap:6px;
+  }
+
+  .investigation-icon-btn{
+    width:44px;
+    height:42px;
   }
 
   .info-panel-layout{
