@@ -2054,9 +2054,22 @@ body.is-admin .mail-write-actions .admin-only{
 }
 
 @media (max-width:1300px){
+  .investigation-team-scroll.open ~ .investigation-scene-label{
+    left:calc(50% + 190px);
+    width:min(620px,calc(100% - 470px));
+  }
+
   .investigation-team-scroll.open ~ .investigation-dialogue,
   .investigation-team-scroll.open ~ .investigation-options{
-    left:calc(50% + clamp(110px, 14vw, 180px));
+    left:calc(50% + 210px);
+  }
+
+  .investigation-team-scroll.open ~ .investigation-dialogue{
+    width:min(620px,calc(100% - 500px));
+  }
+
+  .investigation-team-scroll.open ~ .investigation-options{
+    width:min(270px,calc(100% - 560px));
   }
 }
 
