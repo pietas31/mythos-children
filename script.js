@@ -4558,15 +4558,18 @@ function renderInfoPanel() {
       : foundItems.filter(item => item.place === currentCategory.id);
 
   if (nav) {
-    nav.innerHTML = visibleCategories.map(category => {
+    nav.innerHTML = visibleCategories.map((category, index) => {
       const count = category.id === 'official'
         ? officialItems.length
         : category.id === 'academy'
           ? foundItems.length
           : foundItems.filter(item => item.place === category.id).length;
+      const nextCategory = visibleCategories[index + 1];
+      const isLastChild = category.parent && (!nextCategory || nextCategory.parent !== category.parent);
       const extraClass = [
         category.id === currentCategory.id ? 'active' : '',
         category.parent ? 'child' : '',
+        isLastChild ? 'child-last' : '',
         category.id === 'academy' && academyExpanded ? 'expanded' : ''
       ].filter(Boolean).join(' ');
 
