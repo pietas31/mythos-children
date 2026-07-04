@@ -57,6 +57,7 @@ let currentInvestigationNodeId = 'trial-start';
 let investigationHistory = [];
 let investigationState = null;
 let currentInfoPlace = 'official';
+let isAcademyInfoExpanded = false;
 const MYTHOS_ERA_YEAR_BY_STAGE = {
   1: 1412,
   2: 1418,
@@ -4517,6 +4518,7 @@ function openInfoPanel() {
   if (!modal) return;
 
   currentInfoPlace = 'official';
+  isAcademyInfoExpanded = false;
   modal.style.display = 'flex';
   renderInfoPanel();
 }
@@ -4526,7 +4528,13 @@ function closeInfoPanel() {
 }
 
 function selectInfoPlace(place) {
-  currentInfoPlace = place || 'official';
+  if (place === 'academy' && currentInfoPlace === 'academy') {
+    isAcademyInfoExpanded = !isAcademyInfoExpanded;
+  } else {
+    currentInfoPlace = place || 'official';
+    isAcademyInfoExpanded = place === 'academy' || !!(getInfoCategories().find(category => category.id === place) || {}).parent;
+  }
+
   renderInfoPanel();
 }
 
@@ -4539,7 +4547,7 @@ function renderInfoPanel() {
 
   const categories = getInfoCategories();
   const currentCategory = categories.find(category => category.id === currentInfoPlace) || categories[0];
-  const academyExpanded = currentCategory.id === 'academy' || currentCategory.parent === 'academy';
+  const academyExpanded = isAcademyInfoExpanded || currentCategory.parent === 'academy';
   const visibleCategories = categories.filter(category => !category.parent || (academyExpanded && isInfoCategoryUnlocked(category)));
   const officialItems = getOfficialInfoItems();
   const foundItems = getFoundInfoItems();
