@@ -2223,6 +2223,10 @@ body.is-admin .mail-write-actions .admin-only{
   background:rgba(201,154,69,.58);
 }
 
+.info-panel-nav-btn.child-last::after{
+  bottom:50%;
+}
+
 .info-panel-nav-btn.child span::before{
   content:"✦";
   margin-right:8px;
