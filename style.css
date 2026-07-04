@@ -2053,7 +2053,7 @@ body.is-admin .mail-write-actions .admin-only{
   }
 }
 
-@media (max-width:1300px){
+@media (max-width:1800px){
   .investigation-team-scroll.open ~ .investigation-scene-label{
     left:calc(50% + 190px);
     width:min(620px,calc(100% - 470px));
