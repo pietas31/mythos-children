@@ -3363,8 +3363,9 @@ function renderInvestigationNode() {
     const optionHtml = (node.options || [])
       .map((option, index) => renderInvestigationOption(option, index))
       .join('');
+    const backHtml = getInvestigationBackButtonHtml(node);
 
-    options.innerHTML = optionHtml;
+    options.innerHTML = optionHtml + backHtml;
   }
 
   renderInvestigationState();
@@ -3382,6 +3383,21 @@ function renderInvestigationOption(option, index) {
     subText ? '<em>' + escapeHtml(subText) + '</em>' : '',
     '</button>'
   ].join('');
+}
+
+function getInvestigationBackButtonHtml(node) {
+  if (!node || !node.parentPlaceId || !INVESTIGATION_NODES[node.parentPlaceId]) return '';
+
+  return '<button type="button" class="investigation-option investigation-option-muted" onclick="goBackToParentInvestigation()">돌아가기</button>';
+}
+
+function goBackToParentInvestigation() {
+  const node = INVESTIGATION_NODES[currentInvestigationNodeId];
+  if (!node || !node.parentPlaceId || !INVESTIGATION_NODES[node.parentPlaceId]) return;
+
+  currentInvestigationNodeId = node.parentPlaceId;
+  currentInvestigationResultText = '';
+  renderInvestigationNode();
 }
 
 function getInvestigationOptionSubText(option, lockedReason) {
