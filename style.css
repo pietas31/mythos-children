@@ -2217,6 +2217,16 @@ body.is-admin .mail-write-actions .admin-only{
   background:rgba(255,253,248,.54);
 }
 
+.info-panel-nav-btn.child-depth-2{
+  margin-left:44px;
+  width:calc(100% - 44px);
+}
+
+.info-panel-nav-btn.child-depth-3{
+  margin-left:60px;
+  width:calc(100% - 60px);
+}
+
 .info-panel-nav-btn.child::before{
   content:"";
   position:absolute;

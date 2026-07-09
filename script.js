@@ -3602,6 +3602,7 @@ function renderInfoPanel() {
       const extraClass = [
         category.id === currentCategory.id ? 'active' : '',
         category.parent ? 'child' : '',
+        category.depth > 1 ? 'child-depth-' + Math.min(category.depth, 3) : '',
         isLastChild ? 'child-last' : ''
       ].filter(Boolean).join(' ');
 
@@ -3641,19 +3642,7 @@ function getInfoCategories() {
     categories.push(category);
 
     const root = rootItems.find(item => item.place === category.id && item.title === category.label);
-    const children = foundItems.filter(item => {
-      if (root) return item.parentInfoId === root.infoId;
-      return item.place === category.id && item.parentInfoId;
-    });
-
-    children.forEach(child => {
-      categories.push({
-        id: 'info:' + child.infoId,
-        label: child.title,
-        parent: category.id,
-        infoId: child.infoId
-      });
-    });
+    appendInfoChildCategories(categories, foundItems, category.id, root ? root.infoId : '');
   });
 
   if (categories.length === 1) {
@@ -3661,6 +3650,30 @@ function getInfoCategories() {
   }
 
   return categories;
+}
+
+function appendInfoChildCategories(categories, foundItems, parentCategoryId, parentInfoId, depth) {
+  const safeDepth = Number(depth || 1);
+  const children = foundItems
+    .filter(item => {
+      if (parentInfoId) return item.parentInfoId === parentInfoId;
+      return item.place === parentCategoryId && item.parentInfoId;
+    })
+    .sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
+
+  children.forEach(child => {
+    const categoryId = 'info:' + child.infoId;
+
+    categories.push({
+      id: categoryId,
+      label: child.title,
+      parent: parentCategoryId,
+      infoId: child.infoId,
+      depth: safeDepth
+    });
+
+    appendInfoChildCategories(categories, foundItems, categoryId, child.infoId, safeDepth + 1);
+  });
 }
 
 function getInfoPanelItemsForCategory(category, officialItems, foundItems) {
