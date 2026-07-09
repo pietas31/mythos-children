@@ -58,6 +58,11 @@ let investigationHistory = [];
 let investigationState = null;
 let currentInfoPlace = 'official';
 let isAcademyInfoExpanded = false;
+let isInvestigationLoading = false;
+let currentInvestigationData = null;
+let currentInvestigationInfos = [];
+let currentInvestigationCategories = [];
+let currentInvestigationResultText = '';
 const MYTHOS_ERA_YEAR_BY_STAGE = {
   1: 1412,
   2: 1418,
@@ -2973,6 +2978,9 @@ const INVESTIGATION_DEFAULT_STATE = {
   notes: 0,
   noteSources: {},
   items: {},
+  infos: {},
+  choices: {},
+  groups: {},
   flags: {},
   visitedPlaces: {}
 };
@@ -3006,6 +3014,9 @@ function getInvestigationState() {
     try {
       investigationState = Object.assign(cloneInvestigationDefaultState(), JSON.parse(saved));
       investigationState.items = investigationState.items || {};
+      investigationState.infos = investigationState.infos || {};
+      investigationState.choices = investigationState.choices || {};
+      investigationState.groups = investigationState.groups || {};
       investigationState.flags = investigationState.flags || {};
       investigationState.noteSources = investigationState.noteSources || {};
       investigationState.visitedPlaces = investigationState.visitedPlaces || {};
@@ -3077,6 +3088,16 @@ function applyInvestigationGain(gain) {
     state.items[gain.item] = true;
   }
 
+  if (gain.info) {
+    state.infos = state.infos || {};
+    state.infos[gain.info] = true;
+
+    const info = currentInvestigationInfos.find(item => item.infoId === gain.info);
+    if (info && info.replaceInfoId) {
+      state.infos[info.replaceInfoId] = false;
+    }
+  }
+
   if (gain.consumeItem) {
     state.items[gain.consumeItem] = false;
   }
@@ -3131,11 +3152,173 @@ function showInvestigationPage() {
   loadInvestigationStatDraft();
   if (!INVESTIGATION_NODES[currentInvestigationNodeId]) currentInvestigationNodeId = 'trial-start';
   renderInvestigationNode();
+  loadInvestigationData();
 }
 
 function hideInvestigationPage() {
   const investigationPage = document.getElementById('investigation-page');
   if (investigationPage) investigationPage.style.display = 'none';
+}
+
+function loadInvestigationData() {
+  if (!currentPersonalCode || isInvestigationLoading) return;
+
+  isInvestigationLoading = true;
+  setInvestigationLoadingView();
+
+  const url = API_URL
+    + '?action=getInvestigationData'
+    + '&personalCode=' + encodeURIComponent(currentPersonalCode)
+    + '&_=' + Date.now();
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      isInvestigationLoading = false;
+
+      if (!data.success) {
+        showInvestigationUnavailable(data.message || '조사 데이터를 불러오지 못했습니다.');
+        return;
+      }
+
+      if (!data.active) {
+        showInvestigationUnavailable(data.message || '현재 활성화된 조사가 없습니다.');
+        return;
+      }
+
+      currentInvestigationData = data;
+      applyInvestigationData(data);
+    })
+    .catch(error => {
+      console.error(error);
+      isInvestigationLoading = false;
+      showInvestigationUnavailable('조사 데이터를 불러오는 중 오류가 발생했습니다.');
+    });
+}
+
+function setInvestigationLoadingView() {
+  INVESTIGATION_NODES['trial-start'] = {
+    title: '조사 불러오는 중',
+    path: 'DB 연결 중',
+    text: ['조사 데이터를 불러오고 있습니다.'],
+    options: []
+  };
+
+  currentInvestigationNodeId = 'trial-start';
+  investigationHistory = [];
+  renderInvestigationNode();
+}
+
+function showInvestigationUnavailable(message) {
+  INVESTIGATION_NODES['trial-start'] = {
+    title: '조사 준비 중',
+    path: '조사 데이터 연결 대기',
+    text: [message || '현재 진행 가능한 조사가 없습니다.'],
+    options: []
+  };
+
+  currentInvestigationNodeId = 'trial-start';
+  investigationHistory = [];
+  currentInvestigationInfos = [];
+  currentInvestigationCategories = [];
+  renderInvestigationNode();
+}
+
+function applyInvestigationData(data) {
+  const investigation = data.investigation || {};
+  const places = Array.isArray(data.places) ? data.places : [];
+  const options = Array.isArray(data.options) ? data.options : [];
+  const placeMap = {};
+
+  places.forEach(place => {
+    if (!place.placeId) return;
+    placeMap[place.placeId] = place;
+  });
+
+  Object.keys(INVESTIGATION_NODES).forEach(key => {
+    if (key !== 'trial-start') delete INVESTIGATION_NODES[key];
+  });
+
+  places.forEach(place => {
+    if (!place.placeId) return;
+
+    const placeOptions = options
+      .filter(option => option.currentPlaceId === place.placeId)
+      .sort((a, b) => Number(a.order || 9999) - Number(b.order || 9999));
+
+    INVESTIGATION_NODES[place.placeId] = {
+      title: place.title || '조사',
+      path: getInvestigationPathLabel(place, placeMap, investigation),
+      text: splitInvestigationText(place.content),
+      placeId: place.placeId,
+      parentPlaceId: place.parentPlaceId || '',
+      options: placeOptions.map(option => makeInvestigationOption(option))
+    };
+  });
+
+  currentInvestigationInfos = Array.isArray(data.infos) ? data.infos : [];
+  currentInvestigationCategories = buildInvestigationInfoCategories(currentInvestigationInfos);
+
+  const startPlaceId = investigation.startPlaceId || (places[0] || {}).placeId || 'trial-start';
+  currentInvestigationNodeId = INVESTIGATION_NODES[startPlaceId] ? startPlaceId : 'trial-start';
+  currentInvestigationResultText = '';
+
+  if (!INVESTIGATION_NODES['trial-start'] || currentInvestigationNodeId !== 'trial-start') {
+    INVESTIGATION_NODES['trial-start'] = INVESTIGATION_NODES[currentInvestigationNodeId] || {
+      title: investigation.title || '조사',
+      path: investigation.type || '조사',
+      text: splitInvestigationText(investigation.description || ''),
+      options: []
+    };
+  }
+
+  investigationHistory = [];
+  renderInvestigationNode();
+}
+
+function splitInvestigationText(text) {
+  const normalized = String(text || '').replace(/\r\n/g, '\n');
+  if (!normalized.trim()) return [];
+  return normalized.split('\n').map(line => line.trim()).filter(Boolean);
+}
+
+function getInvestigationPathLabel(place, placeMap, investigation) {
+  const labels = [];
+  let current = place;
+  let guard = 0;
+
+  while (current && guard < 10) {
+    if (current.title) labels.unshift(current.title);
+    current = current.parentPlaceId ? placeMap[current.parentPlaceId] : null;
+    guard += 1;
+  }
+
+  if (labels.length) return labels.join(' · ');
+  return investigation.title || '조사';
+}
+
+function makeInvestigationOption(option) {
+  const gain = {};
+  if (option.gainItemId) gain.item = option.gainItemId;
+  if (option.gainInfoId) gain.info = option.gainInfoId;
+
+  const failGain = {};
+  if (option.failInfoId) failGain.info = option.failInfoId;
+
+  const requires = {};
+  if (option.requiredItemId) requires.item = option.requiredItemId;
+
+  return {
+    label: option.label || '선택지',
+    target: option.targetPlaceId || '',
+    resultText: option.resultText || '',
+    failText: option.failText || '',
+    requires: Object.keys(requires).length ? requires : null,
+    gain: Object.keys(gain).length ? gain : null,
+    failGain: Object.keys(failGain).length ? failGain : null,
+    groupId: option.groupId || '',
+    once: !!option.once
+  };
 }
 
 function getInvestigationNodeText(node) {
@@ -3161,7 +3344,11 @@ function renderInvestigationNode() {
   if (path) path.textContent = node.path || '조사 데이터 연결 대기';
 
   if (text) {
-    text.innerHTML = getInvestigationNodeText(node)
+    const lines = currentInvestigationResultText
+      ? [currentInvestigationResultText].concat(getInvestigationNodeText(node))
+      : getInvestigationNodeText(node);
+
+    text.innerHTML = lines
       .map(line => '<p>' + escapeHtml(line) + '</p>')
       .join('');
   }
@@ -3183,7 +3370,6 @@ function renderInvestigationNode() {
 
 function renderInvestigationOption(option, index) {
   const lockedReason = getInvestigationOptionLockedReason(option);
-  if (lockedReason) return '';
 
   const className = lockedReason ? ' investigation-option-locked' : '';
   const subText = getInvestigationOptionSubText(option, lockedReason);
@@ -3209,17 +3395,21 @@ function getInvestigationOptionSubText(option, lockedReason) {
   }
 
   if (option.requires && option.requires.item) {
-    return INVESTIGATION_ITEM_LABELS[option.requires.item] + ' 필요';
+    return (INVESTIGATION_ITEM_LABELS[option.requires.item] || option.requires.item) + ' 필요';
   }
 
   return '';
 }
 
 function getInvestigationOptionLockedReason(option) {
+  if (isInvestigationOptionAlreadyUsed(option)) {
+    return '이미 조사한 항목입니다.';
+  }
+
   if (!option || !option.requires) return '';
 
   if (option.requires.item && !getInvestigationItem(option.requires.item)) {
-    return (INVESTIGATION_ITEM_LABELS[option.requires.item] || '필요 아이템') + '이 필요합니다.';
+    return option.failText || ((INVESTIGATION_ITEM_LABELS[option.requires.item] || '필요 아이템') + '이 필요합니다.');
   }
 
   if (option.requires.notes && getInvestigationState().notes < option.requires.notes) {
@@ -3233,6 +3423,33 @@ function getInvestigationOptionLockedReason(option) {
   return '';
 }
 
+function getInvestigationOptionKey(option) {
+  return [currentInvestigationNodeId, option && option.label ? option.label : 'option'].join('::');
+}
+
+function isInvestigationOptionAlreadyUsed(option) {
+  if (!option || !option.once) return false;
+
+  const state = getInvestigationState();
+  state.choices = state.choices || {};
+  state.groups = state.groups || {};
+
+  if (option.groupId && state.groups[option.groupId]) return true;
+  return !!state.choices[getInvestigationOptionKey(option)];
+}
+
+function markInvestigationOptionUsed(option) {
+  if (!option || !option.once) return;
+
+  const state = getInvestigationState();
+  state.choices = state.choices || {};
+  state.groups = state.groups || {};
+
+  state.choices[getInvestigationOptionKey(option)] = true;
+  if (option.groupId) state.groups[option.groupId] = true;
+  saveInvestigationState();
+}
+
 function selectInvestigationOption(index) {
   const node = INVESTIGATION_NODES[currentInvestigationNodeId];
   if (!node || !node.options || !node.options[index]) return;
@@ -3241,6 +3458,7 @@ function selectInvestigationOption(index) {
   const lockedReason = getInvestigationOptionLockedReason(option);
 
   if (lockedReason) {
+    applyInvestigationGain(option.failGain);
     showInvestigationNotice(lockedReason);
     return;
   }
@@ -3251,6 +3469,7 @@ function selectInvestigationOption(index) {
     target = option.failTarget || target;
   } else {
     applyInvestigationGain(option.gain);
+    markInvestigationOptionUsed(option);
   }
 
   if (!target || !INVESTIGATION_NODES[target]) return;
@@ -3258,6 +3477,7 @@ function selectInvestigationOption(index) {
   investigationHistory.push(currentInvestigationNodeId);
   if (investigationHistory.length > 30) investigationHistory.shift();
   currentInvestigationNodeId = target;
+  currentInvestigationResultText = option.resultText || '';
   renderInvestigationNode();
 }
 
@@ -3265,6 +3485,7 @@ function goBackInvestigation() {
   const prev = investigationHistory.pop();
   if (!prev || !INVESTIGATION_NODES[prev]) return;
   currentInvestigationNodeId = prev;
+  currentInvestigationResultText = '';
   renderInvestigationNode();
 }
 
@@ -3310,12 +3531,8 @@ function closeInfoPanel() {
 }
 
 function selectInfoPlace(place) {
-  if (place === 'academy' && currentInfoPlace === 'academy') {
-    isAcademyInfoExpanded = !isAcademyInfoExpanded;
-  } else {
-    currentInfoPlace = place || 'official';
-    isAcademyInfoExpanded = place === 'academy' || !!(getInfoCategories().find(category => category.id === place) || {}).parent;
-  }
+  currentInfoPlace = place || 'official';
+  isAcademyInfoExpanded = false;
 
   renderInfoPanel();
 }
@@ -3329,30 +3546,24 @@ function renderInfoPanel() {
 
   const categories = getInfoCategories();
   const currentCategory = categories.find(category => category.id === currentInfoPlace) || categories[0];
-  const academyExpanded = isAcademyInfoExpanded || currentCategory.parent === 'academy';
-  const visibleCategories = categories.filter(category => !category.parent || (academyExpanded && isInfoCategoryUnlocked(category)));
+  const visibleCategories = categories;
   const officialItems = getOfficialInfoItems();
   const foundItems = getFoundInfoItems();
   const items = currentCategory.id === 'official'
     ? officialItems
-    : currentCategory.id === 'academy'
-      ? foundItems
-      : foundItems.filter(item => item.place === currentCategory.id);
+    : foundItems.filter(item => item.place === currentCategory.id);
 
   if (nav) {
     nav.innerHTML = visibleCategories.map((category, index) => {
       const count = category.id === 'official'
         ? officialItems.length
-        : category.id === 'academy'
-          ? foundItems.length
-          : foundItems.filter(item => item.place === category.id).length;
+        : foundItems.filter(item => item.place === category.id).length;
       const nextCategory = visibleCategories[index + 1];
       const isLastChild = category.parent && (!nextCategory || nextCategory.parent !== category.parent);
       const extraClass = [
         category.id === currentCategory.id ? 'active' : '',
         category.parent ? 'child' : '',
-        isLastChild ? 'child-last' : '',
-        category.id === 'academy' && academyExpanded ? 'expanded' : ''
+        isLastChild ? 'child-last' : ''
       ].filter(Boolean).join(' ');
 
       return (
@@ -3382,10 +3593,17 @@ function renderInfoPanel() {
 }
 
 function getInfoCategories() {
-  return [
-    { id: 'official', label: '안내사항' },
-    { id: 'academy', label: '조사 정보' }
-  ];
+  const categories = [{ id: 'official', label: '안내사항' }];
+
+  currentInvestigationCategories.forEach(category => {
+    categories.push(category);
+  });
+
+  if (categories.length === 1) {
+    categories.push({ id: 'academy', label: '아르카디움 피에타스' });
+  }
+
+  return categories;
 }
 
 function getAllInfoItems() {
@@ -3397,7 +3615,47 @@ function getOfficialInfoItems() {
 }
 
 function getFoundInfoItems() {
-  return [];
+  const state = getInvestigationState();
+  const acquired = state.infos || {};
+  const hidden = {};
+
+  currentInvestigationInfos.forEach(info => {
+    if (info.replaceInfoId && (info.defaultOpen || acquired[info.infoId])) {
+      hidden[info.replaceInfoId] = true;
+    }
+  });
+
+  return currentInvestigationInfos
+    .filter(info => !hidden[info.infoId])
+    .filter(info => info.defaultOpen || acquired[info.infoId])
+    .map(info => ({
+      place: getInfoCategoryId(info.category || '아르카디움 피에타스'),
+      title: info.title || '정보',
+      content: info.content || ''
+    }));
+}
+
+function buildInvestigationInfoCategories(infos) {
+  const map = {};
+
+  (infos || []).forEach(info => {
+    const label = info.category || '아르카디움 피에타스';
+    const id = getInfoCategoryId(label);
+    if (!map[id]) map[id] = { id, label };
+  });
+
+  return Object.keys(map).map(key => map[key]);
+}
+
+function getInfoCategoryId(label) {
+  const text = String(label || '아르카디움 피에타스').trim();
+  if (text === '아르카디움 피에타스') return 'academy';
+  if (text === '탈리스') return 'tallis';
+  if (text === '모네타') return 'moneta';
+  if (text === '아르스') return 'ars';
+  if (text === '세렌티아') return 'serentia';
+  if (text === '니발리스') return 'nivalis';
+  return 'info-' + text.replace(/\s+/g, '-');
 }
 
 function renderInvestigationState() {
