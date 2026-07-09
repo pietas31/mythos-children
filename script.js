@@ -3572,8 +3572,19 @@ function closeInfoPanel() {
 }
 
 function selectInfoPlace(place) {
-  currentInfoPlace = place || 'official';
-  isAcademyInfoExpanded = false;
+  const nextPlace = place || 'official';
+
+  if (nextPlace === 'academy') {
+    isAcademyInfoExpanded = currentInfoPlace === 'academy'
+      ? !isAcademyInfoExpanded
+      : true;
+  } else if (nextPlace === 'official') {
+    isAcademyInfoExpanded = false;
+  } else {
+    isAcademyInfoExpanded = true;
+  }
+
+  currentInfoPlace = nextPlace;
 
   renderInfoPanel();
 }
@@ -3587,29 +3598,30 @@ function renderInfoPanel() {
 
   const categories = getInfoCategories();
   const currentCategory = categories.find(category => category.id === currentInfoPlace) || categories[0];
-  const visibleCategories = categories;
+  const visibleCategories = categories.filter(category => !category.parent || isAcademyInfoExpanded);
   const officialItems = getOfficialInfoItems();
   const foundItems = getFoundInfoItems();
   const items = getInfoPanelItemsForCategory(currentCategory, officialItems, foundItems);
 
   if (nav) {
     nav.innerHTML = visibleCategories.map((category, index) => {
-      const count = category.id === 'official'
-        ? officialItems.length
-        : getInfoPanelItemsForCategory(category, officialItems, foundItems).length;
+      const count = getInfoCategoryNavCount(category, categories, officialItems);
       const nextCategory = visibleCategories[index + 1];
-      const isLastChild = category.parent && (!nextCategory || nextCategory.parent !== category.parent);
+      const hasChildren = categories.some(child => child.parent === category.id);
+      const isLastChild = category.parent && !hasChildren && (!nextCategory || nextCategory.parent !== category.parent);
+      const showCount = category.id === 'official' || !category.parent || category.depth === 1;
       const extraClass = [
         category.id === currentCategory.id ? 'active' : '',
         category.parent ? 'child' : '',
         category.depth > 1 ? 'child-depth-' + Math.min(category.depth, 3) : '',
+        hasChildren ? 'child-has-children' : '',
         isLastChild ? 'child-last' : ''
       ].filter(Boolean).join(' ');
 
       return (
         '<button type="button" class="info-panel-nav-btn ' + extraClass + '" onclick="selectInfoPlace(\'' + escapeForAttribute(category.id) + '\')">' +
           '<span>' + escapeHtml(category.label) + '</span>' +
-          '<em>' + count + '</em>' +
+          (showCount ? '<em>' + count + '</em>' : '') +
         '</button>'
       );
     }).join('');
@@ -3674,6 +3686,16 @@ function appendInfoChildCategories(categories, foundItems, parentCategoryId, par
 
     appendInfoChildCategories(categories, foundItems, categoryId, child.infoId, safeDepth + 1);
   });
+}
+
+function getInfoCategoryNavCount(category, categories, officialItems) {
+  if (!category) return 0;
+  if (category.id === 'official') return officialItems.length;
+
+  const directChildren = categories.filter(child => child.parent === category.id);
+  if (directChildren.length) return directChildren.length;
+
+  return category.infoId ? 1 : 0;
 }
 
 function getInfoPanelItemsForCategory(category, officialItems, foundItems) {

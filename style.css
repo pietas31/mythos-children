@@ -2237,6 +2237,16 @@ body.is-admin .mail-write-actions .admin-only{
   background:rgba(201,154,69,.78);
 }
 
+.info-panel-nav-btn.child-depth-2::before{
+  left:-34px;
+  width:32px;
+}
+
+.info-panel-nav-btn.child-depth-3::before{
+  left:-50px;
+  width:48px;
+}
+
 .info-panel-nav-btn.child::after{
   content:"";
   position:absolute;
@@ -2245,6 +2255,14 @@ body.is-admin .mail-write-actions .admin-only{
   bottom:-8px;
   width:1px;
   background:rgba(201,154,69,.58);
+}
+
+.info-panel-nav-btn.child-depth-2::after{
+  left:-34px;
+}
+
+.info-panel-nav-btn.child-depth-3::after{
+  left:-50px;
 }
 
 .info-panel-nav-btn.child-last::after{
