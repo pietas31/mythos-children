@@ -3329,6 +3329,7 @@ function getInvestigationNodeText(node) {
 
 function renderInvestigationNode() {
   const node = INVESTIGATION_NODES[currentInvestigationNodeId] || INVESTIGATION_NODES['trial-start'];
+  const kicker = document.getElementById('investigation-kicker');
   const title = document.getElementById('investigation-title');
   const path = document.getElementById('investigation-path');
   const text = document.getElementById('investigation-text');
@@ -3338,6 +3339,11 @@ function renderInvestigationNode() {
 
   if (node.onEnter) {
     applyInvestigationGain(node.onEnter);
+  }
+
+  if (kicker) {
+    const investigation = (currentInvestigationData && currentInvestigationData.investigation) || {};
+    kicker.textContent = investigation.title || '조사 준비 중';
   }
 
   if (title) title.textContent = node.title || '조사 준비 중';
@@ -3358,11 +3364,7 @@ function renderInvestigationNode() {
       .map((option, index) => renderInvestigationOption(option, index))
       .join('');
 
-    const backHtml = investigationHistory.length
-      ? '<button type="button" class="investigation-option investigation-option-muted" onclick="goBackInvestigation()">이전 조사로 돌아간다</button>'
-      : '';
-
-    options.innerHTML = optionHtml + backHtml;
+    options.innerHTML = optionHtml;
   }
 
   renderInvestigationState();
