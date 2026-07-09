@@ -1891,6 +1891,20 @@ body.is-admin .mail-write-actions .admin-only{
   transform:none;
 }
 
+.investigation-option-visited{
+  border-color:rgba(143,63,80,.34);
+  background:linear-gradient(180deg,#eee4d2,#dfd1b7);
+  color:#7b3d4d;
+}
+
+.investigation-option-visited span::after{
+  content:"확인함";
+  margin-left:10px;
+  color:#9b6673;
+  font-size:11px;
+  font-weight:900;
+}
+
 .investigation-option span{
   font-size:15px;
   font-weight:900;

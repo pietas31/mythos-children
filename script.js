@@ -2981,6 +2981,7 @@ const INVESTIGATION_DEFAULT_STATE = {
   infos: {},
   choices: {},
   groups: {},
+  visitedOptions: {},
   flags: {},
   visitedPlaces: {}
 };
@@ -3017,6 +3018,7 @@ function getInvestigationState() {
       investigationState.infos = investigationState.infos || {};
       investigationState.choices = investigationState.choices || {};
       investigationState.groups = investigationState.groups || {};
+      investigationState.visitedOptions = investigationState.visitedOptions || {};
       investigationState.flags = investigationState.flags || {};
       investigationState.noteSources = investigationState.noteSources || {};
       investigationState.visitedPlaces = investigationState.visitedPlaces || {};
@@ -3373,12 +3375,16 @@ function renderInvestigationNode() {
 
 function renderInvestigationOption(option, index) {
   const lockedReason = getInvestigationOptionLockedReason(option);
+  const visited = isInvestigationOptionVisited(option);
 
-  const className = lockedReason ? ' investigation-option-locked' : '';
+  const className = [
+    lockedReason ? 'investigation-option-locked' : '',
+    visited ? 'investigation-option-visited' : ''
+  ].filter(Boolean).join(' ');
   const subText = getInvestigationOptionSubText(option, lockedReason);
 
   return [
-    '<button type="button" class="investigation-option' + className + '" onclick="selectInvestigationOption(' + index + ')">',
+    '<button type="button" class="investigation-option' + (className ? ' ' + className : '') + '" onclick="selectInvestigationOption(' + index + ')">',
     '<span>' + escapeHtml(option.label || '선택지') + '</span>',
     subText ? '<em>' + escapeHtml(subText) + '</em>' : '',
     '</button>'
@@ -3445,6 +3451,12 @@ function getInvestigationOptionKey(option) {
   return [currentInvestigationNodeId, option && option.label ? option.label : 'option'].join('::');
 }
 
+function isInvestigationOptionVisited(option) {
+  const state = getInvestigationState();
+  state.visitedOptions = state.visitedOptions || {};
+  return !!state.visitedOptions[getInvestigationOptionKey(option)];
+}
+
 function isInvestigationOptionAlreadyUsed(option) {
   if (!option || !option.once) return false;
 
@@ -3457,6 +3469,8 @@ function isInvestigationOptionAlreadyUsed(option) {
 }
 
 function markInvestigationOptionUsed(option) {
+  markInvestigationOptionVisited(option);
+
   if (!option || !option.once) return;
 
   const state = getInvestigationState();
@@ -3465,6 +3479,15 @@ function markInvestigationOptionUsed(option) {
 
   state.choices[getInvestigationOptionKey(option)] = true;
   if (option.groupId) state.groups[option.groupId] = true;
+  saveInvestigationState();
+}
+
+function markInvestigationOptionVisited(option) {
+  if (!option) return;
+
+  const state = getInvestigationState();
+  state.visitedOptions = state.visitedOptions || {};
+  state.visitedOptions[getInvestigationOptionKey(option)] = true;
   saveInvestigationState();
 }
 
@@ -3567,15 +3590,13 @@ function renderInfoPanel() {
   const visibleCategories = categories;
   const officialItems = getOfficialInfoItems();
   const foundItems = getFoundInfoItems();
-  const items = currentCategory.id === 'official'
-    ? officialItems
-    : foundItems.filter(item => item.place === currentCategory.id);
+  const items = getInfoPanelItemsForCategory(currentCategory, officialItems, foundItems);
 
   if (nav) {
     nav.innerHTML = visibleCategories.map((category, index) => {
       const count = category.id === 'official'
         ? officialItems.length
-        : foundItems.filter(item => item.place === category.id).length;
+        : getInfoPanelItemsForCategory(category, officialItems, foundItems).length;
       const nextCategory = visibleCategories[index + 1];
       const isLastChild = category.parent && (!nextCategory || nextCategory.parent !== category.parent);
       const extraClass = [
@@ -3613,8 +3634,26 @@ function renderInfoPanel() {
 function getInfoCategories() {
   const categories = [{ id: 'official', label: '안내사항' }];
 
+  const foundItems = getFoundInfoItems();
+  const rootItems = foundItems.filter(item => !item.parentInfoId);
+
   currentInvestigationCategories.forEach(category => {
     categories.push(category);
+
+    const root = rootItems.find(item => item.place === category.id && item.title === category.label);
+    const children = foundItems.filter(item => {
+      if (root) return item.parentInfoId === root.infoId;
+      return item.place === category.id && item.parentInfoId;
+    });
+
+    children.forEach(child => {
+      categories.push({
+        id: 'info:' + child.infoId,
+        label: child.title,
+        parent: category.id,
+        infoId: child.infoId
+      });
+    });
   });
 
   if (categories.length === 1) {
@@ -3622,6 +3661,20 @@ function getInfoCategories() {
   }
 
   return categories;
+}
+
+function getInfoPanelItemsForCategory(category, officialItems, foundItems) {
+  if (!category) return [];
+  if (category.id === 'official') return officialItems;
+
+  if (category.infoId) {
+    return foundItems.filter(item => item.infoId === category.infoId);
+  }
+
+  const root = foundItems.find(item => item.place === category.id && !item.parentInfoId);
+  if (root) return [root];
+
+  return foundItems.filter(item => item.place === category.id && !item.parentInfoId);
 }
 
 function getAllInfoItems() {
@@ -3647,6 +3700,8 @@ function getFoundInfoItems() {
     .filter(info => !hidden[info.infoId])
     .filter(info => info.defaultOpen || acquired[info.infoId])
     .map(info => ({
+      infoId: info.infoId,
+      parentInfoId: info.parentInfoId,
       place: getInfoCategoryId(info.category || '아르카디움 피에타스'),
       title: info.title || '정보',
       content: info.content || ''
